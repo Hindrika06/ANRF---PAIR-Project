@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Workout Recommender</title>
+  <style>
+    :root {
+      --bg: #faf7f7;
+      --panel: #ffffff;
+      --accent: #4a6bff;
+      --accent-2: #6ee7b7;
+      --text: #2d3748;
+      --muted: #718096;
+      --danger: #ff6b6b;
+      --highlight: #f0f4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 32px 16px;
+    }
+    .app {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 24px;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    h1 { 
+      font-size: clamp(1.4rem, 3.5vw, 2rem); 
+      margin: 0; 
+      letter-spacing: .5px; 
+      color: var(--accent);
+    }
+    .sub { color: var(--muted); font-size: .95rem; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    @media (min-width: 880px) {
+      .grid { grid-template-columns: 360px 1fr; }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 24px;
+    }
+
+    .controls { display: grid; gap: 16px; }
+    label { font-size: .9rem; color: var(--muted); margin-bottom: 6px; display: inline-block; }
+    select, input[type="number"], button {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgb(252, 251, 251);
+      color: var(--text);
+      outline: none;
+      font-size: 0.95rem;
+    }
+    select:focus, input[type="number"]:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 3px rgba(74,107,255,.15); 
+    }
+
+    .btn {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border: none; 
+      color: rgb(244, 240, 240); 
+      font-weight: 700; 
+      letter-spacing: .3px; 
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .btn.secondary { 
+      background: white; 
+      color: var(--accent); 
+      border: 1px solid var(--accent); 
+      font-weight: 600; 
+    }
+
+    .tags { display:flex; flex-wrap: wrap; gap: 8px; }
+    .tag { 
+      font-size: .75rem; 
+      padding: 6px 12px; 
+      border-radius: 999px; 
+      background: rgba(74,107,255,.08);
+      color: var(--accent); 
+    }
+
+    .result-list { display: grid; gap: 16px; }
+
+    .result {
+      display: grid; 
+      gap: 10px; 
+      padding: 20px; 
+      border-radius: 14px; 
+      background: rgb(250, 249, 249); 
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      transition: all 0.2s;
+    }
+    .result:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .result h3 { margin: 0; color: var(--accent); }
+    .score { font-size: .8rem; color: var(--muted); }
+    .meta { font-size: .9rem; color: var(--muted); }
+    .why { font-size: .9rem; color: var(--text); }
+
+    .row { display:flex; gap: 12px; align-items: center; }
+    .row > * { flex: 1; }
+
+    .divider { height: 1px; background: rgba(0,0,0,0.08); margin: 16px 0; }
+
+    .empty { 
+      text-align: center; 
+      color: var(--muted); 
+      padding: 32px 8px;
+      background: rgba(0,0,0,0.02);
+      border-radius: 12px;
+    }
+    
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>🏋️‍♂️ AI Workout Recommender</h1>
+        <div class="sub">Break free from the screen trap with personalized fitness recommendations</div>
+      </div>
+      <button id="resetBtn" class="btn secondary" title="Reset all inputs">Reset</button>
+    </header>
+
+    <div class="grid">
+      <!-- Controls -->
+      <section class="card">
+        <div class="controls">
+          <div>
+            <label for="goal">Goal</label>
+            <select id="goal">
+              <option value="fat_loss">Fatloss</option>
+              <option value="muscle_gain">Muscle Gain</option>
+              <option value="endurance">Endurance</option>
+              <option value="flexibility">Flexibility</option>
+              <option value="general_fitness" selected>General Fitness</option>
+            </select>
+          </div>
+          <div class="row">
+            <div>
+              <label for="level">Level</label>
+              <select id="level">
+                <option value="beginner" selected>Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label for="minutes">Available Time (min)</label>
+              <input id="minutes" type="number" min="5" max="120" value="30" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="equipment">Equipment</label>
+              <select id="equipment">
+                <option value="none" selected>No Equipment</option>
+                <option value="dumbbells">Dumbbells</option>
+                <option value="barbell">Barbell</option>
+                <option value="resistance_band">Resistance Band</option>
+                <option value="kettlebell">Kettlebell</option>
+                <option value="yoga_mat">Yoga Mat</option>
+                <option value="full_gym">Full Gym</option>
+              </select>
+            </div>
+            <div>
+              <label for="bodypart">Focus Body Part</label>
+              <select id="bodypart">
+                <option value="full_body" selected>Full Body</option>
+                <option value="biceps">Biceps</option>
+                <option value="triceps">Triceps</option>
+                <option value="shoulders">Shoulders</option>
+                <option value="back">Back</option>
+                <option value="chest">Chest</option>
+                <option value="legs">Legs</option>
+                <option value="core">Core</option>
+                <option value="glutes">Glutes</option>
+              </select>
+            </div>
+          </div>
+          <button id="recommendBtn" class="btn">Get AI Recommendations</button>
+        </div>
+        <div class="divider"></div>
+        <div class="tags" id="activeFilters"></div>
+      </section>
+
+      <!-- Results -->
+      <section class="card">
+        <h2 style="margin:0 0 16px 0; color: var(--accent);">Top Matches</h2>
+        <div id="results" class="result-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // --- Tiny on‑device "AI" model (scoring + softmax ranking) -----------------
+    // Dataset of exercises with metadata. Replace/add easily.
+    const EXERCISES = [
+      { id: 'burpees', name: 'Burpees', bodyparts: ['full_body','legs','core'], goals: ['fat_loss','endurance','general_fitness'], level: 'intermediate', equipment: ['none'], minutes: [8, 25], url: 'https://www.youtube.com/results?search_query=burpees+workout' },
+      { id: 'jumping_jacks', name: 'Jumping Jacks', bodyparts: ['full_body','legs'], goals: ['fat_loss','endurance','general_fitness'], level: 'beginner', equipment: ['none'], minutes: [5, 20], url: 'https://www.youtube.com/results?search_query=jumping+jacks+hiit' },
+      { id: 'pushups', name: 'Push‑ups', bodyparts: ['chest','triceps','shoulders','core'], goals: ['muscle_gain','general_fitness'], level: 'beginner', equipment: ['none','yoga_mat'], minutes: [8, 30], url: 'https://www.youtube.com/results?search_query=pushups+variations' },
+      { id: 'pullups', name: 'Pull‑ups', bodyparts: ['back','biceps'], goals: ['muscle_gain','general_fitness'], level: 'advanced', equipment: ['full_gym'], minutes: [8, 30], url: 'https://www.youtube.com/results?search_query=pullups+progression' },
+      { id: 'dumbbell_curls', name: 'Dumbbell Biceps Curls', bodyparts: ['biceps'], goals: ['muscle_gain','general_fitness'], level: 'beginner', equipment: ['dumbbells'], minutes: [10, 35], url: 'https://www.youtube.com/results?search_query=dumbbell+biceps+curls' },
+      { id: 'triceps_dips', name: 'Triceps Dips (Bench/Chair)', bodyparts: ['triceps','shoulders'], goals: ['muscle_gain','general_fitness'], level: 'beginner', equipment: ['none'], minutes: [8, 25], url: 'https://www.youtube.com/results?search_query=triceps+dips+at+home' },
+      { id: 'shoulder_press', name: 'Dumbbell Shoulder Press', bodyparts: ['shoulders','triceps'], goals: ['muscle_gain','general_fitness'], level: 'intermediate', equipment: ['dumbbells'], minutes: [10, 30], url: 'https://www.youtube.com/results?search_query=dumbbell+shoulder+press' },
+      { id: 'barbell_squat', name: 'Barbell Back Squat', bodyparts: ['legs','glutes','core'], goals: ['muscle_gain','general_fitness'], level: 'advanced', equipment: ['barbell','full_gym'], minutes: [15, 45], url: 'https://www.youtube.com/results?search_query=barbell+back+squat' },
+      { id: 'kettlebell_swings', name: 'Kettlebell Swings', bodyparts: ['glutes','back','core'], goals: ['fat_loss','endurance','general_fitness'], level: 'intermediate', equipment: ['kettlebell'], minutes: [10, 25], url: 'https://www.youtube.com/results?search_query=kettlebell+swings+hiit' },
+      { id: 'plank', name: 'Plank Hold', bodyparts: ['core'], goals: ['flexibility','general_fitness','endurance'], level: 'beginner', equipment: ['yoga_mat','none'], minutes: [5, 15], url: 'https://www.youtube.com/results?search_query=plank+variations' },
+      { id: 'deadlift', name: 'Romanian Deadlift (DB/BB)', bodyparts: ['back','glutes','hamstrings','legs'], goals: ['muscle_gain','general_fitness'], level: 'intermediate', equipment: ['dumbbells','barbell','full_gym'], minutes: [12, 40], url: 'https://www.youtube.com/results?search_query=romanian+deadlift+form' },
+      { id: 'cycling', name: 'Stationary Bike Intervals', bodyparts: ['legs','full_body'], goals: ['fat_loss','endurance','general_fitness'], level: 'beginner', equipment: ['full_gym'], minutes: [12, 40], url: 'https://www.youtube.com/results?search_query=stationary+bike+intervals' },
+      { id: 'yoga_flow', name: 'Yoga Flow (Vinyasa)', bodyparts: ['full_body','flexibility','core'], goals: ['flexibility','general_fitness','endurance'], level: 'beginner', equipment: ['yoga_mat','none'], minutes: [15, 45], url: 'https://www.youtube.com/results?search_query=15+minute+yoga+flow' }
+    ];
+
+    // Hyperparameters (weights) – tweak for personalization
+    const W = {
+      goal: 2.2,
+      bodypart: 1.8,
+      level: 1.2,          // small penalty if too hard vs user level
+      equipment: 1.4,
+      minutes: 1.0,        // match within duration window
+      diversityNoise: 0.2, // adds small randomness so results vary slightly
+    };
+
+    const LEVEL_ORDER = { beginner: 0, intermediate: 1, advanced: 2 };
+
+    function scoreExercise(ex, prefs) {
+      let s = 0; const why = [];
+
+      // Goal match
+      if (ex.goals.includes(prefs.goal)) { s += W.goal; why.push(`matches goal`); }
+
+      // Body part: exact or full body fallback
+      if (prefs.bodypart === 'full_body' && ex.bodyparts.includes('full_body')) { s += W.bodypart * .8; why.push('full‑body session'); }
+      else if (ex.bodyparts.includes(prefs.bodypart)) { s += W.bodypart; why.push(`focus on ${prefs.bodypart}`); }
+
+      // Level: reward if <= user level; slight penalty if higher
+      const d = LEVEL_ORDER[ex.level] - LEVEL_ORDER[prefs.level];
+      if (d <= 0) { s += W.level; why.push(`${ex.level} friendly`); }
+      else { s -= d * (W.level * 0.9); why.push(`challenging (${ex.level})`); }
+
+      // Equipment: exact equip or "none" == universally accessible
+      if (ex.equipment.includes(prefs.equipment)) { s += W.equipment; why.push(`uses ${prettyEquip(prefs.equipment)}`); }
+      else if (prefs.equipment === 'none' && ex.equipment.includes('none')) { s += W.equipment * 0.9; why.push('no equipment needed'); }
+      else if (prefs.equipment !== 'none' && ex.equipment.includes('none')) { s += W.equipment * 0.5; why.push('no equipment alternative'); }
+      // If user has full gym, allow most
+      if (prefs.equipment === 'full_gym') s += 0.3;
+
+      // Time: inside exercise recommended window
+      const [minT, maxT] = ex.minutes;
+      const t = prefs.minutes;
+      if (t >= minT && t <= maxT) { s += W.minutes; why.push(`${t}m fits ${minT}-${maxT}m`); }
+      else {
+        // penalize distance from window
+        const dist = t < minT ? (minT - t) : (t - maxT);
+        s -= Math.min(dist/10, 1.0) * W.minutes; // up to -1
+        why.push(`${t}m outside ideal ${minT}-${maxT}m`);
+      }
+
+      // Diversity noise to avoid ties / monotony
+      s += (Math.random() - 0.5) * W.diversityNoise;
+
+      return { id: ex.id, name: ex.name, score: s, why, meta: ex };
+    }
+
+    function softmaxRank(items) {
+      // Numerical stability
+      const max = Math.max(...items.map(i => i.score));
+      const exps = items.map(i => Math.exp(i.score - max));
+      const sum = exps.reduce((a,b) => a+b, 0);
+      return items
+        .map((i, idx) => ({...i, prob: exps[idx]/sum }))
+        .sort((a,b) => b.prob - a.prob);
+    }
+
+    function prettyEquip(key) {
+      return key.replace(/_/g, ' ');
+    }
+
+    // --- UI Logic -------------------------------------------------------------
+    const els = {
+      goal: document.getElementById('goal'),
+      level: document.getElementById('level'),
+      minutes: document.getElementById('minutes'),
+      equipment: document.getElementById('equipment'),
+      bodypart: document.getElementById('bodypart'),
+      results: document.getElementById('results'),
+      filters: document.getElementById('activeFilters'),
+      recommend: document.getElementById('recommendBtn'),
+      reset: document.getElementById('resetBtn'),
+    };
+
+    function getPrefs() {
+      return {
+        goal: els.goal.value,
+        level: els.level.value,
+        minutes: Number(els.minutes.value) || 20,
+        equipment: els.equipment.value,
+        bodypart: els.bodypart.value,
+      };
+    }
+
+    function renderFilters(p) {
+      els.filters.innerHTML = '';
+      const parts = [
+        `Goal: ${p.goal.replace('_',' ')}`,
+        `Level: ${p.level}`,
+        `Time: ${p.minutes}m`,
+        `Equipment: ${prettyEquip(p.equipment)}`,
+        `Focus: ${p.bodypart}`,
+      ];
+      parts.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = t;
+        els.filters.appendChild(span);
+      });
+    }
+
+    function renderResults(ranked) {
+      els.results.innerHTML = '';
+      if (!ranked.length) {
+        els.results.innerHTML = `<div class="empty">No matches. Try changing filters.</div>`;
+        return;
+      }
+      ranked.slice(0, 6).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'result';
+        const meta = item.meta;
+        const whyTxt = item.why.slice(0, 3).join(' · ');
+        div.innerHTML = `
+          <h3>${item.name}</h3>
+          <div class="meta">Body: ${meta.bodyparts.join(', ')} · Level: ${meta.level} · Ideal: ${meta.minutes[0]}-${meta.minutes[1]}m · Equip: ${meta.equipment.map(prettyEquip).join(', ')}</div>
+          <div class="score">Match score: ${item.prob.toFixed(2)} (softmax)</div>
+          <div class="why">Why: ${whyTxt}</div>
+          <div class="row">
+            <a class="btn secondary" href="${meta.url}" target="_blank" rel="noreferrer">Watch Guide</a>
+            <button class="btn" data-id="${item.id}">Build Quick Plan</button>
+          </div>
+        `;
+        // attach plan builder
+        div.querySelector('button.btn').addEventListener('click', () => showPlan(meta));
+        els.results.appendChild(div);
+      });
+    }
+
+    function showPlan(meta) {
+      const p = getPrefs();
+      // Simple plan generator: warmup + main + finisher based on minutes
+      const t = p.minutes;
+      const warm = Math.max(3, Math.round(t * 0.15));
+      const main = Math.max(8, Math.round(t * 0.7));
+      const fin = Math.max(2, t - warm - main);
+
+      const plan = `
+        <div class="result">
+          <h3>🗓️ ${meta.name} – ${t} min plan</h3>
+          <div class="why">Goal: ${p.goal.replace('_',' ')} · Focus: ${p.bodypart}</div>
+          <ul>
+            <li><strong>Warm‑up (${warm}m):</strong> light cardio + mobility for target joints</li>
+            <li><strong>Main (${main}m):</strong> ${meta.name} in sets/intervals to maintain RPE 7–8</li>
+            <li><strong>Finisher (${fin}m):</strong> short core/breathing or easy cardio cooldown</li>
+          </ul>
+          <a class="btn secondary" href="${meta.url}" target="_blank" rel="noreferrer">Open Technique Video</a>
+        </div>`;
+
+      // Insert at top
+      els.results.insertAdjacentHTML('afterbegin', plan);
+    }
+
+    function recommend() {
+      const prefs = getPrefs();
+      renderFilters(prefs);
+      const scored = EXERCISES.map(ex => scoreExercise(ex, prefs));
+      const ranked = softmaxRank(scored);
+      renderResults(ranked);
+    }
+
+    els.recommend.addEventListener('click', recommend);
+    els.reset.addEventListener('click', () => {
+      els.goal.value = 'general_fitness';
+      els.level.value = 'beginner';
+      els.minutes.value = 30;
+      els.equipment.value = 'none';
+      els.bodypart.value = 'full_body';
+      els.filters.innerHTML = '';
+      els.results.innerHTML = '<div class="empty">Pick your goal & settings, then press <b>Get AI Recommendations</b>.</div>';
+    });
+
+    // Initial state
+    els.results.innerHTML = '<div class="empty">Pick your goal & settings, then press <b>Get AI Recommendations</b>.</div>';
+  </script>
+<script src="assets/js/backend.js"></script>
+<script>
+  (function(){
+    const btn = document.createElement('button');
+    
+
+    btn.addEventListener('click', async ()=>{
+      const payload = {
+        goal: document.getElementById('goal').value,
+        level: document.getElementById('level').value,
+        minutes: parseInt(document.getElementById('minutes').value) || 0,
+        equipment: document.getElementById('equipment').value,
+        bodypart: document.getElementById('bodypart').value,
+        plan: Array.from(document.querySelectorAll('#results .result')).slice(0,1).map(div=>({
+          title: div.querySelector('h3')?.textContent || '',
+          why: div.querySelector('.why')?.textContent || '',
+          meta: div.querySelector('.meta')?.textContent || ''
+        }))
+      };
+      try{
+        const res = await BackendAPI.saveWorkout(payload);
+        if(res && res.id){ alert('Workout saved (id '+res.id+').'); }
+        else { alert(res.error || 'Save failed'); }
+      }catch(err){ alert('Network error'); }
+    });
+  })();
+</script>
+</body>
+</html>

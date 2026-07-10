@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BMI & Nutrition Planner — Adults & Kids</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg1:#eaf7ff; --bg2:#cfeeff; --primary:#0ea5e9; --primary2:#0284c7;
+    --text:#0f172a; --muted:#64748b; --card:#ffffff; --ring:rgba(56,189,248,.35);
+    --kids1:#fff7e6; --kids2:#ffe6b3; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;
+    color:var(--text);
+    background:
+      radial-gradient(1000px 600px at 10% -10%, var(--bg2), transparent),
+      linear-gradient(135deg, var(--bg1), #ffffff);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .app{ width:min(1100px,94vw); display:grid; grid-template-columns:1.25fr .75fr; gap:18px; margin:40px auto }
+  @media (max-width:980px){ .app{ grid-template-columns:1fr } }
+  .card{
+    background:var(--card); border-radius:22px; padding:22px;
+    box-shadow:0 12px 34px rgba(2,132,199,.12), 0 2px 6px rgba(2,132,199,.06);
+    animation:fadeIn .35s ease both;
+  }
+  h2{ margin:.2rem 0 1rem; color:#0b5a8a; font-size:1.25rem }
+  .sub{ color:var(--muted); margin-top:-6px }
+  .row{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px }
+  @media (max-width:620px){ .row{ grid-template-columns:1fr } }
+  label{ display:block; margin:6px 0 6px; color:#0b5a8a; font-size:.95rem }
+  input, select{
+    width:100%; border:1px solid #cbd5e1; border-radius:12px; padding:12px 14px; font-size:15px; background:#fff;
+    transition:.2s border,.2s box-shadow;
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--ring) }
+  .btn{
+    border:none; padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:700;
+    background:linear-gradient(90deg, var(--primary), var(--primary2)); color:#fff;
+    box-shadow:0 10px 20px rgba(2,132,199,.25); transition:.2s transform,.2s box-shadow;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 14px 24px rgba(2,132,199,.28) }
+  .btn.secondary{ background:#e7f6ff; color:#0369a1; box-shadow:none; font-weight:600 }
+  .steps{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px }
+  .step{ padding:6px 10px; border-radius:999px; background:#f0f9ff; color:#0b5a8a; font-size:.85rem; border:1px solid #d9f1ff }
+  .step.active{ background:#d9f1ff }
+  .toggle{ display:inline-flex; border:1px solid #cfe8f9; border-radius:12px; overflow:hidden; background:#f7fbff }
+  .toggle button{ border:none; padding:10px 12px; cursor:pointer; background:transparent; color:#0369a1; font-weight:700 }
+  .toggle button.active{ background:#e6f6ff }
+  .metrics{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:12px }
+  .metric{ border:1px dashed #cfe8f9; border-radius:14px; padding:12px; text-align:center; background:#f8fcff }
+  .metric .v{ font-size:1.35rem; font-weight:800 }
+  .metric small{ color:var(--muted) }
+  .plan{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:14px }
+  .meal{ border:1px solid #e3f1ff; border-radius:14px; padding:12px; background:#ffffff }
+  .meal h3{ margin:.2rem 0 .5rem; color:#0b5a8a; font-size:1rem }
+  .hidden{ display:none !important }
+  .hint{ font-size:.85rem; color:var(--muted) }
+  .badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:.8rem; background:#eef8ff; color:#0369a1; border:1px solid #d9f1ff }
+
+  /* Step 4 (Kids nutrient guide) theme */
+  .kids-bg{
+    background:
+      radial-gradient(800px 500px at 90% -10%, var(--kids2), transparent),
+      linear-gradient(135deg, var(--kids1), #ffffff);
+  }
+  .pill{ display:inline-flex; gap:8px; align-items:center; padding:8px 10px; background:#fff; border:1px solid #ffe2a6; border-radius:999px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+  @media (max-width:900px){ .grid-3{ grid-template-columns:1fr } }
+
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<main class="app">
+  <!-- Left -->
+  <section class="card">
+    <h2>Your Health Planner</h2>
+    <div class="steps">
+      <span class="step" id="st1">1) Details</span>
+      <span class="step" id="st2">2) BMI & Macros</span>
+      <span class="step" id="st3">3) Meal Plan</span>
+      <span class="step" id="st4">4) Nutrient Guide (Kids)</span>
+    </div>
+
+    <!-- STEP 1: USER DETAILS -->
+    <div id="details">
+      <p class="sub">Fill your basic info. We’ll calculate BMI, calories, and a tailored plan. <span class="badge">Kids under 10 get a special nutrient guide</span></p>
+      <div class="row">
+        <div>
+          <label>Age (years)</label>
+          <input type="number" id="age" min="0" max="120" placeholder="e.g., 28" />
+          <div class="hint">Use decimal for months (e.g., 0.5 = 6 months)</div>
+        </div>
+        <div>
+          <label>Gender</label>
+          <select id="gender">
+            <option value="">Select…</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Region</label>
+          <select id="region">
+            <option value="india">India</option>
+            <option value="western">Western/Global</option>
+          </select>
+        </div>
+        <div>
+          <label>Primary Goal</label>
+          <select id="goal">
+            <option value="loss">Weight Loss</option>
+            <option value="maintain" selected>Maintain Weight</option>
+            <option value="gain">Muscle Gain</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Diet Preference</label>
+          <div class="toggle" style="width:100%">
+            <button type="button" id="veg" class="active" style="flex:1">Veg</button>
+            <button type="button" id="nonveg" style="flex:1">Non-Veg</button>
+          </div>
+        </div>
+        <div>
+          <label>Health Concerns</label>
+          <input id="concerns" placeholder="e.g., diabetes, hypertension" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Height (cm)</label>
+          <input type="number" id="height" min="40" max="230" placeholder="e.g., 170" />
+        </div>
+        <div>
+          <label>Weight (kg)</label>
+          <input type="number" id="weight" min="2" max="250" placeholder="e.g., 68" />
+        </div>
+      </div>
+      <button id="goBMI" class="btn" style="margin-top:12px">Continue to BMI & Macros</button>
+    </div>
+
+    <!-- STEP 2: BMI & MACROS -->
+    <div id="bmiStep" class="hidden">
+      <p class="sub">We calculate BMI, calories and your macro needs. For children & teens, BMI categories use growth charts (not shown here).</p>
+      <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div class="card" style="flex:1; padding:16px">
+          <div class="metrics">
+            <div class="metric"><div class="v" id="bmiVal">—</div><small>BMI</small></div>
+            <div class="metric"><div class="v" id="bmiCat">—</div><small>Category</small></div>
+            <div class="metric"><div class="v" id="targetWt">—</div><small>Target Wt</small></div>
+            <div class="metric"><div class="v" id="calories">—</div><small>Daily Cal</small></div>
+          </div>
+          <div id="bmiNote" class="sub" style="margin-top:10px"></div>
+
+          <div class="card" style="margin-top:12px">
+            <h3 style="margin:.2rem 0 .6rem; color:#0b5a8a; font-size:1rem">Macro Requirement (g/day)</h3>
+            <canvas id="macroChart" height="220" aria-label="Macros bar"></canvas>
+            <div id="macroNote" class="hint" style="margin-top:8px"></div>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+            <button id="reDetails" class="btn secondary">Back</button>
+            <button id="buildPlan" class="btn">Build My Meal Plan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: MEAL PLAN -->
+    <div id="planStep" class="hidden">
+      <div id="planSummary" class="sub"></div>
+      <div class="plan" id="planBlocks"></div>
+      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
+        <button id="again" class="btn secondary">Recalculate</button>
+        <button id="toKidsGuide" class="btn hidden">View Nutrient Guide (Kids)</button>
+      </div>
+      <p class="sub" style="margin-top:10px">General wellness guidance — not a substitute for medical advice.</p>
+    </div>
+
+    <!-- STEP 4: KIDS NUTRIENT GUIDE (visible only if age < 10) -->
+    <div id="kidsStep" class="hidden">
+      <div class="card kids-bg">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+          <h3 style="margin:.2rem 0; color:#92400e">Nutrient Guide for Children</h3>
+          <span id="kidsBadge" class="pill">👶 Category: <b id="kidsCatTxt">—</b></span>
+          <span class="pill">🍽️ Diet: <b id="kidsDietTxt">—</b></span>
+        </div>
+
+        <div class="metrics" style="margin-top:12px">
+          <div class="metric"><div class="v" id="kcalKid">—</div><small>Calories (kcal)</small></div>
+          <div class="metric"><div class="v" id="carbKid">—</div><small>Carbs (g)</small></div>
+          <div class="metric"><div class="v" id="protKid">—</div><small>Protein (g)</small></div>
+          <div class="metric"><div class="v" id="fatKid">—</div><small>Fat (g)</small></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4 style="margin:.2rem 0 .6rem; color:#92400e">Macro Chart (Kids)</h4>
+          <canvas id="kidsMacroChart" height="210"></canvas>
+          <div id="kidsMacroNote" class="hint" style="margin-top:8px"></div>
+        </div>
+
+        <div class="grid-3" style="margin-top:12px">
+          <div class="card">
+            <h4 style="margin:.2rem 0 .5rem; color:#92400e">Key Vitamins</h4>
+            <ul id="kidsVits" class="sub" style="line-height:1.6; margin:0 0 0 16px"></ul>
+          </div>
+          <div class="card">
+            <h4 style="margin:.2rem 0 .5rem; color:#92400e">Key Minerals</h4>
+            <ul id="kidsMins" class="sub" style="line-height:1.6; margin:0 0 0 16px"></ul>
+          </div>
+          <div class="card">
+            <h4 style="margin:.2rem 0 .5rem; color:#92400e">Sample Meals/Snacks</h4>
+            <ul id="kidsMeals" class="sub" style="line-height:1.6; margin:0 0 0 16px"></ul>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
+          <button id="backToPlan" class="btn secondary">Back to Plan</button>
+          <button id="restart" class="btn">Restart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right: Tips -->
+  <aside class="card">
+    <h2>Quick Tips</h2>
+    <ul class="sub">
+      <li>Half plate veggies, quarter protein, quarter smart carbs.</li>
+      <li>Hydration: ~30–35 ml/kg/day.</li>
+      <li>Prefer whole grains; limit sugar & ultra-processed foods.</li>
+      <li>Protein target: ~1–1.6 g/kg/day (adults).</li>
+      <li>Kids: focus on growth, not weight loss.</li>
+    </ul>
+  </aside>
+</main>
+
+<script>
+/* ========= Helpers ========= */
+const $ = id => document.getElementById(id);
+const fmt = n => Number.isFinite(n) ? n.toLocaleString() : '—';
+function setSteps(n){
+  ['st1','st2','st3','st4'].forEach((id,i)=>$(id).classList.toggle('active', i+1===n));
+}
+function show(el){ el.classList.remove('hidden') }
+function hide(el){ el.classList.add('hidden') }
+function getDiet(){ return $('veg').classList.contains('active') ? 'veg' : 'nonveg'; }
+function isChild(age){ return age < 10 }
+function childBucket(age){
+  if(age < 1) return 'infant';
+  if(age < 5) return 'toddler';
+  return 'kid';
+}
+
+/* ========= Collect & Validate ========= */
+function collect(){
+  return {
+    age: +$('age').value || null,
+    gender: $('gender').value,
+    region: $('region').value,
+    goal: $('goal').value,
+    diet: getDiet(),
+    concerns: $('concerns').value.trim(),
+    height: +$('height').value || null,
+    weight: +$('weight').value || null
+  };
+}
+function validate(p){
+  const missing = [];
+  if(p.age===null || p.age<0) missing.push('Age');
+  if(!p.gender) missing.push('Gender');
+  if(!p.height) missing.push('Height');
+  if(!p.weight) missing.push('Weight');
+  if(!p.goal) missing.push('Goal');
+  if(!p.region) missing.push('Region');
+  // diet is always one of the toggles; but still check
+  if(!p.diet) missing.push('Diet');
+
+  if(missing.length){
+    alert('⚠️ Please fill: ' + missing.join(', '));
+    return false;
+  }
+  if(isChild(p.age) && !p.diet){
+    alert('⚠️ Please select Veg or Non-Veg for the child meal plan.');
+    return false;
+  }
+  return true;
+}
+
+/* ========= BMI & Categories ========= */
+function calcBMI(hCm,wKg){
+  const hM = hCm/100; if(!hM||!wKg) return null;
+  return +(wKg/(hM*hM)).toFixed(1);
+}
+function bmiCategory(b, age){
+  if(age < 18) return 'Youth — use growth charts';
+  if(b < 18.5) return 'Underweight';
+  if(b < 25) return 'Normal';
+  if(b < 30) return 'Overweight';
+  return 'Obese';
+}
+function targetWeight(hCm, age){
+  if(age < 18) return '—';
+  const hm = hCm/100; return +(22*hm*hm).toFixed(1);
+}
+
+/* ========= Calories =========
+   Adults: Mifflin–St Jeor (light activity ~1.375)
+   Kids: weight-based estimates (kcal/kg/day):
+     - Infants (<1): 80–100 (use 90 default)
+     - Toddlers (1–4): 40–50 (use 45)
+     - Kids (5–10): 35–45 (use 40)
+*/
+function calcCalories(profile){
+  if(isChild(profile.age)){
+    const bucket = childBucket(profile.age);
+    let perKg = bucket==='infant' ? 90 : bucket==='toddler' ? 45 : 40;
+    return Math.round(perKg * (profile.weight || 0));
+  }
+  // Adult
+  const sexAdj = profile.gender === 'Male' ? 5 : (profile.gender === 'Female' ? -161 : -78); // -78 ~ average
+  const bmr = 10*profile.weight + 6.25*profile.height - 5*profile.age + sexAdj;
+  let maintenance = bmr * 1.375; // light activity
+  if(profile.goal === 'loss') maintenance -= 500;
+  if(profile.goal === 'gain') maintenance += 350; // gentle surplus
+  return Math.max(1000, Math.round(maintenance));
+}
+
+/* ========= Macro Split (grams) =========
+   Adults default: C 50% / P 20% / F 30%
+   Infants default: C 40% / P 8% / F 52%
+   Toddlers: C 50% / P 12% / F 35%
+   Kids 5–10: C 50% / P 15% / F 30%
+*/
+function macroSplit(profile, kcal){
+  let ratios;
+  if(isChild(profile.age)){
+    const b = childBucket(profile.age);
+    if(b==='infant') ratios = {c:0.40, p:0.08, f:0.52};
+    else if(b==='toddler') ratios = {c:0.50, p:0.12, f:0.35};
+    else ratios = {c:0.50, p:0.15, f:0.30};
+  } else {
+    ratios = {c:0.50, p:0.20, f:0.30};
+  }
+  const carbsG = Math.round((kcal*ratios.c)/4);
+  const proteinG = Math.round((kcal*ratios.p)/4);
+  const fatG = Math.round((kcal*ratios.f)/9);
+  return {carbsG, proteinG, fatG, ratios};
+}
+
+/* ========= Meal Databases ========= */
+/* Adults (kept concise; extend as needed) */
+const ADULT_PLANS = {
+  veg:{
+    loss:{ breakfast:["Oats (40g) + skim milk (200ml) + banana (100g)"],
+           lunch:["2 rotis (60g) + dal (150g) + salad (150g)"],
+           snack:["Roasted chana (30g) + green tea"],
+           dinner:["Paneer bhurji (100g) + 2 rotis (60g) + stir-fry veg (150g)"] },
+    maintain:{ breakfast:["Poha (150g) + curd (100g)"],
+           lunch:["Brown rice (150g) + rajma (150g) + kachumber (100g)"],
+           snack:["Sprouts chaat (120g)"],
+           dinner:["Veg pulao (180g) + raita (120g)"] },
+    gain:{ breakfast:["Besan chilla (3) + chutney"],
+           lunch:["Rice (200g) + dal makhani (180g) + salad"],
+           snack:["Banana + peanut butter toast"],
+           dinner:["Paneer curry (150g) + jeera rice (180g)"] }
+  },
+  nonveg:{
+    loss:{ breakfast:["2 egg omelet + toast (40g) + fruit (100g)"],
+           lunch:["Grilled chicken (120g) + 2 rotis (60g) + salad (150g)"],
+           snack:["Greek yogurt (120g) + seeds (10g)"],
+           dinner:["Fish curry (120g) + rice (150g) + veg (150g)"] },
+    maintain:{ breakfast:["Omelet (2 eggs) + toast (40g)"],
+           lunch:["Chicken (150g) + rice (150g) + veg (120g)"],
+           snack:["Boiled egg + nuts (20g)"],
+           dinner:["Fish fry (150g) + 2 rotis (60g) + veg curry (120g)"] },
+    gain:{ breakfast:["Egg scramble (3) + oats (50g)"],
+           lunch:["Chicken (200g) + rice (200g) + veg (150g)"],
+           snack:["Protein shake (250ml) + banana"],
+           dinner:["Fish (200g) + rice (180g) + veggies (180g)"] }
+  }
+};
+
+/* Kids (5–10), Toddlers (1–4), Infants (0–1). Veg & Non-Veg */
+const KIDS_PLANS = {
+  kid: {
+    veg: {
+      breakfast: [
+        "Veg upma (150g) + milk (150ml)",
+        "Idli (2) + sambar (150ml)"
+      ],
+      lunch: [
+        "2 mini rotis (50g total) + dal (120g) + veg (100g)",
+        "Brown rice (120g) + rajma (120g) + cucumber (80g)"
+      ],
+      snack: [
+        "Fruit (100g) + handful nuts (10g)",
+        "Yogurt (120g) + roasted chana (15g)"
+      ],
+      dinner: [
+        "Paneer curry (80g) + 2 mini rotis (50g) + veg (100g)",
+        "Vegetable khichdi (200g) + raita (80g)"
+      ]
+    },
+    nonveg: {
+      breakfast: [
+        "Egg (1) + toast (30g) + milk (150ml)",
+        "Dosa (1) + sambar (120ml) + egg white"
+      ],
+      lunch: [
+        "Rice (120g) + chicken curry (90g) + veg (80g)",
+        "2 mini rotis (50g) + egg curry (1 egg) + salad (80g)"
+      ],
+      snack: [
+        "Boiled egg (1) + fruit (100g)",
+        "Yogurt (120g) + peanuts (10g)"
+      ],
+      dinner: [
+        "Tandoori chicken (90g) + rice (100g) + veg (100g)",
+        "Fish curry (90g) + 2 mini rotis (50g) + salad (80g)"
+      ]
+    }
+  },
+  toddler: {
+    veg: {
+      breakfast: [
+        "Suji upma (120g) + milk (120ml)",
+        "Dalia porridge (150g) + banana slices (50g)"
+      ],
+      lunch: [
+        "Soft roti (40g) + moong dal (100g) + mashed veg (100g)",
+        "Khichdi (180g) + curd (60g)"
+      ],
+      snack: [
+        "Fruit (80g) + cheese cubes (20g)",
+        "Yogurt (100g) + murmura (15g)"
+      ],
+      dinner: [
+        "Veg pulao (160g) + raita (60g)",
+        "Paneer bhurji (60g) + soft roti (40g)"
+      ]
+    },
+    nonveg: {
+      breakfast: [
+        "Oats porridge (150g) + egg (scrambled, 1)",
+        "Idli (2 small) + sambar (100ml)"
+      ],
+      lunch: [
+        "Rice (100g) + chicken curry (60g) + veg (80g)",
+        "Soft roti (40g) + egg curry (1 egg) + cucumber (60g)"
+      ],
+      snack: [
+        "Yogurt (100g) + fruit (80g)",
+        "Egg (boiled, 1) + mashed potato (80g)"
+      ],
+      dinner: [
+        "Fish (60g) + rice (100g) + veg (80g)",
+        "Chicken stew (80g) + roti (40g) + carrots (60g)"
+      ]
+    }
+  },
+  infant: {
+    veg: {
+      breakfast: [
+        "Breastmilk/formula on demand",
+        "Rice cereal (fortified) 2–4 tbsp (as appropriate)"
+      ],
+      lunch: [
+        "Mashed dal (60–100g) + mashed veg (60–100g)"
+      ],
+      snack: [
+        "Pureed fruit (60–100g)"
+      ],
+      dinner: [
+        "Suji kheer (small, 60–100g, low sugar) or khichdi (100g)"
+      ]
+    },
+    nonveg: {
+      breakfast: [
+        "Breastmilk/formula on demand",
+        "Fortified cereal 2–4 tbsp (as appropriate)"
+      ],
+      lunch: [
+        "Pureed chicken/fish (30–50g) + mashed veg (60–100g)"
+      ],
+      snack: [
+        "Pureed fruit (60–100g)"
+      ],
+      dinner: [
+        "Dal/veg puree (100g) + ghee few drops"
+      ]
+    }
+  }
+};
+
+/* Vitamins/Minerals (Step 4) */
+const KIDS_MICROS = {
+  infant: {
+    vitamins: [
+      "Vit D: 400 IU/day (if not fortified)",
+      "Vit A: supports vision & immunity",
+      "B12 (if veg): via fortified foods"
+    ],
+    minerals: [
+      "Iron: iron-fortified cereals/purees",
+      "Calcium: breastmilk/formula, curd",
+      "Zinc: legumes, dairy; meat/fish (NV)"
+    ]
+  },
+  toddler: {
+    vitamins: [
+      "Vit A: orange/green veggies",
+      "Vit D: sun exposure + fortified foods",
+      "Vit C: citrus, guava (helps iron absorption)"
+    ],
+    minerals: [
+      "Iron: legumes, eggs/meat, greens",
+      "Calcium: milk/curd/paneer",
+      "Iodine: iodized salt (tiny amounts)"
+    ]
+  },
+  kid: {
+    vitamins: [
+      "B-complex: whole grains, dairy",
+      "Vit C: fruits/veggies daily",
+      "Vit D: fortified milk + sunlight"
+    ],
+    minerals: [
+      "Iron: meat/eggs/legumes + Vit C",
+      "Calcium: milk/curd/paneer",
+      "Magnesium/Potassium: fruits, pulses"
+    ]
+  }
+};
+
+/* ========= Build Plan (chooses adult or child sets) ========= */
+function buildPlan(profile){
+  const summary = `Region: ${profile.region} • Diet: ${profile.diet.toUpperCase()} • Goal: ${profile.goal}`;
+  if(isChild(profile.age)){
+    const b = childBucket(profile.age);
+    const plan = KIDS_PLANS[b][profile.diet];
+    return {
+      summary,
+      blocks: [
+        {title:'Breakfast (choose 1)', items:plan.breakfast},
+        {title:'Lunch (choose 1)', items:plan.lunch},
+        {title:'Snack (choose 1–2)', items:plan.snack},
+        {title:'Dinner (choose 1)', items:plan.dinner},
+      ]
+    };
+  }
+  const plan = ADULT_PLANS[profile.diet][profile.goal] || ADULT_PLANS.veg.maintain;
+  return {
+    summary,
+    blocks: [
+      {title:'Breakfast (choose 1)', items:plan.breakfast},
+      {title:'Lunch (choose 1)', items:plan.lunch},
+      {title:'Snack (choose 1–2)', items:plan.snack},
+      {title:'Dinner (choose 1)', items:plan.dinner},
+    ]
+  };
+}
+
+/* ========= Charts ========= */
+let macroChart, kidsMacroChart;
+function renderMacroChart(canvasId, carbsG, proteinG, fatG){
+  const ctx = $(canvasId).getContext('2d');
+  if(canvasId==='macroChart' && macroChart) { macroChart.destroy(); }
+  if(canvasId==='kidsMacroChart' && kidsMacroChart) { kidsMacroChart.destroy(); }
+
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Carbs (g)', 'Protein (g)', 'Fat (g)'],
+      datasets: [{
+        label: 'Daily target',
+        data: [carbsG, proteinG, fatG],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display:false }, tooltip:{enabled:true} },
+      scales: {
+        x: { beginAtZero:true },
+        y: { ticks:{font:{weight:'600'}} }
+      }
+    }
+  });
+
+  if(canvasId==='macroChart') macroChart = chart;
+  if(canvasId==='kidsMacroChart') kidsMacroChart = chart;
+}
+
+/* ========= UI Events ========= */
+$('veg').addEventListener('click', ()=>{ $('veg').classList.add('active'); $('nonveg').classList.remove('active') });
+$('nonveg').addEventListener('click', ()=>{ $('nonveg').classList.add('active'); $('veg').classList.remove('active') });
+
+$('goBMI').addEventListener('click', ()=>{
+  const p = collect();
+  if(!validate(p)) return;
+
+  // Compute BMI, cals, macros
+  const bmi = calcBMI(p.height, p.weight);
+  const cat = bmi ? bmiCategory(bmi, p.age) : '—';
+  const tgt = targetWeight(p.height, p.age);
+  const kcal = calcCalories(p);
+  const {carbsG, proteinG, fatG, ratios} = macroSplit(p, kcal);
+
+  $('bmiVal').textContent = bmi ? bmi.toFixed(1) : '—';
+  $('bmiCat').textContent = cat;
+  $('targetWt').textContent = typeof tgt==='number' ? fmt(tgt)+' kg' : '—';
+  $('calories').textContent = fmt(kcal);
+
+  let note = '';
+  if(p.age < 18){
+    note = `Youth note: BMI categories use age/sex-specific growth charts. Focus on balanced nutrition and growth.`;
+  } else {
+    note = `For adults, macros use C:${Math.round(ratios.c*100)}% P:${Math.round(ratios.p*100)}% F:${Math.round(ratios.f*100)}%.`;
+  }
+  $('bmiNote').textContent = note;
+
+  renderMacroChart('macroChart', carbsG, proteinG, fatG);
+  $('macroNote').textContent = `Estimated macros from ${fmt(kcal)} kcal/day.`;
+
+  setSteps(2);
+  hide($('details')); hide($('planStep')); hide($('kidsStep')); show($('bmiStep'));
+  document.body.classList.remove('kids-bg');
+});
+
+$('reDetails').addEventListener('click', ()=>{
+  setSteps(1);
+  show($('details')); hide($('bmiStep')); hide($('planStep')); hide($('kidsStep'));
+  document.body.classList.remove('kids-bg');
+});
+
+$('buildPlan').addEventListener('click', ()=>{
+  const p = collect();
+  if(!validate(p)) return;
+
+  const plan = buildPlan(p);
+  $('planSummary').innerHTML = `<strong>Summary:</strong> ${plan.summary}`;
+  $('planBlocks').innerHTML = plan.blocks.map(b => `
+    <div class="meal">
+      <h3>${b.title}</h3>
+      <ul style="margin:6px 0 0 18px">${b.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+
+  // Show kids guide button only if < 10
+  if(isChild(p.age)) show($('toKidsGuide')); else hide($('toKidsGuide'));
+
+  setSteps(3);
+  hide($('details')); hide($('bmiStep')); show($('planStep')); hide($('kidsStep'));
+  document.body.classList.remove('kids-bg');
+});
+
+$('again').addEventListener('click', ()=>{
+  setSteps(2);
+  show($('bmiStep')); hide($('planStep')); hide($('kidsStep'));
+  document.body.classList.remove('kids-bg');
+});
+
+$('toKidsGuide').addEventListener('click', ()=>{
+  const p = collect();
+  if(!(p.age < 10)){ alert('This guide is only for children under 10.'); return; }
+
+  const kcal = calcCalories(p);
+  const {carbsG, proteinG, fatG, ratios} = macroSplit(p, kcal);
+  const b = childBucket(p.age);
+
+  $('kidsCatTxt').textContent = b==='infant'?'Infant (0–1 yr)':(b==='toddler'?'Toddler (1–4 yrs)':'Child (5–10 yrs)');
+  $('kidsDietTxt').textContent = p.diet.toUpperCase();
+  $('kcalKid').textContent = fmt(kcal);
+  $('carbKid').textContent = fmt(carbsG);
+  $('protKid').textContent = fmt(proteinG);
+  $('fatKid').textContent = fmt(fatG);
+
+  // Micros
+  $('kidsVits').innerHTML = KIDS_MICROS[b].vitamins.map(x=>`<li>${x}</li>`).join('');
+  $('kidsMins').innerHTML = KIDS_MICROS[b].minerals.map(x=>`<li>${x}</li>`).join('');
+
+  // Meals preview (from plan DB)
+  const meals = KIDS_PLANS[b][p.diet];
+  const sample = [
+    ...meals.breakfast.slice(0,1),
+    ...meals.lunch.slice(0,1),
+    ...meals.snack.slice(0,1),
+    ...meals.dinner.slice(0,1),
+  ];
+  $('kidsMeals').innerHTML = sample.map(x=>`<li>${x}</li>`).join('');
+
+  renderMacroChart('kidsMacroChart', carbsG, proteinG, fatG);
+  $('kidsMacroNote').textContent = `Using macros C:${Math.round(ratios.c*100)}%, P:${Math.round(ratios.p*100)}%, F:${Math.round(ratios.f*100)}% for ${$('kidsCatTxt').textContent}.`;
+
+  setSteps(4);
+  hide($('details')); hide($('bmiStep')); hide($('planStep')); show($('kidsStep'));
+  document.body.classList.add('kids-bg');
+});
+
+$('backToPlan').addEventListener('click', ()=>{
+  setSteps(3);
+  show($('planStep')); hide($('kidsStep'));
+  document.body.classList.remove('kids-bg');
+});
+$('restart').addEventListener('click', ()=>{
+  setSteps(1);
+  show($('details')); hide($('bmiStep')); hide($('planStep')); hide($('kidsStep'));
+  document.body.classList.remove('kids-bg');
+});
+
+/* ========= Init ========= */
+setSteps(1);
+</script>
+<script src="assets/js/backend.js"></script>
+<script>
+  // Add a floating save button
+  (function(){
+    const btn = document.createElement('button');
+   
+    btn.addEventListener('click', async ()=>{
+      // Collect the current computed values from the page
+      const profile = {
+        age: +document.getElementById('age').value || null,
+        gender: document.getElementById('gender').value,
+        region: document.getElementById('region').value,
+        goal: document.getElementById('goal').value,
+        diet: document.getElementById('veg').classList.contains('active') ? 'veg' : 'nonveg',
+        concerns: document.getElementById('concerns').value,
+        height: +document.getElementById('height').value || null,
+        weight: +document.getElementById('weight').value || null,
+        bmi: parseFloat((document.getElementById('bmiVal').textContent||'').replace(/[^0-9.]/g,'')) || null,
+        calories: parseInt((document.getElementById('calories').textContent||'').replace(/[^0-9]/g,'')) || null,
+        // Not perfect, but try to infer from chart values text when available
+        carbs_g: null, protein_g: null, fat_g: null,
+        plan: Array.from(document.querySelectorAll('#planBlocks .meal')).map(block=>({
+          title: block.querySelector('h3')?.textContent || '',
+          items: Array.from(block.querySelectorAll('li')).map(li=>li.textContent)
+        }))
+      };
+      try{
+        const res = await BackendAPI.saveNutrition(profile);
+        if(res && res.id){ alert('Nutrition saved (id '+res.id+').'); }
+        else { alert(res.error || 'Save failed'); }
+      }catch(err){ alert('Network error'); }
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+
+
+
+/* MAIN SLIDER STYLING CSS */
+
+
+/* MAIN SLIDER */
+#homepage-slider{
+    width:100%;
+    position:relative;
+    overflow:hidden;
+}
+
+.main-slider{
+    position:relative;
+    width:100%;
+    height:520px;
+    overflow:hidden;
+}
+
+.slide{
+    position:absolute;
+    width:100%;
+    height:100%;
+    opacity:0;
+    transition:opacity 1s ease-in-out;
+}
+
+.slide.active{
+    opacity:1;
+    z-index:1;
+}
+
+.slide img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* Overlay Center */
+.slide-overlay{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    color:#fff;
+    width:90%;
+    max-width:1000px;
+}
+
+/* Small title */
+.slide-overlay h4{
+    font-size:24px;
+    font-weight:600;
+    letter-spacing:2px;
+    margin-bottom:25px;
+    text-transform:uppercase;
+}
+
+/* Big bordered title */
+.slide-overlay h2{
+    display:inline-block;
+    border:4px solid rgba(255,255,255,0.7);
+    padding:28px 55px;
+    font-size:60px;
+    font-weight:800;
+    text-transform:uppercase;
+    margin-bottom:35px;
+    color:#fff;
+}
+
+/* Button */
+.slide-btn-main{
+    display:inline-block;
+    background: #bc2121;
+    color:#fff;
+    padding:16px 36px;
+    text-decoration:none;
+    font-size:18px;
+    font-weight:700;
+    transition:.3s;
+}
+
+.slide-btn-main:hover{
+    background:#024283;
+    color:#fff;
+}
+
+/* Slider Nav */
+.slider-btn{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:45px;
+    height:45px;
+    border:none;
+    background:rgba(255,255,255,.8);
+    cursor:pointer;
+    font-size:22px;
+    z-index:5;
+}
+
+.slider-btn:hover{
+    background:#bc2121;
+    color:#fff;
+}
+
+.prev{left:20px;}
+.next{right:20px;}
+
+/* MOBILE */
+@media(max-width:768px){
+
+    .main-slider{
+        height:280px;
+    }
+
+    .slide-overlay h4{
+        font-size:14px;
+        margin-bottom:10px;
+    }
+
+    .slide-overlay h2{
+        font-size:24px;
+        padding:15px 18px;
+        border:2px solid rgba(255,255,255,.7);
+        margin-bottom:20px;
+    }
+
+    .slide-btn-main{
+        padding:10px 18px;
+        font-size:14px;
+    }
+
+    .slider-btn{
+        width:35px;
+        height:35px;
+        font-size:16px;
+    }
+}
+
+
+
+
+ /* Ticker Wrapper — clips overflow and fades edges */
+.logos-ticker-wrapper {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+/* Fade edges for a polished look */
+.logos-ticker-wrapper::before,
+.logos-ticker-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 80px;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+.logos-ticker-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, #fff, transparent);
+}
+.logos-ticker-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, #fff, transparent);
+}
+
+/* The scrolling track */
+.logos-ticker {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: ticker-scroll 15s linear infinite;
+}
+
+/* Pause on hover */
+.logos-ticker:hover {
+    animation-play-state: paused;
+}
+
+/* Each institution card */
+.logo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 30px;
+    min-width: 180px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.logo-item img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.institution-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: #222;
+    margin: 0 0 3px 0;
+    line-height: 1.3;
+}
+
+.institution-address {
+    font-size: 11px;
+    color: #777;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Scroll keyframe — moves left by exactly 50% (the duplicated half) */
+@keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+
+
+
+
+
+        /* UPCOMING EVENTS - COMPACT VERSION */
+        #upcoming-events-compact {
+            padding: 0;
+            background: transparent;
+            margin-bottom: 20px;
+            height: auto; 
+            max-width: 400px; 
+            margin: 0 auto;
+        }
+
+        .events-card-compact {
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border-top: 4px solid #024283;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 6px;
+            height: auto; 
+        }
+
+        /* FIX: REMOVED ASPECT-RATIO SO CONTAINER COLLAPSES TO IMAGE HEIGHT */
+        .event-image-container {
+            width: 100%;
+            height: auto; /* Lets the height adjust perfectly to the rectangular banner */
+            overflow: hidden;
+            background: #021a34; 
+            border-bottom: 1px solid #e2e8f0; 
+            line-height: 0; /* Removes extra baseline inline spacing gaps */
+        }
+
+        .event-image-container img {
+            width: 100%;
+            height: auto; /* Ensures image fills the width naturally without forced spacing */
+            display: block;
+        }
+
+        .events-header-compact {
+            padding: 20px;
+            background: linear-gradient(135deg, #024283 0%, #002b56 100%);
+            color: #fff;
+        }
+
+        .event-badge-compact {
+            background: #bc2121;
+            color: #fff;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .events-header-compact h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .event-subtitle-compact {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #cbd5e1;
+            margin-bottom: 15px;
+        }
+
+        /* COMPACT COUNTDOWN */
+        .countdown-container-compact {
+            margin-top: 0;
+        }
+
+        .countdown-title-compact {
+            font-size: 11px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .countdown-compact {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item-compact {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 6px;
+            border-radius: 6px;
+            min-width: 44px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .countdown-value-compact {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .countdown-label-compact {
+            font-size: 8px;
+            color: #cbd5e1;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 500;
+        }
+
+        .countdown-separator-compact {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            font-weight: 300;
+            margin: 0 1px;
+        }
+
+        /* --- MOBILE RESPONSIVENESS ADJUSTMENTS --- */
+        @media (max-width: 480px) {
+            .events-header-compact {
+                padding: 12px 15px; 
+            }
+
+            .event-badge-compact {
+                margin-bottom: 6px; 
+                font-size: 9px;
+                padding: 3px 10px;
+            }
+
+            .events-header-compact h2 {
+                font-size: 15px; 
+                margin-bottom: 4px; 
+            }
+
+            .event-subtitle-compact {
+                font-size: 11px;
+                margin-bottom: 10px; 
+            }
+
+            .countdown-title-compact {
+                font-size: 10px;
+                margin-bottom: 4px; 
+            }
+
+            .countdown-compact {
+                gap: 2px; 
+            }
+
+            .countdown-item-compact {
+                padding: 4px 4px; 
+                min-width: 38px;
+            }
+
+            .countdown-value-compact {
+                font-size: 14px;
+                min-width: 26px;
+            }
+
+            .countdown-label-compact {
+                font-size: 7px;
+                margin-top: 1px;
+            }
+        }

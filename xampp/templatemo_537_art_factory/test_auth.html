@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Test - ACTIVAURA</title>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/backend.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0284c7;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 ACTIVAURA Authentication Test</h1>
+    
+    <div class="test-card">
+        <h2>Authentication Status</h2>
+        <div id="authStatus" class="status info">Checking authentication...</div>
+        <div id="userInfo" style="display: none;">
+            <h3>User Information</h3>
+            <p><strong>Name:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            <p><strong>User ID:</strong> <span id="userId"></span></p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>Test Actions</h2>
+        <button class="test-button" onclick="testAuthCheck()">Test Auth Check</button>
+        <button class="test-button" onclick="testLogout()">Test Logout</button>
+        <button class="test-button" onclick="goToMainPage()">Go to Main Page</button>
+        <button class="test-button" onclick="goToDashboard()">Go to Dashboard</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Feature Access Test</h2>
+        <p>Try accessing these protected features:</p>
+        <a href="nutri.html" class="test-button" style="text-decoration: none; display: inline-block;">Nutrition Page</a>
+        <a href="workout.html" class="test-button" style="text-decoration: none; display: inline-block;">Workout Page</a>
+        <a href="task.html" class="test-button" style="text-decoration: none; display: inline-block;">Task Page</a>
+        <a href="dashboard.html" class="test-button" style="text-decoration: none; display: inline-block;">Dashboard</a>
+    </div>
+
+    <div class="test-card">
+        <h2>Instructions</h2>
+        <ol>
+            <li>If you're not logged in, you should see a login prompt when accessing protected pages</li>
+            <li>Click "Go to Login" to go to the main page</li>
+            <li>On the main page, click "Join us" to open the login modal</li>
+            <li>Create an account or login with existing credentials</li>
+            <li>After login, you should be able to access all features</li>
+        </ol>
+    </div>
+
+    <script>
+        // Override the showAuthenticatedContent method for test page
+        authManager.showAuthenticatedContent = function() {
+            console.log('Test page - User authenticated:', this.user);
+            
+            const authStatus = document.getElementById('authStatus');
+            const userInfo = document.getElementById('userInfo');
+            
+            authStatus.className = 'status success';
+            authStatus.textContent = '✅ User is authenticated!';
+            
+            // Show user info
+            document.getElementById('userName').textContent = this.user.name;
+            document.getElementById('userEmail').textContent = this.user.email;
+            document.getElementById('userId').textContent = this.user.id;
+            userInfo.style.display = 'block';
+        };
+
+        // Test functions
+        function testAuthCheck() {
+            const authStatus = document.getElementById('authStatus');
+            authStatus.className = 'status info';
+            authStatus.textContent = '🔄 Testing authentication...';
+            
+            authManager.checkAuth().then(isAuthenticated => {
+                if (isAuthenticated) {
+                    authStatus.className = 'status success';
+                    authStatus.textContent = '✅ Authentication test passed!';
+                } else {
+                    authStatus.className = 'status error';
+                    authStatus.textContent = '❌ User is not authenticated';
+                }
+            });
+        }
+
+        function testLogout() {
+            authManager.logout();
+        }
+
+        function goToMainPage() {
+            window.location.href = 'index.html';
+        }
+
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Auto-check authentication when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            authManager.checkAuth();
+        });
+    </script>
+</body>
+</html>

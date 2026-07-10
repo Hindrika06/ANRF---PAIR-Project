@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellness | Health & Sports Hub</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+    background: linear-gradient(135deg, #fdf6f0, #f5f9ff, #fcf8f2, #f4f7fb);
+    background-size: 400% 400%;
+    animation: bgShift 15s ease infinite;
+}
+
+
+/* Smooth background movement */
+@keyframes bgShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
+        /* Header */
+        header {
+            background: linear-gradient(to right, #97d8f2, #084873);
+            padding: 20px 0;
+            text-align: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2em;
+        }
+
+        nav {
+            margin-top: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #c8facc;
+        }
+
+        /* Wellness Tracker Section */
+        .section {
+    padding: 20px 20px; /* less vertical gap */
+}
+
+
+        .section h2 {
+            text-align: center;
+            font-size: 2em;
+            color: #04105b;
+            margin-bottom: 30px;
+        }
+
+        .tracker {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .habit {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f6fff6;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+
+        .habit input {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #ddd;
+            border-radius: 20px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 20px;
+        }
+
+        .progress-container {
+    background: #ddd;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 35px; /* bigger bar */
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* glow effect */
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    text-align: center;
+    line-height: 35px; /* match the height of progress-container */
+    font-weight: bold;
+    color: white;
+    font-size: 16px;
+    transition: width 0.6s ease-in-out; /* smooth animation */
+     white-space: nowrap;
+    overflow: hidden;
+}
+
+
+
+        .gold {
+            background: linear-gradient(90deg, #ffd700, #ffcc33, #ffb300);
+            color: #fff8dc;
+            font-weight: bold;
+        }
+        .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* space between cards */
+    height: auto;
+    padding: 20px 0; /* small top/bottom spacing */
+    flex-wrap: wrap; /* for smaller screens */
+}
+
+
+.step-card, .motivation-card {
+    background: #ffffff;
+    padding: 40px 60px; /* more space inside */
+    border-radius: 16px;
+    box-shadow: 0px 6px 14px rgba(0,0,0,0.15);
+    text-align: center;
+    border: 2px solid #4e99f0;
+    max-width: 500px; /* bigger cards */
+    font-family: Arial, sans-serif;
+}
+
+.step-card p, .motivation-card p {
+    font-size: 1.4rem; /* bigger text */
+}
+
+.step-card:hover, .motivation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 18px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#stepCount {
+    font-size: 3.5rem; /* make number HUGE */
+    font-weight: bold;
+}
+
+
+#motivationBtn {
+    background: #75c6e9;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+#motivationBtn:hover {
+    background: #5cc6e6;
+}
+
+/* Mobile-friendly stacking */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        padding: 20px;
+    }
+}
+
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #1d7cb7;
+            color: white;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Tasks</h1>
+    </header>
+
+    <!-- Habit Tracker Section -->
+    <section class="section">
+        <h2>✅ Build Your Healthy Habits</h2>
+        <div class="tracker">
+            <div class="habit">
+                <span>🧘 Meditation</span>
+                <input type="checkbox" data-habit="meditation">
+            </div>
+            <div class="habit">
+                <span>💧 Drink 8 Glasses of Water</span>
+                <input type="checkbox" data-habit="water">
+            </div>
+            <div class="habit">
+                <span>😴 Sleep 7-9 Hours</span>
+                <input type="checkbox" data-habit="sleep">
+            </div>
+            <div class="habit">
+                <span>🤸 Stretching</span>
+                <input type="checkbox" data-habit="stretching">
+            </div>
+            <div class="habit">
+                <span>🚶‍♂ Daily Walk</span>
+                <input type="checkbox" data-habit="walk">
+            </div>
+            <div class="habit">
+                <span>🥦 Eat Healthy Food</span>
+                <input type="checkbox" data-habit="healthy">
+            </div>
+            <!-- Add Custom Task -->
+<div style="margin-top: 20px; text-align: center;">
+    <input type="text" id="customHabitInput" placeholder="✍ Add your own habit" style="padding: 8px; width: 70%; border-radius: 8px; border: 1px solid #ccc;">
+    <button onclick="addCustomHabit()" style="padding: 8px 15px; margin-left: 8px; border: none; border-radius: 8px; background: #4e99f0; color: white; cursor: pointer;">➕ Add</button>
+</div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">0%</div>
+            </div>
+            <!-- Save Tasks Button -->
+<div style="text-align:center; margin-top: 20px;">
+    <button id="saveTasksBtn" style="padding: 10px 15px; border: none; border-radius: 8px; background: #4e99f0; color: white; cursor: pointer; font-size: 1rem;">
+         Save Tasks
+    </button>
+</div>
+
+        </div>
+        <div class="container">
+    <!-- Steps Counter Card -->
+    <div class="step-card">
+        <h3>👟 Steps Taken Today</h3>
+        <p id="stepCount">0</p>
+        <small>(Move your phone to simulate walking)</small>
+    </div>
+
+    <!-- Daily Motivation Card -->
+    <div class="motivation-card">
+        <h3>💡 Daily Motivation</h3>
+        <p id="motivationText">Press the button for some inspiration</p>
+        <button id="motivationBtn">Get Motivation</button>
+    </div>
+</div>
+</div>
+
+    </section>
+
+    <!-- Footer -->
+    
+
+    <!-- JS -->
+    <script>
+        // Local Storage for Habit Tracker
+        localStorage.clear();
+        const checkboxes = document.querySelectorAll('.habit input');
+        const progressBar = document.querySelector('.progress-bar');
+        const today = new Date().toLocaleDateString();
+        let habitsData = JSON.parse(localStorage.getItem('wellnessHabits')) || {};
+
+        if (habitsData.date !== today) {
+            habitsData = { date: today, habits: {} };
+        }
+
+        function updateProgress() {
+    // Get ALL checkboxes every time — including newly added ones
+    const checkboxes = document.querySelectorAll('.habit input[type="checkbox"]');
+    const total = checkboxes.length;
+    const completed = Array.from(checkboxes).filter(box => box.checked).length;
+    const percent = Math.round((completed / total) * 100);
+
+    progressBar.style.width = percent + '%';
+
+    if (percent === 100) {
+        progressBar.textContent = 'All Done! 🏆';
+        progressBar.classList.add('gold');
+    } else {
+        progressBar.textContent = percent + '%';
+        progressBar.classList.remove('gold');
+    }
+}
+
+
+        checkboxes.forEach(box => {
+            const habit = box.dataset.habit;
+            if (habitsData.habits[habit]) {
+                box.checked = true;
+            }
+            box.addEventListener('change', () => {
+                habitsData.habits[habit] = box.checked;
+                habitsData.date = today;
+                localStorage.setItem('wellnessHabits', JSON.stringify(habitsData));
+                updateProgress();
+            });
+        });
+        updateProgress();
+// ===== Steps Counter =====
+let stepCount = 0;
+let lastAcc = { x: null, y: null, z: null };
+let stepThreshold = 6;
+const stepCountDisplay = document.getElementById('stepCount');
+
+function startStepCounter() {
+    if (window.DeviceMotionEvent) {
+        // For iOS devices - need permission
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('devicemotion', detectSteps);
+                    } else {
+                        alert("Motion permission denied.");
+                    }
+                })
+                .catch(console.error);
+        } else {
+            // Android and others
+            window.addEventListener('devicemotion', detectSteps);
+        }
+    } else {
+        stepCountDisplay.textContent = "Not Supported";
+    }
+}
+
+function detectSteps(event) {
+    const acc = event.accelerationIncludingGravity;
+    if (lastAcc.x !== null) {
+        let deltaX = Math.abs(acc.x - lastAcc.x);
+        let deltaY = Math.abs(acc.y - lastAcc.y);
+        let deltaZ = Math.abs(acc.z - lastAcc.z);
+
+        if (deltaX + deltaY + deltaZ > stepThreshold) {
+            stepCount++;
+            stepCountDisplay.textContent = stepCount;
+        }
+    }
+    lastAcc = { x: acc.x, y: acc.y, z: acc.z };
+}
+
+window.addEventListener('load', startStepCounter);
+
+// ===== Daily Motivation =====
+const motivations = [
+    "Push yourself, because no one else is going to do it for you.",
+    "Every step is progress, no matter how small.",
+    "Wake up with determination, go to bed with satisfaction.",
+    "The only bad workout is the one that didn’t happen.",
+    "Dream big. Work hard. Stay focused."
+];
+
+document.getElementById('motivationBtn').addEventListener('click', () => {
+    const randomIndex = Math.floor(Math.random() * motivations.length);
+    document.getElementById('motivationText').textContent = motivations[randomIndex];
+});
+
+function addCustomHabit() {
+    let input = document.getElementById("customHabitInput");
+    let habitName = input.value.trim();
+
+    if (!habitName) {
+        input.style.border = "2px solid red";
+        setTimeout(() => input.style.border = "", 800);
+        return;
+    }
+
+    let tracker = document.querySelector(".tracker");
+    let habitDiv = document.createElement("div");
+    habitDiv.classList.add("habit");
+    habitDiv.innerHTML = `
+        <span>${habitName}</span>
+        <input type="checkbox" data-habit="${habitName.toLowerCase().replace(/\s+/g, '-')}">
+    `;
+
+    tracker.insertBefore(habitDiv, document.querySelector(".progress-container"));
+
+    let newCheckbox = habitDiv.querySelector('input');
+    newCheckbox.addEventListener('change', () => {
+        habitsData.habits[newCheckbox.dataset.habit] = newCheckbox.checked;
+        habitsData.date = today;
+        localStorage.setItem('wellnessHabits', JSON.stringify(habitsData));
+        updateProgress();
+    });
+
+    input.value = "";
+    updateProgress();
+}
+
+
+    </script>
+    <script src="assets/js/backend.js"></script>
+    <script>
+    (function(){
+        const btn = document.createElement('button');
+        
+
+        btn.addEventListener('click', async ()=>{
+            const tasks = Array.from(document.querySelectorAll('.habit input[type="checkbox"]')).map(chk=>({
+                key: chk.dataset.habit,
+                title: chk.parentElement.querySelector('span')?.textContent || chk.dataset.habit,
+                completed: chk.checked
+            }));
+            const percentTxt = document.querySelector('.progress-bar')?.textContent || '0%';
+            const percent = parseInt(percentTxt) || 0;
+            try{
+                const res = await BackendAPI.saveTasks({ tasks, progress_percent: percent });
+                if(res && res.id){ alert('Tasks saved (id '+res.id+').'); }
+                else { alert(res.error || 'Save failed'); }
+            }catch(err){ alert('Network error'); }
+        });
+    })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Food Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f8ff; /* very light blue page background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Main container with outer light blue, inner white, and black border */
+        .scanner-container {
+            background: white;
+            border: 1px solid black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 360px;
+            text-align: center;
+        }
+
+        video, canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #059669;
+        }
+
+        input[type="file"] {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin: 5px;
+        }
+
+        #result {
+            margin-top: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 14px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Food Scanner</h1>
+
+    <div class="scanner-container">
+        <video id="video" width="300" height="200" autoplay playsinline></video>
+        <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+
+        <button id="capture">Capture from Camera</button>
+        <br>
+        <input type="file" id="uploadImage" accept="image/*">
+        <button id="analyzeUpload">Analyze Uploaded Image</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Start camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                document.getElementById('video').srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing camera: ", err);
+                alert("Camera access was denied or not available.");
+            });
+
+        // Capture image from camera
+        document.getElementById('capture').addEventListener('click', () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataURL = canvas.toDataURL('image/png');
+            document.getElementById('result').innerHTML = `<img src="${dataURL}" width="300" style="border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1)">`;
+        });
+    </script>
+</body>
+</html>

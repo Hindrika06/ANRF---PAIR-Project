@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - ACTIVAURA</title>
+    <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/templatemo-art-factory.css">
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/backend.js"></script>
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0ea5e9;
+        }
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <button class="logout-btn" onclick="authManager.logout()">Logout</button>
+    
+    <div class="dashboard-header">
+        <div class="container">
+            <h1 id="welcomeMessage">Welcome to Your Dashboard</h1>
+            <p>Track your health and fitness journey</p>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top: 40px;">
+        <!-- Stats Section -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="nutritionCount">0</div>
+                    <p>Nutrition Plans</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="workoutCount">0</div>
+                    <p>Workout Plans</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="taskCount">0</div>
+                    <p>Task Records</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row" style="margin-top: 40px;">
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">🥗</div>
+                    <h3>Nutrition Planner</h3>
+                    <p>Create personalized nutrition plans based on your goals and preferences.</p>
+                    <a href="nutri.html" class="btn btn-primary">Go to Nutrition</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">💪</div>
+                    <h3>Workout Recommender</h3>
+                    <p>Get AI-powered workout recommendations tailored to your fitness level.</p>
+                    <a href="workout.html" class="btn btn-primary">Go to Workout</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">✅</div>
+                    <h3>Task Tracker</h3>
+                    <p>Track your daily wellness tasks and build healthy habits.</p>
+                    <a href="task.html" class="btn btn-primary">Go to Tasks</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row" style="margin-top: 40px;">
+            <div class="col-12">
+                <div class="feature-card">
+                    <h3>Recent Activity</h3>
+                    <div id="recentActivity">
+                        <p class="text-muted">No recent activity. Start using the features to see your progress!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Override the showAuthenticatedContent method for dashboard
+    authManager.showAuthenticatedContent = function() {
+        console.log('Dashboard - User authenticated:', this.user);
+        
+        // Update welcome message
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        if (welcomeMessage) {
+            welcomeMessage.textContent = `Welcome back, ${this.user.name}!`;
+        }
+        
+        // Load user stats
+        this.loadUserStats();
+    };
+
+    // Load user statistics
+    authManager.loadUserStats = async function() {
+        try {
+            // Load real user data from database
+            const [nutritionData, workoutData, taskData] = await Promise.all([
+                BackendAPI.getNutritionProfiles(),
+                BackendAPI.getWorkoutPlans(),
+                BackendAPI.getTaskLogs()
+            ]);
+            
+            // Update statistics
+            document.getElementById('nutritionCount').textContent = nutritionData.count || 0;
+            document.getElementById('workoutCount').textContent = workoutData.count || 0;
+            document.getElementById('taskCount').textContent = taskData.count || 0;
+            
+            // Show recent activity
+            const recentActivity = document.getElementById('recentActivity');
+            let activityHTML = '';
+            
+            // Add last login
+            activityHTML += `
+                <div class="alert alert-info">
+                    <strong>Last Login:</strong> ${new Date().toLocaleDateString()}
+                </div>
+            `;
+            
+            // Add latest nutrition plan
+            if (nutritionData.profiles && nutritionData.profiles.length > 0) {
+                const latest = nutritionData.profiles[0];
+                const date = new Date(latest.created_at).toLocaleDateString();
+                activityHTML += `
+                    <div class="alert alert-success">
+                        <strong>Latest Nutrition Plan:</strong> ${latest.goal} plan created on ${date}
+                        <br><small>Calories: ${latest.calories || 'N/A'}, BMI: ${latest.bmi || 'N/A'}</small>
+                    </div>
+                `;
+            }
+            
+            // Add latest workout plan
+            if (workoutData.plans && workoutData.plans.length > 0) {
+                const latest = workoutData.plans[0];
+                const date = new Date(latest.created_at).toLocaleDateString();
+                activityHTML += `
+                    <div class="alert alert-warning">
+                        <strong>Latest Workout Plan:</strong> ${latest.goal} (${latest.minutes} min) created on ${date}
+                        <br><small>Level: ${latest.level}, Focus: ${latest.bodypart}</small>
+                    </div>
+                `;
+            }
+            
+            // Add latest task log
+            if (taskData.logs && taskData.logs.length > 0) {
+                const latest = taskData.logs[0];
+                const date = new Date(latest.created_at).toLocaleDateString();
+                activityHTML += `
+                    <div class="alert alert-primary">
+                        <strong>Latest Task Progress:</strong> ${latest.progress_percent}% completed on ${date}
+                        <br><small>${latest.tasks_json ? latest.tasks_json.length : 0} tasks tracked</small>
+                    </div>
+                `;
+            }
+            
+            if (activityHTML === '') {
+                activityHTML = '<p class="text-muted">No recent activity. Start using the features to see your progress!</p>';
+            }
+            
+            recentActivity.innerHTML = activityHTML;
+            
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            // Show fallback data
+            document.getElementById('nutritionCount').textContent = '0';
+            document.getElementById('workoutCount').textContent = '0';
+            document.getElementById('taskCount').textContent = '0';
+            
+            const recentActivity = document.getElementById('recentActivity');
+            recentActivity.innerHTML = `
+                <div class="alert alert-warning">
+                    <strong>Error loading data:</strong> Please try refreshing the page.
+                </div>
+            `;
+        }
+    };
+
+    // Auto-check authentication when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        authManager.checkAuth();
+    });
+    </script>
+</body>
+</html>

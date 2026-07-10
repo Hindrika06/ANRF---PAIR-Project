@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Storage Test - ACTIVAURA</title>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/backend.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0284c7;
+        }
+        .test-button.success {
+            background: #10b981;
+        }
+        .test-button.warning {
+            background: #f59e0b;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .data-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .data-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .user-info {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗄️ ACTIVAURA Data Storage Test</h1>
+    
+    <div class="user-info" id="userInfo" style="display: none;">
+        <h2>Current User</h2>
+        <p><strong>Name:</strong> <span id="userName"></span></p>
+        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+        <p><strong>User ID:</strong> <span id="userId"></span></p>
+    </div>
+    
+    <div class="test-card">
+        <h2>Test Data Storage</h2>
+        <p>This page tests that each user's data is properly stored and retrieved with their unique user ID.</p>
+        
+        <button class="test-button" onclick="testNutritionStorage()">Test Nutrition Storage</button>
+        <button class="test-button" onclick="testWorkoutStorage()">Test Workout Storage</button>
+        <button class="test-button" onclick="testTaskStorage()">Test Task Storage</button>
+        <button class="test-button" onclick="loadAllUserData()">Load All User Data</button>
+        <button class="test-button warning" onclick="clearTestData()">Clear Test Data</button>
+    </div>
+
+    <div class="test-card">
+        <h2>Test Results</h2>
+        <div id="testResults">
+            <p class="status info">Click the test buttons above to verify data storage.</p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>User's Stored Data</h2>
+        
+        <div class="data-section">
+            <h3>🥗 Nutrition Profiles</h3>
+            <div id="nutritionData">
+                <p class="status info">No nutrition data loaded yet.</p>
+            </div>
+        </div>
+        
+        <div class="data-section">
+            <h3>💪 Workout Plans</h3>
+            <div id="workoutData">
+                <p class="status info">No workout data loaded yet.</p>
+            </div>
+        </div>
+        
+        <div class="data-section">
+            <h3>✅ Task Logs</h3>
+            <div id="taskData">
+                <p class="status info">No task data loaded yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Override the showAuthenticatedContent method for test page
+        authManager.showAuthenticatedContent = function() {
+            console.log('Data storage test page - User authenticated:', this.user);
+            
+            // Show user info
+            document.getElementById('userName').textContent = this.user.name;
+            document.getElementById('userEmail').textContent = this.user.email;
+            document.getElementById('userId').textContent = this.user.id;
+            document.getElementById('userInfo').style.display = 'block';
+        };
+
+        // Test functions
+        function addTestResult(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(resultDiv);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testNutritionStorage() {
+            try {
+                addTestResult('Testing nutrition storage...', 'info');
+                
+                const testData = {
+                    age: 25,
+                    gender: 'male',
+                    region: 'Asia',
+                    goal: 'weight_loss',
+                    diet: 'nonveg',
+                    concerns: 'Test nutrition plan',
+                    height_cm: 175.0,
+                    weight_kg: 70.0,
+                    bmi: 22.9,
+                    calories: 2000,
+                    carbs_g: 250,
+                    protein_g: 150,
+                    fat_g: 67,
+                    plan_json: JSON.stringify([
+                        { title: 'Breakfast', items: ['Oatmeal', 'Banana', 'Milk'] },
+                        { title: 'Lunch', items: ['Chicken Rice', 'Vegetables'] }
+                    ])
+                };
+                
+                const result = await authManager.saveData('nutrition_save.php', testData);
+                
+                if (result && result.id) {
+                    addTestResult(`✅ Nutrition plan saved successfully! ID: ${result.id}`, 'success');
+                } else {
+                    addTestResult(`❌ Nutrition save failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Nutrition test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWorkoutStorage() {
+            try {
+                addTestResult('Testing workout storage...', 'info');
+                
+                const testData = {
+                    goal: 'muscle_gain',
+                    level: 'intermediate',
+                    minutes: 45,
+                    equipment: 'dumbbells',
+                    bodypart: 'upper_body',
+                    plan_json: JSON.stringify([
+                        { title: 'Push-ups', why: 'Build chest strength', meta: 'Body: chest · Level: intermediate' },
+                        { title: 'Dumbbell Rows', why: 'Improve back muscles', meta: 'Body: back · Level: intermediate' }
+                    ])
+                };
+                
+                const result = await authManager.saveData('workout_save.php', testData);
+                
+                if (result && result.id) {
+                    addTestResult(`✅ Workout plan saved successfully! ID: ${result.id}`, 'success');
+                } else {
+                    addTestResult(`❌ Workout save failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Workout test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTaskStorage() {
+            try {
+                addTestResult('Testing task storage...', 'info');
+                
+                const testData = {
+                    tasks_json: JSON.stringify([
+                        { key: 'drink_water', title: 'Drink 8 glasses of water', completed: true },
+                        { key: 'exercise', title: '30 minutes exercise', completed: false },
+                        { key: 'sleep', title: '8 hours sleep', completed: true }
+                    ]),
+                    progress_percent: 67
+                };
+                
+                const result = await authManager.saveData('tasks_save.php', testData);
+                
+                if (result && result.id) {
+                    addTestResult(`✅ Task log saved successfully! ID: ${result.id}`, 'success');
+                } else {
+                    addTestResult(`❌ Task save failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Task test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadAllUserData() {
+            try {
+                addTestResult('Loading all user data...', 'info');
+                
+                const [nutritionData, workoutData, taskData] = await Promise.all([
+                    BackendAPI.getNutritionProfiles(),
+                    BackendAPI.getWorkoutPlans(),
+                    BackendAPI.getTaskLogs()
+                ]);
+                
+                // Display nutrition data
+                const nutritionDiv = document.getElementById('nutritionData');
+                if (nutritionData.profiles && nutritionData.profiles.length > 0) {
+                    nutritionDiv.innerHTML = nutritionData.profiles.map(profile => `
+                        <div class="data-item">
+                            <strong>ID: ${profile.id}</strong> - ${profile.goal} plan<br>
+                            <small>Created: ${new Date(profile.created_at).toLocaleString()}</small><br>
+                            <small>Calories: ${profile.calories || 'N/A'}, BMI: ${profile.bmi || 'N/A'}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    nutritionDiv.innerHTML = '<p class="status info">No nutrition profiles found.</p>';
+                }
+                
+                // Display workout data
+                const workoutDiv = document.getElementById('workoutData');
+                if (workoutData.plans && workoutData.plans.length > 0) {
+                    workoutDiv.innerHTML = workoutData.plans.map(plan => `
+                        <div class="data-item">
+                            <strong>ID: ${plan.id}</strong> - ${plan.goal} (${plan.minutes} min)<br>
+                            <small>Created: ${new Date(plan.created_at).toLocaleString()}</small><br>
+                            <small>Level: ${plan.level}, Focus: ${plan.bodypart}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    workoutDiv.innerHTML = '<p class="status info">No workout plans found.</p>';
+                }
+                
+                // Display task data
+                const taskDiv = document.getElementById('taskData');
+                if (taskData.logs && taskData.logs.length > 0) {
+                    taskDiv.innerHTML = taskData.logs.map(log => `
+                        <div class="data-item">
+                            <strong>ID: ${log.id}</strong> - ${log.progress_percent}% progress<br>
+                            <small>Created: ${new Date(log.created_at).toLocaleString()}</small><br>
+                            <small>Tasks: ${log.tasks_json ? log.tasks_json.length : 0} items</small>
+                        </div>
+                    `).join('');
+                } else {
+                    taskDiv.innerHTML = '<p class="status info">No task logs found.</p>';
+                }
+                
+                addTestResult(`✅ Data loaded successfully! Nutrition: ${nutritionData.count}, Workouts: ${workoutData.count}, Tasks: ${taskData.count}`, 'success');
+                
+            } catch (error) {
+                addTestResult(`❌ Error loading data: ${error.message}`, 'error');
+            }
+        }
+
+        function clearTestData() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<p class="status info">Test results cleared.</p>';
+            
+            document.getElementById('nutritionData').innerHTML = '<p class="status info">No nutrition data loaded yet.</p>';
+            document.getElementById('workoutData').innerHTML = '<p class="status info">No workout data loaded yet.</p>';
+            document.getElementById('taskData').innerHTML = '<p class="status info">No task data loaded yet.</p>';
+        }
+
+        // Auto-check authentication when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            authManager.checkAuth();
+        });
+    </script>
+</body>
+</html>
