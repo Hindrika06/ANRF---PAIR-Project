@@ -652,14 +652,14 @@ select:focus-visible,
 
 /* Arc 3 (largest, outermost): starts at 0.3s, ends at 0.8s */
 .preloader-arc-3 {
-    clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%, 0% 59%, 25% 59%, 25% 41%, 0% 41%);
+    clip-path: polygon(0% 0%, 50% 0%, 50% 41%, 39% 41%, 39% 59%, 50% 59%, 50% 100%, 25% 100%, 25% 0%, 7% 0%, 7% 100%, 0% 100%);
     animation: preArcSlide 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     animation-delay: 0.3s;
 }
 
 /* Arc 2 (middle): starts at 0.8s, ends at 1.3s */
 .preloader-arc-2 {
-    clip-path: polygon(7% 0%, 25% 0%, 25% 38%, 22% 38%, 22% 62%, 25% 62%, 25% 100%, 7% 100%);
+    clip-path: polygon(7% 0%, 25% 0%, 25% 100%, 22% 100%, 22% 0%, 10% 0%, 10% 100%, 7% 100%);
     animation: preArcSlide 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     animation-delay: 0.8s;
 }
