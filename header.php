@@ -505,7 +505,12 @@ $activePage = $activePage ?? '';
                 <!-- LEFT: ANRF logo -->
                 <div class="logo-left">
                     <a href="https://anrfonline.in/ANRF/HomePage">
-                        <img src="logos/ANRF Image.png" alt="ANRF Logo" class="logo-left-img">
+                        <div class="logo-animation-wrapper">
+                            <img src="logos/ANRF Image.png" alt="ANRF Logo" class="logo-left-img logo-static">
+                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-arcs">
+                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-dot">
+                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-text">
+                        </div>
                     </a>
                 </div>
 
