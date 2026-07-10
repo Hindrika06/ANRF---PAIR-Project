@@ -1,4 +1,4 @@
-    <!-- WHATS NEW SCROLLING -->
+<!-- WHATS NEW SCROLLING -->
         <div class="whatsnew-bar">
             <div class="whatsnew-title">What's New</div>
             <div class="whatsnew-scroll">
