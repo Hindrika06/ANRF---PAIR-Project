@@ -1,17 +1,17 @@
 <?php
 session_start();
 
+require_once 'role_access.php';
+
 // ── Check for 'username' and 'institute_prefix' ─────
 if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
     header("Location: index.php");
     exit();
 }
 
-// ── Resolve which institute's tables this user can access ─────────────────
-$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-$prefix = $_SESSION['institute_prefix'];
+$prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
-if (!in_array($prefix, $allowedPrefixes, true)) {
+if (!isValidPrefix($prefix)) {
     die('Invalid institute configuration. Please contact admin.');
 }
 
@@ -141,7 +141,7 @@ foreach ($reports as $report) {
     if (!empty(trim($report['task_no']))) {
         $unique_tasks[trim($report['task_no'])] = true;
     }
-    if (!empty(trim($report['work_package_no']))) {
+    if (!empty(trim($report['work_package_no'] ?? ''))) {
         $total_work_pkgs++;
     }
 }
@@ -353,6 +353,8 @@ $total_unique_tasks   = count($unique_tasks);
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
+
+            <?php include 'institute_banner.php'; ?>
 
             <div class="page-titles">
                 <ol class="breadcrumb">

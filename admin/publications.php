@@ -1,38 +1,20 @@
 <?php
 session_start();
 
+require_once 'role_access.php';
+
 // ── Check for 'username' or 'institute_prefix' ─────
 if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
     header("Location: index.php");
     exit();
 }
 
-// ── Resolve which institute's tables this user can access ─────────────────
-$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-$prefix = $_SESSION['institute_prefix'];
+$prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
-if (!in_array($prefix, $allowedPrefixes, true)) {
+if (!isValidPrefix($prefix)) {
     die('Invalid institute configuration. Please contact admin.');
 }
 
-// Table name built only from a whitelisted value above — safe from injection
-$table = "{$prefix}_patent";
-
-// ── FIX: Check for 'username' or 'institute_prefix' instead of 'user' ─────
-if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
-    header("Location: index.php");
-    exit();
-}
-
-// ── Resolve which institute's tables this user can access ─────────────────
-$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-$prefix = $_SESSION['institute_prefix']; // Successfully pulled from the new DB layout
-
-if (!in_array($prefix, $allowedPrefixes, true)) {
-    die('Invalid institute configuration. Please contact admin.');
-}
-
-// Table name built only from a whitelisted value above — safe from injection
 $table = "{$prefix}_publications";
 
 // ── Database & logic ─────────────────────────────────────────────────────────
@@ -43,6 +25,9 @@ $error   = '';
 
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to delete records for this institute.';
+    } else {
     try {
         $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
@@ -50,6 +35,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
+    }
     }
 }
 
@@ -73,6 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($task_no === '' || $publication_title === '' || $author_name === '' || $publication_journal === '' || $publication_date === '') {
         $error = 'Please fill in all required fields marked with *.';
     } else {
+        if (!canEditInstitute($prefix)) {
+            $error = 'You are not allowed to update records for this institute.';
+        } else {
         try {
             if ($edit_id) {
                 $stmt = $pdo->prepare("
@@ -121,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
+        }
         }
     }
 }
@@ -414,6 +404,8 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
+
+            <?php include 'institute_banner.php'; ?>
 
             <div class="page-titles">
                 <ol class="breadcrumb">
