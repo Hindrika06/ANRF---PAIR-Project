@@ -404,149 +404,129 @@
         }
 
 /* ============================================================
-   HERO LOGO ANIMATION — ANRF-PAIR logo in hero slider only
-   Header logo (.logo-pair-img) is NOT affected.
+   CENTER LOGO ANIMATION SYSTEM
    ============================================================ */
-
-/* Wrapper: positions the logo centered in the overlay */
-.hero-logo-anim-wrap {
+.anrf-logo-animation-wrapper {
     position: relative;
     display: inline-block;
-    width: 220px;
-    height: 220px;
-    margin-bottom: 18px;
-    /* No background, no overlay, no black */
+    line-height: 0;
+    overflow: visible;   /* clip-path on children must NOT be clipped by the parent */
+    vertical-align: middle;
 }
 
-/* All layers share the same base position & size */
-.hero-logo-layer {
+.anrf-logo-layer {
     position: absolute;
     top: 0;
     left: 0;
-    width: 220px;
-    height: 220px;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    /* Hidden by default; animations bring them in */
-    opacity: 0;
+    display: block;
 }
 
-/*
-  The ANRF-PAIR logo (2.png) has two main regions:
-    LEFT half  (0–50% x):  the semicircular arcs + red dot
-    RIGHT half (50–100% x): the "ANRF-PAIR" text block
-
-  Within the left half, the arcs occupy roughly the outer 50% of the
-  left column and the dot sits near the center (≈26–39% x, 41–59% y).
-
-  We define three arc "bands" by progressively unmasking from inside out:
-    Arc1 (innermost): clip to inner ring   ~10–22% x, full height
-    Arc2 (middle)   : clip to middle ring  ~7–25% x, full height
-    Arc3 (outermost): clip all arcs left half minus dot
-    Dot             : clip to dot region   ~26–39% x, 41–59% y
-    Text            : clip to right half   50–100% x
-*/
-
-/* LAYER 1 — innermost arc band */
-#hero-layer-arc1 {
+/* Layer Clips */
+.anrf-layer-arcs {
+    /* Crop right 50% and cut a hole for the red dot */
     clip-path: polygon(
-        10% 0%, 22% 0%,
-        22% 38%, 22% 62%, 22% 100%,
-        10% 100%
+        0% 0%, 
+        50% 0%, 
+        50% 41%, 
+        26% 41%, 
+        26% 59%, 
+        39% 59%, 
+        39% 41%, 
+        50% 41%, 
+        50% 100%, 
+        0% 100%
     );
-    transform-origin: 32% 50%;
-    animation: heroArc1 1.8s ease-in-out forwards;
 }
 
-/* LAYER 2 — middle arc band */
-#hero-layer-arc2 {
-    clip-path: polygon(
-        7% 0%, 25% 0%,
-        25% 38%, 22% 38%,
-        22% 62%, 25% 62%, 25% 100%,
-        7% 100%
-    );
-    transform-origin: 32% 50%;
-    animation: heroArc2 1.8s ease-in-out forwards;
-    animation-delay: 0.25s;
-}
-
-/* LAYER 3 — outermost arcs (full left half minus dot hole) */
-#hero-layer-arc3 {
-    clip-path: polygon(
-        0% 0%,   50% 0%,
-        50% 100%, 0% 100%,
-        0% 59%,  25% 59%,
-        25% 41%, 0% 41%
-    );
-    transform-origin: 32% 50%;
-    animation: heroArc3 1.8s ease-in-out forwards;
-    animation-delay: 0.5s;
-}
-
-/* LAYER 4 — red dot only */
-#hero-layer-dot {
+.anrf-layer-dot {
+    /* Clip precisely to the red dot bounds */
     clip-path: inset(41% 61% 41% 26%);
+    /* Transform origin centered on the red dot */
     transform-origin: 32.5% 50%;
-    animation: heroDot 0.55s ease-in-out forwards;
-    animation-delay: 0.85s;
 }
 
-/* LAYER 5 — ANRF-PAIR text (right half) */
-#hero-layer-text {
+.anrf-layer-text {
+    /* Crop left 50% to show only text */
     clip-path: inset(0% 0% 0% 50%);
-    animation: heroText 0.6s ease-in-out forwards;
-    animation-delay: 1.15s;
 }
 
-/* ---- Keyframes ---- */
+/* Animation Keyframes — Smooth & Extended (2.8 s) */
 
-/* Arc 1: fade + scale from center outward */
-@keyframes heroArc1 {
-    0%   { opacity: 0; transform: scale(0.6);  }
-    30%  { opacity: 1; transform: scale(1.04); }
-    60%  {             transform: scale(0.98); }
-    100% { opacity: 1; transform: scale(1);    }
-}
-
-/* Arc 2: same, slightly slower */
-@keyframes heroArc2 {
-    0%   { opacity: 0; transform: scale(0.65); }
-    35%  { opacity: 1; transform: scale(1.03); }
-    65%  {             transform: scale(0.99); }
-    100% { opacity: 1; transform: scale(1);    }
-}
-
-/* Arc 3: outermost, most delayed */
-@keyframes heroArc3 {
-    0%   { opacity: 0; transform: scale(0.7);  }
-    35%  { opacity: 1; transform: scale(1.02); }
-    65%  {             transform: scale(0.99); }
-    100% { opacity: 1; transform: scale(1);    }
-}
-
-/* Dot: clean scale-in, no bounce */
-@keyframes heroDot {
-    0%   { opacity: 0; transform: scale(0.3);  }
-    60%  { opacity: 1; transform: scale(1.05); }
-    100% { opacity: 1; transform: scale(1);    }
-}
-
-/* Text: smooth fade-in only */
-@keyframes heroText {
-    0%   { opacity: 0; }
-    100% { opacity: 1; }
-}
-
-/* Mobile: scale down the hero logo */
-@media (max-width: 768px) {
-    .hero-logo-anim-wrap,
-    .hero-logo-layer {
-        width: 140px;
-        height: 140px;
+/* ARCS: scale up from slightly small + gentle blur-to-sharp */
+@keyframes anrfArcsReveal {
+    0% {
+        opacity: 0;
+        transform: scale(0.80);
+        filter: blur(6px);
+    }
+    12% {
+        opacity: 1;
+    }
+    30% {
+        transform: scale(1.03);
+        filter: blur(0px);
+    }
+    50% {
+        transform: scale(1);
+    }
+    88% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
     }
 }
 
+/* DOT: starts late, gentle spring overshoot, lingers longer */
+@keyframes anrfDotReveal {
+    0%   { opacity: 0; transform: scale(0);    }
+    35%  { opacity: 0; transform: scale(0);    }
+    50%  { opacity: 1; transform: scale(1.25); }
+    62%  {             transform: scale(0.92); }
+    70%  {             transform: scale(1.06); }
+    78%  {             transform: scale(1);    }
+    88%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1);    }
+}
+
+/* TEXT: slow graceful fade-in, drifts in very slightly from right */
+@keyframes anrfTextReveal {
+    0%   { opacity: 0; transform: translateX(10px); }
+    55%  { opacity: 0; transform: translateX(10px); }
+    75%  { opacity: 1; transform: translateX(0);    }
+    88%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* STATIC LOGO: waits for animation to finish, then fades in cleanly */
+@keyframes anrfStaticFadeIn {
+    0%   { opacity: 0; }
+    86%  { opacity: 0; }
+    94%  { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+/* Assign Animations — Duration 2.8 s */
+.anrf-animate-arcs {
+    animation: anrfArcsReveal 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.anrf-animate-dot {
+    animation: anrfDotReveal 2.8s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+.anrf-animate-text {
+    animation: anrfTextReveal 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.anrf-static-fadein {
+    animation: anrfStaticFadeIn 2.8s ease-out forwards;
+}
 
 /* ============================================================
    NAVIGATION SMOOTH TRANSITIONS

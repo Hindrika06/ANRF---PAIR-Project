@@ -11,19 +11,6 @@
                 <div class="slide active">
                     <img src="assets/img/1.jpg" alt="ANRF PAIR" loading="eager" fetchpriority="high" decoding="async">
                     <div class="slide-overlay">
-                        <!-- HERO LOGO ANIMATION -->
-                        <div class="hero-logo-anim-wrap" id="hero-logo-anim-wrap">
-                            <!-- Layer 1: Innermost arc (clip: show only inner arc region) -->
-                            <img src="2.png" alt="" class="hero-logo-layer" id="hero-layer-arc1">
-                            <!-- Layer 2: Middle arc -->
-                            <img src="2.png" alt="" class="hero-logo-layer" id="hero-layer-arc2">
-                            <!-- Layer 3: Outermost arc -->
-                            <img src="2.png" alt="" class="hero-logo-layer" id="hero-layer-arc3">
-                            <!-- Layer 4: Red dot -->
-                            <img src="2.png" alt="" class="hero-logo-layer" id="hero-layer-dot">
-                            <!-- Layer 5: ANRF-PAIR text (right half) -->
-                            <img src="2.png" alt="" class="hero-logo-layer" id="hero-layer-text">
-                        </div>
                         <h5 style="text-transform:none; font-size:2.5rem; margin-top:-50px;"></h5>
                     </div>
                 </div>
