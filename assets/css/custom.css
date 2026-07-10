@@ -404,129 +404,211 @@
         }
 
 /* ============================================================
-   CENTER LOGO ANIMATION SYSTEM
+   ANRF-PAIR LOGO — PREMIUM REVEAL ANIMATION
    ============================================================ */
-.anrf-logo-animation-wrapper {
+
+.anrf-logo-animation-container {
     position: relative;
     display: inline-block;
-    line-height: 0;
-    overflow: visible;   /* clip-path on children must NOT be clipped by the parent */
     vertical-align: middle;
 }
 
-.anrf-logo-layer {
+.anrf-base-logo {
+    display: block;
+    opacity: 1;
+}
+
+.anrf-anim-layer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    display: block;
+    display: none;
+    opacity: 0;
+    will-change: transform, opacity;
 }
 
 /* Layer Clips */
-.anrf-layer-arcs {
-    /* Crop right 50% and cut a hole for the red dot */
-    clip-path: polygon(
-        0% 0%, 
-        50% 0%, 
-        50% 41%, 
-        26% 41%, 
-        26% 59%, 
-        39% 59%, 
-        39% 41%, 
-        50% 41%, 
-        50% 100%, 
-        0% 100%
-    );
+/* Outermost arc: X from 0% to 13.5% */
+.anrf-arc-1 {
+    clip-path: inset(0% 86.5% 0% 0%);
 }
 
-.anrf-layer-dot {
-    /* Clip precisely to the red dot bounds */
-    clip-path: inset(41% 61% 41% 26%);
-    /* Transform origin centered on the red dot */
-    transform-origin: 32.5% 50%;
+/* Middle arc: X from 13.5% to 25.5% */
+.anrf-arc-2 {
+    clip-path: inset(0% 74.5% 0% 13.5%);
 }
 
-.anrf-layer-text {
-    /* Crop left 50% to show only text */
+/* Innermost arc: X from 25.5% to 50% (excluding the dot height) */
+.anrf-arc-3 {
+    clip-path: polygon(25.5% 0%, 50% 0%, 50% 41%, 25.5% 41%, 25.5% 59%, 50% 59%, 50% 100%, 25.5% 100%);
+}
+
+/* Red dot: X from 25.5% to 39%, Y from 41% to 59% */
+.anrf-dot-layer {
+    clip-path: inset(41% 61% 41% 25.5%);
+    transform-origin: 32.25% 50%;
+}
+
+/* Text: X from 50% to 100% */
+.anrf-text-layer {
     clip-path: inset(0% 0% 0% 50%);
 }
 
-/* Animation Keyframes — Smooth & Extended (2.8 s) */
-
-/* ARCS: scale up from slightly small + gentle blur-to-sharp */
-@keyframes anrfArcsReveal {
-    0% {
-        opacity: 0;
-        transform: scale(0.80);
-        filter: blur(6px);
-    }
-    12% {
-        opacity: 1;
-    }
-    30% {
-        transform: scale(1.03);
-        filter: blur(0px);
-    }
-    50% {
-        transform: scale(1);
-    }
-    88% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: scale(1);
-    }
+/* Animation triggers */
+.anrf-logo-animation-container.anrf-animating .anrf-base-logo {
+    animation: animBase 2.6s ease-in-out forwards;
 }
 
-/* DOT: starts late, gentle spring overshoot, lingers longer */
-@keyframes anrfDotReveal {
-    0%   { opacity: 0; transform: scale(0);    }
-    35%  { opacity: 0; transform: scale(0);    }
-    50%  { opacity: 1; transform: scale(1.25); }
-    62%  {             transform: scale(0.92); }
-    70%  {             transform: scale(1.06); }
-    78%  {             transform: scale(1);    }
-    88%  { opacity: 1; }
-    100% { opacity: 0; transform: scale(1);    }
+.anrf-logo-animation-container.anrf-animating .anrf-anim-layer {
+    display: block;
 }
 
-/* TEXT: slow graceful fade-in, drifts in very slightly from right */
-@keyframes anrfTextReveal {
-    0%   { opacity: 0; transform: translateX(10px); }
-    55%  { opacity: 0; transform: translateX(10px); }
-    75%  { opacity: 1; transform: translateX(0);    }
-    88%  { opacity: 1; }
-    100% { opacity: 0; }
+.anrf-logo-animation-container.anrf-animating .anrf-arc-1 {
+    animation: animArc1 2.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* STATIC LOGO: waits for animation to finish, then fades in cleanly */
-@keyframes anrfStaticFadeIn {
-    0%   { opacity: 0; }
-    86%  { opacity: 0; }
-    94%  { opacity: 1; }
+.anrf-logo-animation-container.anrf-animating .anrf-arc-2 {
+    animation: animArc2 2.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.08s;
+}
+
+.anrf-logo-animation-container.anrf-animating .anrf-arc-3 {
+    animation: animArc3 2.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.16s;
+}
+
+.anrf-logo-animation-container.anrf-animating .anrf-dot-layer {
+    animation: animDot 1.7s forwards;
+    animation-delay: 0.9s;
+}
+
+.anrf-logo-animation-container.anrf-animating .anrf-text-layer {
+    animation: animText 1.0s ease-out forwards;
+    animation-delay: 1.6s;
+}
+
+/* Keyframes */
+
+/* Base logo: remains hidden until the animation completes, then fades in and stays */
+@keyframes animBase {
+    0% { opacity: 0; }
+    85% { opacity: 0; }
     100% { opacity: 1; }
 }
 
-/* Assign Animations — Duration 2.8 s */
-.anrf-animate-arcs {
-    animation: anrfArcsReveal 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+/* Arcs: staggered slide in from left and fade in */
+@keyframes animArc1 {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    25% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    92% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(0);
+    }
 }
 
-.anrf-animate-dot {
-    animation: anrfDotReveal 2.8s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+@keyframes animArc2 {
+    0% {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    25% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    92% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(0);
+    }
 }
 
-.anrf-animate-text {
-    animation: anrfTextReveal 2.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+@keyframes animArc3 {
+    0% {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    25% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    92% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(0);
+    }
 }
 
-.anrf-static-fadein {
-    animation: anrfStaticFadeIn 2.8s ease-out forwards;
+/* Red dot: drops vertically with a bounce effect */
+@keyframes animDot {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    45% {
+        transform: translateY(-6px);
+    }
+    60% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-2px);
+    }
+    85% {
+        transform: translateY(0);
+    }
+    88% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(0);
+    }
 }
+
+/* Text: fades in with slight upward movement (5px) */
+@keyframes animText {
+    0% {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    35% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    80% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(0);
+    }
+}
+
 
 /* ============================================================
    NAVIGATION SMOOTH TRANSITIONS
