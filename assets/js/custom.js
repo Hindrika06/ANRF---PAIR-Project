@@ -241,20 +241,75 @@ $(document).ready(function($) {
         $(this).text($(this).text().substring(0,25));
     });
 
-    // Center Logo (ANRF-PAIR) Premium Entrance Animation
+    // Center Logo (ANRF-PAIR) Animation Setup
     (function() {
-        var container = document.querySelector('.anrf-logo-animation-container');
-        if (!container) return;
+        var $logo = $('.logo-pair-img').first();
+        if ($logo.length === 0) return;
 
-        // Check sessionStorage to play only once per session
-        if (!sessionStorage.getItem('anrf_logo_animated')) {
-            sessionStorage.setItem('anrf_logo_animated', 'true');
-            container.classList.add('anrf-animating');
-            
-            // Clean up class after animation finishes (2.8 seconds)
+        var logoSrc = $logo.attr('src');
+
+        function runAnimation() {
+            // Read rendered dimensions of the original logo
+            var w = $logo[0].offsetWidth;
+            var h = $logo[0].offsetHeight;
+
+            // If dimensions are zero (image not yet rendered), skip gracefully
+            if (!w || !h) return;
+
+            // Build the wrapper with explicit pixel dimensions so absolute layers work
+            var $wrapper = $('<div class="anrf-logo-animation-wrapper"></div>').css({
+                width:    w + 'px',
+                height:   h + 'px',
+                overflow: 'visible'   // allow clip-path to work without being clipped by parent
+            });
+
+            // Clone layers — each is a full copy of the logo image, clipped via CSS
+            var $staticLogo = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-static-fadein')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $arcs = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-arcs anrf-animate-arcs')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $dot = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-dot anrf-animate-dot')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $text = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-text anrf-animate-text')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            // Wrap and inject
+            $logo.wrap($wrapper);
+            var $parent = $logo.parent(); // now the wrapper
+
+            // Hide the real logo during animation
+            $logo.hide();
+
+            $parent.append($staticLogo);
+            $parent.append($arcs);
+            $parent.append($dot);
+            $parent.append($text);
+
+            // After animation (2.8 s), clean up and restore
             setTimeout(function() {
-                container.classList.remove('anrf-animating');
-            }, 2800);
+                $logo.show();
+                $staticLogo.remove();
+                $arcs.remove();
+                $dot.remove();
+                $text.remove();
+                if ($logo.parent().hasClass('anrf-logo-animation-wrapper')) {
+                    $logo.unwrap();
+                }
+            }, 2850);
+        }
+
+        // Run after the logo image has fully loaded (needed for offsetWidth/Height)
+        if ($logo[0].complete && $logo[0].naturalWidth > 0) {
+            runAnimation();
+        } else {
+            $logo.on('load', runAnimation);
         }
     })();
 

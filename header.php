@@ -512,16 +512,7 @@ $activePage = $activePage ?? '';
                 <!-- CENTER: PAIR badge + title text -->
                 <div class="logo-center">
                     <a href="index.php" class="logo-center-link">
-                        <div class="anrf-logo-animation-container">
-                            <!-- Base logo: acts as layout setter and remains visible after animation -->
-                            <img src="2.png" alt="ANRF-PAIR Logo" class="logo-pair-img anrf-base-logo">
-                            <!-- Animation layers -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-anim-layer anrf-arc-1">
-                            <img src="2.png" alt="" class="logo-pair-img anrf-anim-layer anrf-arc-2">
-                            <img src="2.png" alt="" class="logo-pair-img anrf-anim-layer anrf-arc-3">
-                            <img src="2.png" alt="" class="logo-pair-img anrf-anim-layer anrf-dot-layer">
-                            <img src="2.png" alt="" class="logo-pair-img anrf-anim-layer anrf-text-layer">
-                        </div>
+                        <img src="2.png" alt="ANRF-PAIR Logo" class="logo-pair-img">
                     </a>
                 </div>
 
