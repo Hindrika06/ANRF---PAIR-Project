@@ -492,58 +492,6 @@ $activePage = $activePage ?? '';
 </head>
 
 <body class="page-homepage-courses">
-<div id="anrf-preloader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #ffffff; z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 1;">
-    <div class="anrf-preloader-logo-container">
-        <!-- Base logo acts as sizing reference -->
-        <img src="2.png" alt="ANRF-PAIR Logo" class="anrf-preloader-base">
-        <!-- Animated overlay layers: Arc 1 (smallest) to Arc 8 (largest) -->
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-1">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-2">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-3">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-4">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-5">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-6">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-7">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-arc-8">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-dot">
-        <img src="2.png" alt="" class="anrf-preloader-layer preloader-text">
-    </div>
-</div>
-<script>
-(function() {
-    var isReload = false;
-    try {
-        isReload = (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0] && window.performance.getEntriesByType('navigation')[0].type === 'reload');
-    } catch(e) {}
-    
-    var hasPlayed = sessionStorage.getItem('anrf_preloader_played');
-    var loader = document.getElementById('anrf-preloader');
-    
-    if (hasPlayed && !isReload) {
-        if (loader) {
-            loader.style.display = 'none';
-            loader.parentNode.removeChild(loader);
-        }
-    } else {
-        sessionStorage.setItem('anrf_preloader_played', 'true');
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-        
-        setTimeout(function() {
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(function() {
-                    if (loader.parentNode) {
-                        loader.parentNode.removeChild(loader);
-                    }
-                    document.documentElement.style.overflow = '';
-                    document.body.style.overflow = '';
-                }, 400);
-            }
-        }, 3000);
-    }
-})();
-</script>
 <div class="wrapper">
 
 <!-- ===== HEADER ===================================================== -->
