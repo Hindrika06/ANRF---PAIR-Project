@@ -292,7 +292,7 @@ $(document).ready(function($) {
             $parent.append($dot);
             $parent.append($text);
 
-            // After animation (1.85 s), clean up and restore
+            // After animation (2.8 s), clean up and restore
             setTimeout(function() {
                 $logo.show();
                 $staticLogo.remove();
@@ -302,7 +302,7 @@ $(document).ready(function($) {
                 if ($logo.parent().hasClass('anrf-logo-animation-wrapper')) {
                     $logo.unwrap();
                 }
-            }, 1850);
+            }, 2850);
         }
 
         // Run after the logo image has fully loaded (needed for offsetWidth/Height)
