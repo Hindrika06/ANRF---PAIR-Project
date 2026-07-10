@@ -1,0 +1,117 @@
+/* ============================================================
+   PRELOADER STYLESHEET
+   ============================================================ */
+
+#anrf-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 400ms ease-in-out;
+}
+
+.anrf-preloader-svg {
+    width: 450px;
+    height: 160px;
+    display: block;
+}
+
+/* SVG Path Sizing & Coloration */
+.arc-path {
+    fill: none;
+    stroke: #6F2C91;
+    stroke-width: 4.5px;
+    stroke-linecap: round;
+    opacity: 0;
+    will-change: opacity;
+}
+
+.dot-path {
+    fill: #BC2121;
+    opacity: 0;
+    will-change: opacity;
+}
+
+.text-path {
+    opacity: 0;
+    will-change: opacity;
+}
+
+/* Opacity-only Fade Keyframe */
+@keyframes prePureFade {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Staggered Delay Assignments — non-overlapping sequence */
+
+/* Arc 1 (smallest inner): starts at 0.3s */
+.arc-1 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 0.30s;
+}
+
+/* Arc 2: starts at 0.48s */
+.arc-2 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 0.48s;
+}
+
+/* Arc 3: starts at 0.66s */
+.arc-3 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 0.66s;
+}
+
+/* Arc 4: starts at 0.84s */
+.arc-4 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 0.84s;
+}
+
+/* Arc 5: starts at 1.02s */
+.arc-5 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 1.02s;
+}
+
+/* Arc 6: starts at 1.20s */
+.arc-6 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 1.20s;
+}
+
+/* Arc 7: starts at 1.38s */
+.arc-7 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 1.38s;
+}
+
+/* Arc 8 (largest outer): starts at 1.56s */
+.arc-8 {
+    animation: prePureFade 0.15s ease-in-out forwards;
+    animation-delay: 1.56s;
+}
+
+/* Red Dot: starts at 1.80s (after last arc completes and 200ms wait) */
+.dot-path {
+    animation: prePureFade 0.40s ease-in-out forwards;
+    animation-delay: 1.80s;
+}
+
+/* Text block: starts at 2.20s (after dot settles and 200ms wait) */
+.text-path {
+    animation: prePureFade 0.40s ease-in-out forwards;
+    animation-delay: 2.20s;
+}
