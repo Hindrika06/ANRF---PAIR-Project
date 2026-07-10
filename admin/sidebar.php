@@ -1,10 +1,16 @@
+<?php
+if (!isset($GLOBALS['__role_access_loaded'])) { require_once 'role_access.php'; $GLOBALS['__role_access_loaded'] = true; }
+$__brandPrefix = resolveAdminPrefix();
+?>
+
 <!--**********************************
     Nav header start
 ***********************************-->
-<!-- Added missing '#' to hex code and a soft shadow for depth -->
+<!-- Logo + name reflect whichever institute is logged in / currently active -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
     <a href="index.html" class="brand-logo">
-        <img src="logo/3.png" alt="University of Hyderabad Logo" class="logo-img">
+        <img src="<?= htmlspecialchars(getInstituteLogo($__brandPrefix)) ?>" alt="<?= htmlspecialchars(getInstituteFullName($__brandPrefix)) ?> Logo" class="logo-img">
+        <span class="brand-institute-name"><?= htmlspecialchars(getInstituteFullName($__brandPrefix)) ?></span>
     </a>
     <div class="nav-control">
         <div class="hamburger">
@@ -18,14 +24,31 @@
 
 <style>
 /* --- Global & Header Updates --- */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    overflow: hidden;
+}
 .logo-img {
-    max-height: 45px; 
+    max-height: 45px;
     width: auto;
+    flex-shrink: 0;
     object-fit: contain;
     transition: transform 0.3s ease;
 }
 .logo-img:hover {
     transform: scale(1.03); /* Subtle pop when hovering over the logo */
+}
+.brand-institute-name {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #024283;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- Attractive Sidebar Styling --- */
@@ -100,6 +123,12 @@
 <!-- Added 'custom-sidebar' class for custom stylings -->
 <div class="dlabnav custom-sidebar">
     <div class="dlabnav-scroll" style="display: flex; flex-direction: column; height: 100%;">
+        <div style="padding: 12px 18px 10px; color: #fff; font-size: 12px; opacity: 0.95;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;background:#0f3a72;color:#ffffff;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">
+                <i class="fas <?= isSuperAdmin() ? 'fa-shield-alt' : 'fa-user-shield' ?>" style="color:#ffffff;"></i>
+                <span><?= isSuperAdmin() ? '🛡️ SUPER ADMIN PORTAL' : '👤 ADMIN PORTAL' ?></span>
+            </div>
+        </div>
         <!-- Main Navigation Links -->
         <ul class="metismenu" id="menu" style="flex: 1;">
             <li>
@@ -138,6 +167,14 @@
                     <span class="nav-text">Progress Reports</span>
                 </a>
             </li>
+            <?php if (isSuperAdmin()): ?>
+            <li>
+                <a href="manage_admins.php" aria-expanded="false">
+                    <i class="fas fa-users-cog"></i>
+                    <span class="nav-text">Manage Admins</span>
+                </a>
+            </li>
+            <?php endif; ?>
         </ul>
 
         <!-- Logout Button Section -->

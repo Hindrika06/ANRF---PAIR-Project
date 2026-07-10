@@ -121,19 +121,10 @@
 								</div>
 							</li>
 							
-							<li class="nav-item dropdown  header-profile">
-								<a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
+							<li class="nav-item header-profile">
+								<a class="nav-link" href="logout.php" title="Logout">
 									<img src="logo/logo.png" width="30" alt="">
 								</a>
-								<div class="dropdown-menu dropdown-menu-end">
-									<div class="dropdown-item text-center border-bottom pb-2 mb-2">
-										<img src="logo/logo.png" alt="logo" style="max-width: 120px;">
-									</div>
-									<a href="index.php" class="dropdown-item ai-icon">
-										<svg id="icon-logout" xmlns="http://www.w3.org/2000/svg" class="text-danger" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-										<span class="ms-2">Logout </span>
-									</a>
-								</div>
 							</li>
                         </ul>
                     </div>

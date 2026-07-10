@@ -241,6 +241,78 @@ $(document).ready(function($) {
         $(this).text($(this).text().substring(0,25));
     });
 
+    // Center Logo (ANRF-PAIR) Animation Setup
+    (function() {
+        var $logo = $('.logo-pair-img').first();
+        if ($logo.length === 0) return;
+
+        var logoSrc = $logo.attr('src');
+
+        function runAnimation() {
+            // Read rendered dimensions of the original logo
+            var w = $logo[0].offsetWidth;
+            var h = $logo[0].offsetHeight;
+
+            // If dimensions are zero (image not yet rendered), skip gracefully
+            if (!w || !h) return;
+
+            // Build the wrapper with explicit pixel dimensions so absolute layers work
+            var $wrapper = $('<div class="anrf-logo-animation-wrapper"></div>').css({
+                width:    w + 'px',
+                height:   h + 'px',
+                overflow: 'visible'   // allow clip-path to work without being clipped by parent
+            });
+
+            // Clone layers — each is a full copy of the logo image, clipped via CSS
+            var $staticLogo = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-static-fadein')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $arcs = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-arcs anrf-animate-arcs')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $dot = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-dot anrf-animate-dot')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            var $text = $('<img>').attr({ src: logoSrc, alt: '' })
+                .addClass('logo-pair-img anrf-logo-layer anrf-layer-text anrf-animate-text')
+                .css({ width: w + 'px', height: h + 'px', maxHeight: 'none' });
+
+            // Wrap and inject
+            $logo.wrap($wrapper);
+            var $parent = $logo.parent(); // now the wrapper
+
+            // Hide the real logo during animation
+            $logo.hide();
+
+            $parent.append($staticLogo);
+            $parent.append($arcs);
+            $parent.append($dot);
+            $parent.append($text);
+
+            // After animation (1.85 s), clean up and restore
+            setTimeout(function() {
+                $logo.show();
+                $staticLogo.remove();
+                $arcs.remove();
+                $dot.remove();
+                $text.remove();
+                if ($logo.parent().hasClass('anrf-logo-animation-wrapper')) {
+                    $logo.unwrap();
+                }
+            }, 1850);
+        }
+
+        // Run after the logo image has fully loaded (needed for offsetWidth/Height)
+        if ($logo[0].complete && $logo[0].naturalWidth > 0) {
+            runAnimation();
+        } else {
+            $logo.on('load', runAnimation);
+        }
+    })();
+
 });
 
 
@@ -278,6 +350,8 @@ if (typeof _date != 'undefined') { // run function only if _date is defined
                         const eventDate = new Date('2026-05-20T10:00:00+05:30').getTime();
                         
                         function tick() {
+                            const daysEl = document.getElementById('days');
+                            if (!daysEl) return;
                             const now = new Date().getTime();
                             const distance = eventDate - now;
                             

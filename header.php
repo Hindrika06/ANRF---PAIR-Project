@@ -159,8 +159,18 @@ $activePage = $activePage ?? '';
             padding: 0 !important;
 
         }
+        /* Slightly widen the nav container (Bootstrap normally caps this at
+           1170px) so the extra Login item has room to sit next to Contact
+           without wrapping onto its own line. */
+        .menu-bar-wrapper .container {
+            width: 100% !important;
+            max-width: 1300px !important;
+            padding: 0 20px !important;
+        }
         .menu-bar-wrapper .nav.navbar-nav {
             width: 100%;
+            display: flex;
+            flex-wrap: nowrap;
             justify-content: center;
             float: none;
             padding: 0 !important;
@@ -181,12 +191,20 @@ $activePage = $activePage ?? '';
             line-height: 1 !important;
             height: auto !important;
             display: inline-block !important;
+            white-space: nowrap;
             border-right: 1px solid rgba(255,255,255,0.2);
         }
         .menu-bar-wrapper .nav.navbar-nav > li:last-child > a { border-right: none; }
         .menu-bar-wrapper .nav.navbar-nav > li > a i { margin-right: 4px; font-size: 18px; }
         .menu-bar-wrapper .nav.navbar-nav > li > a:hover,
         .menu-bar-wrapper .nav.navbar-nav > li.active > a { background-color: rgba(255,255,255,0.1); }
+
+        /* Login's dropdown opens right-aligned since it's the rightmost item
+           and would otherwise overflow past the edge of the bar. */
+        .menu-bar-wrapper .nav.navbar-nav > li.nav-login .child-navigation {
+            left: auto;
+            right: 0;
+        }
 
         /* Desktop dropdowns */
         .menu-bar-wrapper .child-navigation {
@@ -364,6 +382,9 @@ $activePage = $activePage ?? '';
                 margin: 0 !important;
             }
             .menu-bar-wrapper .nav.navbar-nav > li:last-child { border-bottom: none; }
+            .menu-bar-wrapper .nav.navbar-nav > li.nav-login .child-navigation {
+                right: auto;
+            }
             .menu-bar-wrapper .nav.navbar-nav > li > a {
                 display: flex !important;
                 align-items: center;
@@ -476,8 +497,6 @@ $activePage = $activePage ?? '';
 <!-- ===== HEADER ===================================================== -->
 <div class="navigation-wrapper">
 
-    <?php include 'topbar.php'; ?>
-
     <!-- Logo Section -->
     <div class="logo-section">
         <div class="container">
@@ -486,12 +505,7 @@ $activePage = $activePage ?? '';
                 <!-- LEFT: ANRF logo -->
                 <div class="logo-left">
                     <a href="https://anrfonline.in/ANRF/HomePage">
-                        <div class="logo-animation-wrapper">
-                            <img src="logos/ANRF Image.png" alt="ANRF Logo" class="logo-left-img logo-static">
-                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-arcs">
-                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-dot">
-                            <img src="logos/ANRF Image.png" alt="" class="logo-left-img logo-layer logo-layer-text">
-                        </div>
+                        <img src="logos/ANRF Image.png" alt="ANRF Logo" class="logo-left-img">
                     </a>
                 </div>
 
@@ -597,6 +611,15 @@ $activePage = $activePage ?? '';
                                 <a href="#" class="has-child"><i class="fa fa-envelope"></i> Contact</a>
                                 <ul class="list-unstyled child-navigation">
                                     <li><a href="contact-us.php"><i class="fa fa-phone"></i> Contact Us</a></li>
+                                </ul>
+                            </li>
+
+                            <!-- 8. Login -->
+                            <li class="nav-login">
+                                <a href="#" class="has-child"><i class="fa fa-sign-in"></i> Login</a>
+                                <ul class="list-unstyled child-navigation">
+                                    <li><a href="admin/index.php"><i class="fa fa-user"></i> Hub Admin</a></li>
+                                    <li><a href="admin/index.php"><i class="fa fa-user"></i> Admin</a></li>
                                 </ul>
                             </li>
 
