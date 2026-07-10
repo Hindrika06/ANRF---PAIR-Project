@@ -512,21 +512,7 @@ $activePage = $activePage ?? '';
                 <!-- CENTER: PAIR badge + title text -->
                 <div class="logo-center">
                     <a href="index.php" class="logo-center-link">
-                        <!-- Animation stage: base img sets layout; layers animate on top -->
-                        <div class="anrf-logo-stage" id="anrfLogoStage">
-                            <!-- Base: always-visible final logo (hidden only during animation) -->
-                            <img src="2.png" alt="ANRF-PAIR Logo" class="logo-pair-img anrf-stage-base">
-                            <!-- Arc layer 1: outer arc strip, slides in first -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-stage-layer anrf-arc-1" aria-hidden="true">
-                            <!-- Arc layer 2: wider arc group, slides in second -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-stage-layer anrf-arc-2" aria-hidden="true">
-                            <!-- Arc layer 3: full arc region, completes the arcs -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-stage-layer anrf-arc-3" aria-hidden="true">
-                            <!-- Dot layer: drops from above after arcs assemble -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-stage-layer anrf-dot" aria-hidden="true">
-                            <!-- Text layer: fades in last -->
-                            <img src="2.png" alt="" class="logo-pair-img anrf-stage-layer anrf-text" aria-hidden="true">
-                        </div>
+                        <img src="2.png" alt="ANRF-PAIR Logo" class="logo-pair-img">
                     </a>
                 </div>
 
