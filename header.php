@@ -488,12 +488,9 @@ $activePage = $activePage ?? '';
         }
 
     </style>
-    <link rel="stylesheet" href="assets/css/preloader.css">
 </head>
 
 <body class="page-homepage-courses">
-<?php include 'preloader.php'; ?>
-<script src="assets/js/preloader.js"></script>
 <div class="wrapper">
 
 <!-- ===== HEADER ===================================================== -->
