@@ -1,4 +1,4 @@
-    <!-- WHATS NEW SCROLLING -->
+<!-- WHATS NEW SCROLLING -->
         <div class="whatsnew-bar">
             <div class="whatsnew-title">What's New</div>
             <div class="whatsnew-scroll">
@@ -26,7 +26,6 @@
     display:flex;
     align-items:center;
     background:#ffffff;
-    border-top:3px solid #bc2121;
     border-bottom:1px solid #ddd;
     box-shadow:0 2px 8px rgba(0,0,0,0.05);
     margin-bottom:20px;
@@ -35,26 +34,38 @@
 .whatsnew-title{
     background:#bc2121;
     color:#fff;
-    padding:14px 22px;
+    width:190px;              /* Fixed width */
+    height:55px;              /* Fixed height */
+    display:flex;
+    align-items:center;
+    justify-content:center;
     font-size:16px;
     font-weight:700;
-    white-space:nowrap;
 }
 
 .whatsnew-scroll{
     flex:1;
+    background:#0056b3;
+    height:55px;              /* Same height */
+    display:flex;
+    align-items:center;
     padding:0 15px;
 }
 
+.whatsnew-scroll marquee{
+    line-height:55px;
+    height:55px;
+}
+
 .whatsnew-scroll a{
-    color:#2f5fb8;
+    color:#ffffff;
     font-size:14px;
     font-weight:600;
     text-decoration:none;
 }
 
 .whatsnew-scroll a:hover{
-    color:#bc2121;
+    color:#ffffff;
 }
 
 /* MOBILE */

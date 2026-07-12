@@ -1255,6 +1255,86 @@ ul.list-links a:hover {
   vertical-align: top;
 }
 
+/* ======= EVENT NOTICE BOARD ======= */
+.notice-summary {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.notice-summary-date {
+  font-size: 14px;
+  font-weight: 700;
+  color: #14213a;
+  margin-bottom: 12px;
+}
+
+.notice-summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notice-summary-item {
+  padding: 12px 10px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+  border: 1px solid rgba(47, 95, 184, 0.14);
+  box-shadow: 0 10px 20px rgba(47, 95, 184, 0.05);
+}
+
+.notice-summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.notice-event-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #14213a;
+  margin-bottom: 8px;
+}
+
+.notice-event-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.notice-event-meta span {
+  display: block;
+}
+
+.notice-event-coordinator{
+    display:block;
+    margin-top:4px;
+    color:#666;
+    font-size:12px;
+    font-weight:400;
+    line-height:1.4;
+}
+
+.notice-empty {
+  font-size: 13px;
+  color: #7a7a7a;
+  font-style: italic;
+  text-align: left;
+  padding: 14px 0;
+}
+
+#notice-board-body {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+@media (max-width: 680px) {
+  .notice-summary-item {
+    padding: 10px 10px;
+  }
+}
+
 /****
   H
 ****/
