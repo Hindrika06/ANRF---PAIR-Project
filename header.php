@@ -486,11 +486,298 @@ $activePage = $activePage ?? '';
             .project-title-main    { font-size: 9px !important; }
             .project-title-tagline { display: none !important; }
         }
+        /* ============================================================
+           FULL SCREEN PRELOADER (CINEMATIC DARK OVERLAY & BLUR)
+           ============================================================ */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            box-sizing: border-box;
+            
+            /* Preloader Dissolution Transitions */
+            transition: backdrop-filter 500ms ease-in-out, -webkit-backdrop-filter 500ms ease-in-out, opacity 500ms ease-in-out;
+        }
 
+        body:not(.preloader-active) #preloader {
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            opacity: 0;
+        }
+
+        #preloader .preloader-logo-container {
+            width: 240px;
+            height: 180px;
+            display: block;
+            mix-blend-mode: multiply;
+        }
+
+        #preloader svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Preloader CSS Animations */
+        .layer-arc-5 {
+            opacity: 0;
+            animation: preloader-fade-in 250ms ease-in-out forwards;
+            animation-delay: 0ms;
+        }
+        .layer-arc-4 {
+            opacity: 0;
+            animation: preloader-fade-in 250ms ease-in-out forwards;
+            animation-delay: 200ms;
+        }
+        .layer-arc-3 {
+            opacity: 0;
+            animation: preloader-fade-in 250ms ease-in-out forwards;
+            animation-delay: 400ms;
+        }
+        .layer-arc-2 {
+            opacity: 0;
+            animation: preloader-fade-in 250ms ease-in-out forwards;
+            animation-delay: 600ms;
+        }
+        .layer-arc-1 {
+            opacity: 0;
+            animation: preloader-fade-in 250ms ease-in-out forwards;
+            animation-delay: 800ms;
+        }
+
+        .layer-dot {
+            opacity: 0;
+            transform-origin: 60px 31px;
+            animation: preloader-dot-animation 250ms ease-in-out forwards;
+            animation-delay: 1000ms;
+        }
+
+        .layer-text {
+            opacity: 0;
+            animation: preloader-text-animation 250ms ease-in-out forwards;
+            animation-delay: 1150ms;
+        }
+
+        .layer-final {
+            opacity: 0;
+            animation: preloader-fade-in 100ms ease-in-out forwards;
+            animation-delay: 1400ms;
+        }
+
+        @keyframes preloader-fade-in {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes preloader-dot-animation {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1.0);
+            }
+        }
+
+        @keyframes preloader-text-animation {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body.preloader-active {
+            overflow: hidden !important;
+        }
+
+        /* ── Loading Text & Progress Bar ─────────────────────────── */
+        #preloader .preloader-loading-block {
+            position: absolute;
+            bottom: calc(50% - 130px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            animation: preloader-fade-in 400ms ease-in-out 1600ms forwards;
+        }
+
+        /* Animated letter wave */
+        #preloader .preloader-text {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        #preloader .preloader-text span {
+            display: inline-block;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            color: #1a3a6b;
+            text-transform: uppercase;
+            animation: preloader-wave 1.4s ease-in-out infinite;
+        }
+
+        /* Stagger each letter */
+        #preloader .preloader-text span:nth-child(1)  { animation-delay: 0.00s; }
+        #preloader .preloader-text span:nth-child(2)  { animation-delay: 0.08s; }
+        #preloader .preloader-text span:nth-child(3)  { animation-delay: 0.16s; }
+        #preloader .preloader-text span:nth-child(4)  { animation-delay: 0.24s; }
+        #preloader .preloader-text span:nth-child(5)  { animation-delay: 0.32s; }
+        #preloader .preloader-text span:nth-child(6)  { animation-delay: 0.40s; }
+        #preloader .preloader-text span:nth-child(7)  { animation-delay: 0.48s; }
+        #preloader .preloader-text span:nth-child(8)  { animation-delay: 0.56s; }
+        #preloader .preloader-text span:nth-child(9)  { animation-delay: 0.64s; }
+        #preloader .preloader-text span:nth-child(10) { animation-delay: 0.72s; }
+
+        @keyframes preloader-wave {
+            0%, 60%, 100% { transform: translateY(0px);   color: #1a3a6b; }
+            30%            { transform: translateY(-7px);  color: #0d5cbf; }
+        }
+
+        /* Shimmer progress bar */
+        #preloader .preloader-bar-track {
+            width: 180px;
+            height: 3px;
+            border-radius: 99px;
+            background: rgba(26, 58, 107, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #preloader .preloader-bar-fill {
+            position: absolute;
+            top: 0;
+            left: -60%;
+            height: 100%;
+            width: 60%;
+            border-radius: 99px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                #0d5cbf     40%,
+                #4a9eff     60%,
+                transparent 100%);
+            animation: preloader-shimmer 1.3s ease-in-out infinite;
+        }
+
+        @keyframes preloader-shimmer {
+            0%   { left: -60%; }
+            100% { left: 110%; }
+        }
     </style>
+    <script>
+        console.log("Preloader: Script loaded in head.");
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Preloader: DOMContentLoaded fired, starting animation.");
+            document.body.classList.add("preloader-active");
+            
+            setTimeout(function() {
+                console.log("Preloader: Holding time complete, dissolving preloader.");
+                document.body.classList.remove("preloader-active");
+                
+                setTimeout(function() {
+                    console.log("Preloader: Dissolve complete, removing preloader and starting autoplay.");
+                    var preloader = document.getElementById("preloader");
+                    if (preloader) {
+                        preloader.remove();
+                    }
+                    if (typeof window.startSliderAutoplay === "function") {
+                        window.startSliderAutoplay();
+                    }
+                }, 500); // 500ms preloader fade out and blur dissolution
+            }, 1900); // 1.4s logo reveal + 500ms hold = 1.9s
+        });
+    </script>
 </head>
 
 <body class="page-homepage-courses">
+<div id="preloader">
+    <div class="preloader-logo-container">
+        <svg viewBox="0 0 120 90" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+                <clipPath id="clip-bottom">
+                    <rect x="0" y="20" width="120" height="70" />
+                </clipPath>
+                <clipPath id="clip-text">
+                    <rect x="0" y="0" width="120" height="20" />
+                </clipPath>
+                <clipPath id="clip-dot">
+                    <circle cx="60" cy="31" r="9" />
+                </clipPath>
+                
+                <!-- SVG concentric arc masks -->
+                <clipPath id="clip-ring-1">
+                    <path d="M 60,11.5 A 19.5,19.5 0 1,0 60,50.5 A 19.5,19.5 0 1,0 60,11.5
+                             M 60,21 A 10,10 0 1,1 60,41 A 10,10 0 1,1 60,21" clip-rule="evenodd" />
+                </clipPath>
+                <clipPath id="clip-ring-2">
+                    <path d="M 60,4 A 27,27 0 1,0 60,58 A 27,27 0 1,0 60,4
+                             M 60,11.5 A 19.5,19.5 0 1,1 60,50.5 A 19.5,19.5 0 1,1 60,11.5" clip-rule="evenodd" />
+                </clipPath>
+                <clipPath id="clip-ring-3">
+                    <path d="M 60,-4 A 35,35 0 1,0 60,66 A 35,35 0 1,0 60,-4
+                             M 60,4 A 27,27 0 1,1 60,58 A 27,27 0 1,1 60,4" clip-rule="evenodd" />
+                </clipPath>
+                <clipPath id="clip-ring-4">
+                    <path d="M 60,-11.5 A 42.5,42.5 0 1,0 60,73.5 A 42.5,42.5 0 1,0 60,-11.5
+                             M 60,-4 A 35,35 0 1,1 60,66 A 35,35 0 1,1 60,-4" clip-rule="evenodd" />
+                </clipPath>
+                <clipPath id="clip-ring-5">
+                    <path d="M 60,-27 A 58,58 0 1,0 60,89 A 58,58 0 1,0 60,-27
+                             M 60,-11.5 A 42.5,42.5 0 1,1 60,73.5 A 42.5,42.5 0 1,1 60,-11.5" clip-rule="evenodd" />
+                </clipPath>
+            </defs>
+            
+            <!-- Animated SVG layers using the original 2.png image -->
+            <g class="layer-text" clip-path="url(#clip-text)">
+                <image href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
+            </g>
+            <g class="layer-dot" clip-path="url(#clip-dot)">
+                <image href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
+            </g>
+            <g clip-path="url(#clip-bottom)">
+                <image class="layer-arc-5" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-5)" />
+                <image class="layer-arc-4" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-4)" />
+                <image class="layer-arc-3" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-3)" />
+                <image class="layer-arc-2" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-2)" />
+                <image class="layer-arc-1" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-1)" />
+            </g>
+            
+            <!-- Final overlay of original unclipped image to guarantee absolute pixel-identity -->
+            <image class="layer-final" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
+        </svg>
+    </div>
+
+    <!-- Loading text + progress bar -->
+    <div class="preloader-loading-block">
+        <div class="preloader-text" aria-label="Loading">
+            <span>L</span><span>O</span><span>A</span><span>D</span><span>I</span><span>N</span><span>G</span><span>&nbsp;</span><span>.</span><span>.</span>
+        </div>
+        <div class="preloader-bar-track">
+            <div class="preloader-bar-fill"></div>
+        </div>
+    </div>
+</div>
 <div class="wrapper">
 
 <!-- ===== HEADER ===================================================== -->
