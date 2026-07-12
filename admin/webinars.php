@@ -26,6 +26,9 @@ $error   = '';
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to delete records for this institute.';
+    } else {
     try {
         // Fetch image path first to delete the file from the server
         $stmt = $pdo->prepare("SELECT image FROM `$table` WHERE id = :id");
@@ -41,6 +44,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
+    }
     }
 }
 
@@ -61,6 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $content      = trim($_POST['content']      ?? ''); // Description
     $edit_id      = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to update records for this institute.';
+    } else {
     try {
         $uploadDir = 'uploads/banners/';
         if (!is_dir($uploadDir)) {
@@ -183,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Upload System Error: " . $e->getMessage();
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
+    }
     }
 }
 
@@ -543,9 +551,11 @@ $total_pis = count($unique_investigators);
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-video me-2"></i>WEBINARS &amp; EVENTS RECORDS
                         </h4>
+                        <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#webinarModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Webinar
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="table-responsive">
@@ -607,6 +617,7 @@ $total_pis = count($unique_investigators);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
@@ -628,6 +639,24 @@ $total_pis = count($unique_investigators);
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
+                                                    <?php else: ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white edit-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#webinarModal"
+                                                            data-view-only="true"
+                                                            data-id="<?= $webinar['id'] ?>"
+                                                            data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
+                                                            data-title="<?= htmlspecialchars($webinar['title']) ?>"
+                                                            data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
+                                                            data-organisers="<?= htmlspecialchars($webinar['organisers']) ?>"
+                                                            data-institute="<?= htmlspecialchars($webinar['institute'] ?? '') ?>"
+                                                            data-investigator="<?= htmlspecialchars($webinar['investigator'] ?? '') ?>"
+                                                            data-content="<?= htmlspecialchars($webinar['content'] ?? '') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -778,13 +807,33 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_edit_id').value = '';
             modalTitle.innerText = "Webinar Creation Form";
             modalSubmitBtn.innerText = "Save Records";
+            modalSubmitBtn.style.display = "block";
+            modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
         });
     }
 
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
-            modalTitle.innerText = "Edit Webinar Info";
-            modalSubmitBtn.innerText = "Save Changes";
+            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            if (isViewOnly) {
+                modalTitle.innerText = "View Webinar Info";
+                modalSubmitBtn.style.display = "none";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = true;
+                    el.readOnly = true;
+                });
+            } else {
+                modalTitle.innerText = "Edit Webinar Info";
+                modalSubmitBtn.innerText = "Save Changes";
+                modalSubmitBtn.style.display = "block";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = false;
+                    el.readOnly = false;
+                });
+            }
 
             document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
             document.getElementById('modal_taskno').value = this.getAttribute('data-taskno');

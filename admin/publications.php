@@ -487,10 +487,12 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-book-open me-2"></i>REGISTERED PUBLICATIONS LIST
                         </h4>
+                        <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3"
                                 data-bs-toggle="modal" data-bs-target="#publicationModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Publication
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="table-responsive">
@@ -555,6 +557,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
@@ -576,6 +579,24 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
+                                                    <?php else: ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white edit-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#publicationModal"
+                                                            data-view-only="true"
+                                                            data-id="<?= $pub['id'] ?>"
+                                                            data-task-no="<?= htmlspecialchars($pub['task_no'] ?? '') ?>"
+                                                            data-title="<?= htmlspecialchars($pub['publication_title']) ?>"
+                                                            data-author="<?= htmlspecialchars($pub['author_name']) ?>"
+                                                            data-doi="<?= htmlspecialchars($pub['doi_number'] ?? '') ?>"
+                                                            data-date="<?= $pub['publication_date'] ?? '' ?>"
+                                                            data-journal="<?= htmlspecialchars($pub['publication_journal']) ?>"
+                                                            data-impact="<?= htmlspecialchars($pub['impact_factor'] ?? '') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -756,14 +777,34 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('modal_edit_id').value = '';
             modalTitle.innerText     = 'Publication Registration Form';
             modalSubmitBtn.innerText = 'Save Publication';
+            modalSubmitBtn.style.display = "block";
+            modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
         });
     }
 
     // ── EDIT
     editButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
-            modalTitle.innerText     = 'Edit Publication Info';
-            modalSubmitBtn.innerText = 'Save Changes';
+            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            if (isViewOnly) {
+                modalTitle.innerText     = 'View Publication Info';
+                modalSubmitBtn.style.display = "none";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = true;
+                    el.readOnly = true;
+                });
+            } else {
+                modalTitle.innerText     = 'Edit Publication Info';
+                modalSubmitBtn.innerText = 'Save Changes';
+                modalSubmitBtn.style.display = "block";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = false;
+                    el.readOnly = false;
+                });
+            }
 
             document.getElementById('modal_edit_id').value             = this.dataset.id;
             document.getElementById('modal_task_no').value             = this.dataset.taskNo;

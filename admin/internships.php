@@ -26,6 +26,9 @@ $error   = '';
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to delete records for this institute.';
+    } else {
     try {
         $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
@@ -33,6 +36,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
+    }
     }
 }
 
@@ -53,6 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $content              = trim($_POST['content'] ?? '');
     $edit_id              = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to update records for this institute.';
+    } else {
     try {
         if ($edit_id) {
             $stmt = $pdo->prepare("
@@ -101,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
+    }
     }
 }
 
@@ -467,9 +475,11 @@ $total_pis = count($unique_investigators);
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-graduation-cap me-2"></i>INTERNSHIPS &amp; TRAINING RECORDS
                         </h4>
+                        <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#internshipModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Internship
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="table-responsive">
@@ -523,6 +533,7 @@ $total_pis = count($unique_investigators);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
@@ -544,6 +555,24 @@ $total_pis = count($unique_investigators);
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
+                                                    <?php else: ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white edit-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#internshipModal"
+                                                            data-view-only="true"
+                                                            data-id="<?= $item['id'] ?>"
+                                                            data-task="<?= htmlspecialchars($item['task_no'] ?? '') ?>"
+                                                            data-title="<?= htmlspecialchars($item['title']) ?>"
+                                                            data-pi="<?= htmlspecialchars($item['project_investigator']) ?>"
+                                                            data-trained="<?= (int)$item['no_students_trained'] ?>"
+                                                            data-days="<?= $item['no_days_trained'] ?? '' ?>"
+                                                            data-names="<?= htmlspecialchars($item['students_names'] ?? '') ?>"
+                                                            data-content="<?= htmlspecialchars($item['content'] ?? '') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -738,6 +767,12 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_edit_id').value = ''; 
             modalTitle.innerText = "Internship & Training Records Form";
             modalSubmitBtn.innerText = "Save Records";
+            modalSubmitBtn.style.display = "block";
+            addStudentRowBtn.style.display = "block";
+            modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
             setStudentFieldsData('');
         });
     }
@@ -757,6 +792,24 @@ document.addEventListener("DOMContentLoaded", function() {
             
             const currentNamesStr = this.getAttribute('data-names') || '';
             setStudentFieldsData(currentNamesStr);
+
+            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            if (isViewOnly) {
+                modalTitle.innerText = "View Internship Info";
+                modalSubmitBtn.style.display = "none";
+                addStudentRowBtn.style.display = "none";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = true;
+                    el.readOnly = true;
+                });
+            } else {
+                modalSubmitBtn.style.display = "block";
+                addStudentRowBtn.style.display = "block";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = false;
+                    el.readOnly = false;
+                });
+            }
         });
     });
 

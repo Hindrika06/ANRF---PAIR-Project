@@ -1,16 +1,19 @@
 <?php
 if (!isset($GLOBALS['__role_access_loaded'])) { require_once 'role_access.php'; $GLOBALS['__role_access_loaded'] = true; }
-$__brandPrefix = resolveAdminPrefix();
+$__isSuper = isSuperAdmin();
+$__brandPrefix = $__isSuper ? 'uoh' : resolveAdminPrefix();
+$__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPrefix);
+$__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 ?>
 
 <!--**********************************
     Nav header start
 ***********************************-->
-<!-- Logo + name reflect whichever institute is logged in / currently active -->
+<!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
-    <a href="index.html" class="brand-logo">
-        <img src="<?= htmlspecialchars(getInstituteLogo($__brandPrefix)) ?>" alt="<?= htmlspecialchars(getInstituteFullName($__brandPrefix)) ?> Logo" class="logo-img">
-        <span class="brand-institute-name"><?= htmlspecialchars(getInstituteFullName($__brandPrefix)) ?></span>
+    <a href="publications.php" class="brand-logo">
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 50%; object-fit: contain; background: #fff; padding: 2px;">
+        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
     </a>
     <div class="nav-control">
         <div class="hamburger">
@@ -124,7 +127,7 @@ $__brandPrefix = resolveAdminPrefix();
 <div class="dlabnav custom-sidebar">
     <div class="dlabnav-scroll" style="display: flex; flex-direction: column; height: 100%;">
         <div style="padding: 12px 18px 10px; color: #fff; font-size: 12px; opacity: 0.95;">
-            <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;background:#0f3a72;color:#ffffff;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">
+            <div class="portal-badge" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;background:#0f3a72;color:#ffffff;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">
                 <i class="fas <?= isSuperAdmin() ? 'fa-shield-alt' : 'fa-user-shield' ?>" style="color:#ffffff;"></i>
                 <span><?= isSuperAdmin() ? '🛡️ SUPER ADMIN PORTAL' : '👤 ADMIN PORTAL' ?></span>
             </div>
@@ -163,8 +166,14 @@ $__brandPrefix = resolveAdminPrefix();
             </li>
             <li>
                 <a href="progress_reports.php" aria-expanded="false">
-                    <i class="fas fa-user-graduate"></i>
+                    <i class="fas fa-chart-line"></i>
                     <span class="nav-text">Progress Reports</span>
+                </a>
+            </li>
+            <li>
+                <a href="gallery.php" aria-expanded="false">
+                    <i class="fas fa-images"></i>
+                    <span class="nav-text">Gallery</span>
                 </a>
             </li>
             <?php if (isSuperAdmin()): ?>

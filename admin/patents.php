@@ -35,6 +35,9 @@ $patentId = generatePatentId($pdo, $table);
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to delete records for this institute.';
+    } else {
     try {
         // Optional: Clean up associated server-side assets if they exist
         $stmt = $pdo->prepare("SELECT patent_file FROM `$table` WHERE id = :id");
@@ -50,6 +53,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
+    }
     }
 }
 
@@ -77,6 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $abstract         = trim($_POST['abstract']         ?? '');
     $edit_id          = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to update records for this institute.';
+    } else {
     try {
         // Direct target folder
         $uploadDir = 'uploads/patents/';
@@ -186,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "System Upload Notice: " . $e->getMessage();
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
+    }
     }
 }
 
@@ -574,9 +582,11 @@ $total_inventors = count($unique_inventors);
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-certificate me-2"></i>REGISTERED PATENTS LIST
                         </h4>
+                        <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#patentModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Patent
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="table-responsive">
@@ -651,6 +661,7 @@ $total_inventors = count($unique_inventors);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
@@ -679,6 +690,31 @@ $total_inventors = count($unique_inventors);
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
+                                                    <?php else: ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white edit-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#patentModal"
+                                                            data-view-only="true"
+                                                            data-id="<?= $patent['id'] ?>"
+                                                            data-taskno="<?= htmlspecialchars($patent['task_no'] ?? '') ?>"
+                                                            data-patid="<?= htmlspecialchars($patent['patent_id']) ?>"
+                                                            data-title="<?= htmlspecialchars($patent['patent_title']) ?>"
+                                                            data-inventor="<?= htmlspecialchars($patent['inventor_name']) ?>"
+                                                            data-coinventors="<?= htmlspecialchars($patent['co_inventors'] ?? '') ?>"
+                                                            data-appno="<?= htmlspecialchars($patent['application_no'] ?? '') ?>"
+                                                            data-patno="<?= htmlspecialchars($patent['patent_no'] ?? '') ?>"
+                                                            data-country="<?= htmlspecialchars($patent['country'] ?? '') ?>"
+                                                            data-filing="<?= $patent['filing_date'] ?? '' ?>"
+                                                            data-pub="<?= $patent['publication_date'] ?? '' ?>"
+                                                            data-grant="<?= $patent['grant_date'] ?? '' ?>"
+                                                            data-status="<?= htmlspecialchars($patent['status']) ?>"
+                                                            data-tech="<?= htmlspecialchars($patent['technology_area'] ?? '') ?>"
+                                                            data-abstract="<?= htmlspecialchars($patent['abstract'] ?? '') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -866,6 +902,11 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_patent_id').value = defaultPatentId;
             modalTitle.innerText = "Patent Registration Form";
             modalSubmitBtn.innerText = "Save Patent";
+            modalSubmitBtn.style.display = "block";
+            modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
 
             if(jQuery('.default-select').length > 0) {
                 jQuery('#modal_status').val('Filed').selectpicker('refresh');
@@ -875,8 +916,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
-            modalTitle.innerText = "Edit Patent Info";
-            modalSubmitBtn.innerText = "Save Changes";
+            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            if (isViewOnly) {
+                modalTitle.innerText = "View Patent Info";
+                modalSubmitBtn.style.display = "none";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = true;
+                    el.readOnly = true;
+                });
+            } else {
+                modalTitle.innerText = "Edit Patent Info";
+                modalSubmitBtn.innerText = "Save Changes";
+                modalSubmitBtn.style.display = "block";
+                modalForm.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = false;
+                    el.readOnly = false;
+                });
+            }
 
             document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
             document.getElementById('modal_task_no').value = this.getAttribute('data-taskno');

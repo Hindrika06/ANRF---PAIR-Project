@@ -497,6 +497,8 @@ $activePage = $activePage ?? '';
 <!-- ===== HEADER ===================================================== -->
 <div class="navigation-wrapper">
 
+    <?php include 'topbar.php'; ?>
+
     <!-- Logo Section -->
     <div class="logo-section">
         <div class="container">
@@ -611,15 +613,6 @@ $activePage = $activePage ?? '';
                                 <a href="#" class="has-child"><i class="fa fa-envelope"></i> Contact</a>
                                 <ul class="list-unstyled child-navigation">
                                     <li><a href="contact-us.php"><i class="fa fa-phone"></i> Contact Us</a></li>
-                                </ul>
-                            </li>
-
-                            <!-- 8. Login -->
-                            <li class="nav-login">
-                                <a href="#" class="has-child"><i class="fa fa-sign-in"></i> Login</a>
-                                <ul class="list-unstyled child-navigation">
-                                    <li><a href="admin/index.php"><i class="fa fa-user"></i> Hub Admin</a></li>
-                                    <li><a href="admin/index.php"><i class="fa fa-user"></i> Admin</a></li>
                                 </ul>
                             </li>
 

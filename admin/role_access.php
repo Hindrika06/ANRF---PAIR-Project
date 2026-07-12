@@ -38,15 +38,18 @@ function resolveAdminPrefix($requestedPrefix = null)
 {
     global $adminAllowedPrefixes;
 
+    // Allow switching to any valid prefix (both super admin AND regular admin can view any institute)
     if ($requestedPrefix && in_array($requestedPrefix, $adminAllowedPrefixes, true)) {
         $_SESSION['active_prefix'] = $requestedPrefix;
         return $requestedPrefix;
     }
 
+    // Use session-remembered active prefix
     if (!empty($_SESSION['active_prefix']) && in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true)) {
         return $_SESSION['active_prefix'];
     }
 
+    // Default to the admin's own institute on first load
     if (!empty($_SESSION['institute_prefix']) && in_array($_SESSION['institute_prefix'], $adminAllowedPrefixes, true)) {
         $_SESSION['active_prefix'] = $_SESSION['institute_prefix'];
         return $_SESSION['institute_prefix'];
@@ -69,13 +72,9 @@ function canEditInstitute($prefix)
 function getVisiblePrefixes()
 {
     global $adminAllowedPrefixes;
-
-    if (isSuperAdmin()) {
-        return $adminAllowedPrefixes;
-    }
-
-    $assignedPrefix = $_SESSION['institute_prefix'] ?? '';
-    return ($assignedPrefix && in_array($assignedPrefix, $adminAllowedPrefixes, true)) ? [$assignedPrefix] : $adminAllowedPrefixes;
+    // All users (super admin AND regular admin) can SEE all institutes.
+    // Write access is separately controlled by canEditInstitute().
+    return $adminAllowedPrefixes;
 }
 
 function getInstituteLabel($prefix)

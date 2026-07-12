@@ -21,11 +21,24 @@ $table = "{$prefix}_progress_reports";
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
 
+// Self-healing DB check: Ensure work_package_no column exists in progress reports table
+try {
+    $checkCol = $pdo->query("SHOW COLUMNS FROM `$table` LIKE 'work_package_no'");
+    if ($checkCol->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE `$table` ADD COLUMN `work_package_no` VARCHAR(100) NULL AFTER `task_no`");
+    }
+} catch (PDOException $e) {
+    // Fail silently, or it will be handled when accessing/inserting
+}
+
 $success = false;
 $error   = '';
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to delete records for this institute.';
+    } else {
     try {
         $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
@@ -33,6 +46,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
+    }
     }
 }
 
@@ -54,6 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $summary_progress  = trim($_POST['summary_progress']  ?? '');
     $edit_id           = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
+    if (!canEditInstitute($prefix)) {
+        $error = 'You are not allowed to update records for this institute.';
+    } else {
     // MANDATORY CHECKS REMOVED AS REQUESTED
     try {
         if ($edit_id) {
@@ -110,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
+    }
     }
 }
 
@@ -438,10 +456,12 @@ $total_unique_tasks   = count($unique_tasks);
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-file-lines me-2"></i>PROGRESS REPORTS LIST
                         </h4>
+                        <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3"
                                 data-bs-toggle="modal" data-bs-target="#reportModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Report
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="table-responsive">
@@ -498,6 +518,7 @@ $total_unique_tasks   = count($unique_tasks);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
@@ -520,6 +541,25 @@ $total_unique_tasks   = count($unique_tasks);
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
+                                                    <?php else: ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white edit-btn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#reportModal"
+                                                            data-view-only="true"
+                                                            data-id="<?= $report['id'] ?>"
+                                                            data-title="<?= htmlspecialchars($report['project_title']) ?>"
+                                                            data-pi="<?= htmlspecialchars($report['pi_name']) ?>"
+                                                            data-copi="<?= htmlspecialchars($report['co_pi_name'] ?? '') ?>"
+                                                            data-task="<?= htmlspecialchars($report['task_no']) ?>"
+                                                            data-wp="<?= htmlspecialchars($report['work_package_no'] ?? '') ?>"
+                                                            data-objects="<?= htmlspecialchars($report['approved_objects'] ?? '') ?>"
+                                                            data-methodology="<?= htmlspecialchars($report['methodology'] ?? '') ?>"
+                                                            data-summary="<?= htmlspecialchars($report['summary_progress'] ?? '') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -662,13 +702,32 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_edit_id').value = ''; 
             modalTitle.innerText = "Project Progress Report Form";
             modalSubmitBtn.innerText = "Submit Report";
+            modalSubmitBtn.style.display = "block";
+            modalForm.querySelectorAll('input, textarea, select').forEach(el => {
+                el.disabled = false;
+                el.readOnly = false;
+            });
         });
     }
 
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
-            modalTitle.innerText = "Edit Progress Report";
-            modalSubmitBtn.innerText = "Save Changes";
+            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            if (isViewOnly) {
+                modalTitle.innerText = "View Progress Report";
+                modalSubmitBtn.style.display = "none";
+                modalForm.querySelectorAll('input, textarea, select').forEach(el => {
+                    el.disabled = true;
+                    el.readOnly = true;
+                });
+            } else {
+                modalTitle.innerText = "Edit Progress Report";
+                modalSubmitBtn.style.display = "block";
+                modalForm.querySelectorAll('input, textarea, select').forEach(el => {
+                    el.disabled = false;
+                    el.readOnly = false;
+                });
+            }
             
             document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
             document.getElementById('modal_project_title').value = this.getAttribute('data-title');
