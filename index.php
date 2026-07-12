@@ -55,7 +55,10 @@
             }
             next.addEventListener("click", nextSlide);
             prev.addEventListener("click", prevSlide);
-            setInterval(nextSlide, 5000);
+            window.startSliderAutoplay = function() {
+                console.log("Slider: Autoplay initialized.");
+                setInterval(nextSlide, 5000);
+            };
         </script>
 
     </div><!-- end .wrapper -->
