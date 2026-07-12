@@ -235,6 +235,207 @@ $(document).ready(function($) {
         });
     }
 
+    // Interactive event calendar for about-1.php
+    function initializeEventBoard() {
+        const noticeBody = document.getElementById('notice-board-body');
+        const monthEl = document.getElementById('month');
+        const yearEl = document.getElementById('year');
+        const calBody = document.getElementById('calendar-body');
+        const selectedLabel = document.querySelector('.sel-date-label');
+        const selectedText = document.getElementById('sel-event-text');
+
+        if (!noticeBody || !monthEl || !yearEl || !calBody || !selectedText || !selectedLabel) {
+            return;
+        }
+
+        const calendarEvents = {
+            '2026-07-09': [
+                {
+                    title: 'University of Hyderabad Research Symposium',
+                    time: '10:00 AM - 1:00 PM',
+                    venue: 'Conference Hall A',
+                    coordinator: "Dr. Ramesh Kumar"
+                }
+            ],
+            '2026-07-14': [
+                {
+                    title: 'ANRF-PAIR Innovation Showcase',
+                    time: '11:00 AM - 2:00 PM',
+                    venue: 'Innovation Hub',
+                    coordinator: "Dr. Priya Sharma"
+                },
+                {
+                    title: 'Research Seminar on Sustainable Health',
+                    time: '3:00 PM - 4:30 PM',
+                    venue: 'Seminar Room 3',
+                    coordinator: "Dr. Anil Patel"
+                }
+            ],
+            '2026-07-21': [
+                {
+                    title: 'Strengthening Health Systems Workshop',
+                    time: '10:00 AM - 12:30 PM',
+                    venue: 'Seminar Room 2',
+                    coordinator: "Dr. Meera Reddy"
+                }
+            ]
+        };
+
+        const monthNames = [
+            'January','February','March','April','May','June',
+            'July','August','September','October','November','December'
+        ];
+
+        let currentDate = new Date();
+
+        function formatDateLabel(dateKey) {
+            const [year, month, day] = dateKey.split('-');
+            return `${parseInt(day, 10)} ${monthNames[parseInt(month, 10) - 1]} ${year}`;
+        }
+
+        function renderNoEvents(dateKey) {
+            noticeBody.innerHTML = `
+                <div class="notice-summary">
+                    <div class="notice-summary-date">${formatDateLabel(dateKey)}</div>
+                    <div class="notice-empty">No events scheduled for this date.</div>
+                </div>
+            `;
+            selectedText.textContent = 'No events scheduled for this date.';
+            selectedText.classList.add('no-event');
+        }
+
+        function renderEvents(dateKey, events) {
+
+    const eventList = events.map(function(event) {
+
+        return `
+            <li class="notice-summary-item">
+
+                <div class="notice-event-title">
+                    ${event.title}
+                </div>
+
+                <div class="notice-event-meta">
+                    <span class="notice-event-time">
+                        ⏰ ${event.time}
+                    </span>
+                </div>
+
+                <div class="notice-event-meta">
+                    <span class="notice-event-venue">
+                        📍 ${event.venue}
+                    </span>
+                </div>
+
+                <div class="notice-event-meta">
+                    <span class="notice-event-coordinator">
+                        👤 Coordinator: ${event.coordinator}
+                    </span>
+                </div>
+
+            </li>
+        `;
+
+    }).join('');
+
+    noticeBody.innerHTML = `
+        <div class="notice-summary">
+            <div class="notice-summary-date">
+                ${formatDateLabel(dateKey)}
+            </div>
+
+            <ul class="notice-summary-list">
+                ${eventList}
+            </ul>
+        </div>
+    `;
+
+    selectedText.textContent =
+        `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
+
+    selectedText.classList.remove('no-event');
+}
+
+        function buildCalendar() {
+            const monthIndex = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            const firstDay = new Date(year, monthIndex, 1).getDay();
+            const lastDate = new Date(year, monthIndex + 1, 0).getDate();
+            const prevLastDate = new Date(year, monthIndex, 0).getDate();
+            const today = new Date();
+
+            monthEl.textContent = monthNames[monthIndex];
+            yearEl.textContent = year;
+
+            let html = '';
+            let dayNumber = 1;
+            let nextMonthDay = 1;
+
+            for (let week = 0; week < 6; week++) {
+                html += '<tr>';
+                for (let weekday = 0; weekday < 7; weekday++) {
+                    if (week === 0 && weekday < firstDay) {
+                        html += `<td class="muted">${prevLastDate - firstDay + weekday + 1}</td>`;
+                    } else if (dayNumber > lastDate) {
+                        html += `<td class="muted">${nextMonthDay++}</td>`;
+                    } else {
+                        const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+                        const isToday = dayNumber === today.getDate() && monthIndex === today.getMonth() && year === today.getFullYear();
+                        const hasEventClass = calendarEvents[dateKey] ? 'has-event' : '';
+
+                        html += `<td class="${isToday ? 'today' : ''} ${hasEventClass}" data-date="${dateKey}">${dayNumber}</td>`;
+                        dayNumber++;
+                    }
+                }
+                html += '</tr>';
+                if (dayNumber > lastDate) {
+                    break;
+                }
+            }
+
+            calBody.innerHTML = html;
+            bindCalendarEvents();
+        }
+
+        function bindCalendarEvents() {
+            const allDates = calBody.querySelectorAll('td[data-date]');
+            allDates.forEach(function (cell) {
+                cell.addEventListener('click', function () {
+                    const dateKey = this.getAttribute('data-date');
+                    selectedLabel.textContent = formatDateLabel(dateKey);
+                    if (calendarEvents[dateKey] && calendarEvents[dateKey].length > 0) {
+                        renderEvents(dateKey, calendarEvents[dateKey]);
+                    } else {
+                        renderNoEvents(dateKey);
+                    }
+                });
+            });
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', function () {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            buildCalendar();
+            selectedLabel.textContent = 'Selected Date';
+            selectedText.textContent = 'Click a date to see events';
+            selectedText.classList.add('no-event');
+            renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', function () {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            buildCalendar();
+            selectedLabel.textContent = 'Selected Date';
+            selectedText.textContent = 'Click a date to see events';
+            selectedText.classList.add('no-event');
+            renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+        });
+
+        buildCalendar();
+        renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+    }
+
+    initializeEventBoard();
+
 //  Event title shorting
 
     $('.fc-view-month .fc-event-title').each(function(){
