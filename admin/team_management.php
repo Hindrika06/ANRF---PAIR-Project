@@ -353,9 +353,12 @@ include 'loader.php';
         opacity: 0.8;
         font-weight: 400;
     }
+    .view-team .filter-container-block {
+        display: none !important;
+    }
 </style>
 
-<div id="main-wrapper">
+<div id="main-wrapper" class="view-team">
     <div class="content-body default-height">
         <div class="container-fluid">
 
@@ -437,7 +440,11 @@ include 'loader.php';
                     </div>
 
                     <!-- Search Filter Block -->
-                    <div class="p-3 border-bottom bg-light">
+                    <?php 
+                    $current_page = basename($_SERVER['PHP_SELF']);
+                    if ($current_page !== 'team_management.php' && $current_page !== 'event_calendar.php'): 
+                    ?>
+                    <div class="p-3 border-bottom bg-light filter-container-block">
                         <form method="GET" action="team_management.php" class="row g-2">
                             <div class="col-md-4">
                                 <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by name, designation, department..." value="<?= htmlspecialchars($search) ?>">
@@ -464,6 +471,7 @@ include 'loader.php';
                             </div>
                         </form>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Data Table -->
                     <div class="table-responsive">

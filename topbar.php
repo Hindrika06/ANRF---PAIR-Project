@@ -259,8 +259,8 @@
                         <span>Login <i class="fa fa-caret-down" aria-hidden="true" style="font-size: 10px; margin-left: 2px;"></i></span>
                     </a>
                     <ul class="topbar-dropdown-menu">
-                        <li><a href="admin/index.php"><i class="fa fa-user" aria-hidden="true"></i> Hub Admin</a></li>
-                        <li><a href="admin/index.php"><i class="fa fa-user" aria-hidden="true"></i> Admin</a></li>
+                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Hub Admin</a></li>
+                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Admin</a></li>
                     </ul>
                 </li>
             </ul>

@@ -403,9 +403,12 @@ include 'loader.php';
         opacity: 0.8;
         font-weight: 400;
     }
+    .view-calendar .filter-container-block {
+        display: none !important;
+    }
 </style>
 
-<div id="main-wrapper">
+<div id="main-wrapper" class="view-calendar">
     <div class="content-body default-height">
         <div class="container-fluid">
 
@@ -501,7 +504,11 @@ include 'loader.php';
                     </div>
 
                     <!-- Search Filter Form -->
-                    <div class="p-3 border-bottom bg-light">
+                    <?php 
+                    $current_page = basename($_SERVER['PHP_SELF']);
+                    if ($current_page !== 'team_management.php' && $current_page !== 'event_calendar.php'): 
+                    ?>
+                    <div class="p-3 border-bottom bg-light filter-container-block">
                         <form method="GET" action="event_calendar.php" class="row g-2">
                             <?php if (!$is_super && isset($_GET['prefix'])): ?>
                                 <input type="hidden" name="prefix" value="<?= htmlspecialchars($_GET['prefix']) ?>">
@@ -537,6 +544,7 @@ include 'loader.php';
                             </div>
                         </form>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Events Table -->
                     <div class="table-responsive">

@@ -481,6 +481,257 @@
         ?>
     </style>
     <?php endif; ?>
+    <!-- User Profile Dropdown Styles & Scripts -->
+    <style>
+        /* --- PROFILE DROPDOWN CUSTOM STYLES --- */
+        .profile-trigger-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-trigger-btn:hover .profile-avatar-img,
+        .profile-trigger-btn:focus .profile-avatar-img {
+            border-color: #024283 !important;
+            transform: scale(1.05);
+        }
+
+        .theme-admin .profile-trigger-btn:hover .profile-avatar-img,
+        .theme-admin .profile-trigger-btn:focus .profile-avatar-img {
+            border-color: #059669 !important;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 270px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 1rem; /* Rounded border design */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); /* Soft drop shadow */
+            z-index: 1050; /* Z-index priority */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .dropdown-menu-custom.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Top Section: User Info Card */
+        .dropdown-header-custom {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+        }
+
+        .dropdown-header-custom .user-avatar-large {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+            background: #ffffff;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-header-custom .user-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 2px;
+        }
+
+        .dropdown-header-custom .user-details {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .dropdown-header-custom .user-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .dropdown-header-custom .user-role {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+
+        .dropdown-header-custom .user-badge {
+            margin-top: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #eff6ff;
+            color: #024283;
+            padding: 2px 8px;
+            border-radius: 12px;
+            width: fit-content;
+            white-space: nowrap;
+        }
+
+        .theme-admin .dropdown-header-custom .user-badge {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background-color: #f1f5f9;
+            margin: 0;
+        }
+
+        /* Bottom Section: Logout Action */
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #dc2626; /* Crimson Red text */
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .dropdown-item-custom i {
+            font-size: 0.95rem;
+            color: #dc2626; /* Left-aligned red sign-out icon */
+            width: 18px;
+            text-align: center;
+        }
+
+        .dropdown-item-custom:hover,
+        .dropdown-item-custom:focus {
+            background-color: rgba(220, 38, 38, 0.08); /* Soft light-red tint background */
+            color: #b91c1c; /* Crimson Red hover */
+            text-decoration: none;
+            outline: none;
+        }
+
+        .dropdown-item-custom:hover i,
+        .dropdown-item-custom:focus i {
+            color: #b91c1c;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const trigger = document.getElementById('profileDropdownTrigger');
+            const menu = document.getElementById('profileDropdownMenu');
+            
+            if (!trigger || !menu) return;
+            
+            const menuItems = Array.from(menu.querySelectorAll('[role="menuitem"], a'));
+
+            function openDropdown() {
+                menu.classList.add('show');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+            
+            function closeDropdown() {
+                menu.classList.remove('show');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+            
+            // Toggle dropdown on click
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const isOpen = menu.classList.contains('show');
+                if (isOpen) {
+                    closeDropdown();
+                    trigger.focus();
+                } else {
+                    openDropdown();
+                    if (menuItems.length > 0) {
+                        menuItems[0].focus();
+                    }
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+            
+            // Keyboard navigation within the dropdown
+            menu.addEventListener('keydown', (e) => {
+                const currentIndex = menuItems.indexOf(document.activeElement);
+                
+                switch (e.key) {
+                    case 'Escape':
+                        e.preventDefault();
+                        closeDropdown();
+                        trigger.focus();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        const nextIndex = (currentIndex + 1) % menuItems.length;
+                        menuItems[nextIndex].focus();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        const prevIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
+                        menuItems[prevIndex].focus();
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        if (menuItems.length > 0) {
+                            menuItems[0].focus();
+                        }
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        if (menuItems.length > 0) {
+                            menuItems[menuItems.length - 1].focus();
+                        }
+                        break;
+                    case 'Tab':
+                        setTimeout(() => {
+                            if (!menu.contains(document.activeElement) && document.activeElement !== trigger) {
+                                closeDropdown();
+                            }
+                        }, 10);
+                        break;
+                }
+            });
+
+            // Close when Esc is pressed on trigger
+            trigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeDropdown();
+                    trigger.focus();
+                }
+            });
+        });
+    </script>
 </head>
 <body class="<?= isSuperAdmin() ? 'theme-super-admin' : 'theme-admin' ?>">
 	<!--**********************************
@@ -508,10 +759,41 @@
 							
 
 							
-							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px;">
-								<a class="nav-link p-0" href="logout.php" title="Logout" style="display: flex; align-items: center;">
-									<img src="logo/logo.png" alt="ANRF Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; border: 2px solid #e2e8f0; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-								</a>
+							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px; position: relative;">
+								<?php
+								$headerIsSuper = isSuperAdmin();
+								$headerBrandPrefix = $headerIsSuper ? 'uoh' : resolveAdminPrefix();
+								$headerProfileLogo = $headerIsSuper ? 'logo/logo.png' : getInstituteLogo($headerBrandPrefix);
+								
+								// Dynamic display that strictly falls back to requested defaults for Super Admin
+								$headerEmail = $_SESSION['username'] ?? 'admin@uoh.ac.in';
+								$headerRole = $headerIsSuper ? 'Super Admin' : 'Admin';
+								$headerBadge = $headerIsSuper ? 'ANRF Super Admin' : 'ANRF Admin - ' . getInstituteLabel($headerBrandPrefix);
+								?>
+								<button class="nav-link p-0 profile-trigger-btn" id="profileDropdownTrigger" aria-haspopup="true" aria-expanded="false">
+									<img src="<?= htmlspecialchars($headerProfileLogo) ?>" alt="ANRF-PAIR" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; border: 2px solid #e2e8f0; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s ease, border-color 0.2s ease;" class="profile-avatar-img">
+								</button>
+								
+								<!-- User Profile Dropdown Menu -->
+								<div class="dropdown-menu-custom" id="profileDropdownMenu" aria-labelledby="profileDropdownTrigger">
+									<!-- Top Section (User Info Card) -->
+									<div class="dropdown-header-custom">
+										<div class="user-avatar-large">
+											<img src="<?= htmlspecialchars($headerProfileLogo) ?>" alt="ANRF-PAIR">
+										</div>
+										<div class="user-details">
+											<div class="user-name"><?= htmlspecialchars($headerEmail) ?></div>
+											<div class="user-role"><?= htmlspecialchars($headerRole) ?></div>
+											<div class="user-badge"><?= htmlspecialchars($headerBadge) ?></div>
+										</div>
+									</div>
+									<div class="dropdown-divider-custom"></div>
+									<!-- Bottom Section (Logout Action) -->
+									<a href="logout.php" class="dropdown-item-custom logout-item" role="menuitem">
+										<i class="fas fa-sign-out-alt"></i>
+										<span>Logout</span>
+									</a>
+								</div>
 							</li>
                         </ul>
                     </div>

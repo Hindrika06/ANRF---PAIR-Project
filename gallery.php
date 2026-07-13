@@ -97,8 +97,9 @@ $stockCovers = [
 <div class="wrapper">
 
 <div id="page-content">
+    <!-- Breadcrumb -->
     <div class="container">
-        <ol class="breadcrumb" style="font-size: 14px;">
+        <ol class="breadcrumb">
             <li><a href="index.php">Home</a></li>
             <li class="active">Gallery</li>
         </ol>
@@ -109,22 +110,22 @@ $stockCovers = [
             <div class="container">
                 
                 <!-- Main Header Title -->
-                <div class="row mb-4">
+                <div class="row">
                     <div class="col-md-12">
-                        <h2 class="no-theme-underline" style="font-size: 24px !important; font-weight: bold !important; text-transform: uppercase !important; text-decoration: none !important; border: none !important; border-left: 5px solid #002b5c !important; padding-left: 12px !important; margin-top: 25px !important; margin-bottom: 25px !important; color: #002b5c !important; background: none !important;">MEDIA GALLERY</h2>
+                        <h2 class="main-gallery-title">MEDIA GALLERY</h2>
                     </div>
                 </div>
 
                 <!-- Navigation Tabs -->
-                <ul class="nav nav-tabs custom-gallery-tabs mb-4" id="galleryTabs" role="tablist">
+                <ul class="nav nav-tabs custom-gallery-tabs" id="galleryTabs" role="tablist" style="margin-bottom: 35px;">
                     <li class="nav-item active" role="presentation">
                         <a class="nav-link active" id="photos-tab" data-toggle="tab" href="#photos-pane" role="tab" aria-controls="photos-pane" aria-selected="true">
-                            <i class="fas fa-camera mr-2"></i> Photo Gallery (<?= count($photoAlbums) ?>)
+                            <i class="fa fa-camera mr-2"></i> Photo Gallery (<?= count($photoAlbums) ?>)
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="videos-tab" data-toggle="tab" href="#videos-pane" role="tab" aria-controls="videos-pane" aria-selected="false">
-                            <i class="fas fa-video mr-2"></i> Video Gallery (<?= count($videoCards) ?>)
+                            <i class="fa fa-video-camera mr-2"></i> Video Gallery (<?= count($videoCards) ?>)
                         </a>
                     </li>
                 </ul>
@@ -136,7 +137,7 @@ $stockCovers = [
                     <div class="tab-pane fade in active" id="photos-pane" role="tabpanel" aria-labelledby="photos-tab">
                         <?php if (empty($photoAlbums)): ?>
                         <div class="gallery-empty-state">
-                            <i class="fas fa-images"></i>
+                            <i class="fa fa-picture-o"></i>
                             <h5>No photo albums available yet.</h5>
                             <p>Photo albums added by the Super Admin will appear here.</p>
                         </div>
@@ -149,12 +150,12 @@ $stockCovers = [
                                 $dateStr = !empty($ev['event_date']) ? date('d M Y', strtotime($ev['event_date'])) : 'General';
                                 $photoCount = (strlen($ev['event_name']) % 9) + 8; // dynamic mock count
                             ?>
-                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                            <div class="col-md-4 col-sm-6" style="margin-bottom: 30px;">
                                 <div class="card album-card" onclick="openLightbox('<?= htmlspecialchars(addslashes($ev['event_name'])) ?>', '<?= htmlspecialchars(addslashes($ev['photos_drive_link'])) ?>', <?= $idx ?>)">
                                     <div class="album-img-wrap">
                                         <img src="<?= $cover ?>" class="album-cover" alt="Cover" loading="lazy">
                                         <span class="album-badge-uni"><?= htmlspecialchars($uni) ?></span>
-                                        <span class="album-photo-count"><i class="fas fa-images mr-1"></i> <?= $photoCount ?> Photos</span>
+                                        <span class="album-photo-count"><i class="fa fa-picture-o mr-1"></i> <?= $photoCount ?> Photos</span>
                                     </div>
                                     <div class="album-body">
                                         <span class="album-date"><?= $dateStr ?></span>
@@ -163,7 +164,7 @@ $stockCovers = [
                                         <p class="album-desc"><?= htmlspecialchars(mb_substr($ev['description'], 0, 110)) ?><?= mb_strlen($ev['description']) > 110 ? '…' : '' ?></p>
                                         <?php endif; ?>
                                         <div class="album-footer">
-                                            <span class="album-category"><i class="fas fa-tag mr-1"></i> <?= htmlspecialchars($ev['category'] ?: 'General') ?></span>
+                                            <span class="album-category"><i class="fa fa-tag mr-1"></i> <?= htmlspecialchars($ev['category'] ?: 'General') ?></span>
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +178,7 @@ $stockCovers = [
                     <div class="tab-pane fade" id="videos-pane" role="tabpanel" aria-labelledby="videos-tab">
                         <?php if (empty($videoCards)): ?>
                         <div class="gallery-empty-state">
-                            <i class="fas fa-video-slash"></i>
+                            <i class="fa fa-video-camera"></i>
                             <h5>No videos available yet.</h5>
                             <p>Videos added by the Super Admin will appear here.</p>
                         </div>
@@ -192,15 +193,15 @@ $stockCovers = [
                                 $thumb = $ytId ? "https://img.youtube.com/vi/{$ytId}/0.jpg" : 'assets/img/tech.webp';
                                 $duration = (strlen($ev['event_name']) % 4) + 3 . ":" . sprintf("%02d", (strlen($ev['event_name']) * 7) % 60); // Dynamic length
                             ?>
-                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                            <div class="col-md-4 col-sm-6" style="margin-bottom: 30px;">
                                 <div class="card video-card" onclick="openVideoPlayer('<?= htmlspecialchars(addslashes($ev['event_name'])) ?>', '<?= htmlspecialchars(addslashes($ev['photos_drive_link'])) ?>')">
                                     <div class="video-img-wrap">
                                         <img src="<?= $thumb ?>" class="video-cover" alt="Thumbnail" loading="lazy">
                                         <div class="video-play-overlay">
-                                            <i class="fas fa-play-circle"></i>
+                                            <i class="fa fa-play-circle-o"></i>
                                         </div>
                                         <span class="video-badge-uni"><?= htmlspecialchars($uni) ?></span>
-                                        <span class="video-duration"><i class="fas fa-clock mr-1"></i> <?= $duration ?></span>
+                                        <span class="video-duration"><i class="fa fa-clock-o mr-1"></i> <?= $duration ?></span>
                                     </div>
                                     <div class="video-body">
                                         <span class="video-date"><?= $dateStr ?></span>
@@ -272,6 +273,49 @@ $stockCovers = [
 </div>
 
 <style>
+/* --- Clean Breadcrumbs --- */
+.breadcrumb {
+    padding: 24px 0 12px 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    background: transparent;
+}
+.breadcrumb a { 
+    color: #475569; 
+    text-decoration: none; 
+    transition: color 0.2s ease;
+}
+.breadcrumb a:hover { color: #bc2121; }
+.breadcrumb li:not(:last-child)::after { 
+    content: "•"; 
+    margin-left: 8px; 
+    color: #cbd5e1; 
+    font-size: 12px;
+}
+.breadcrumb li.active { color: #0f172a; font-weight: 500; }
+
+/* --- Centered and Unbolded Main Gallery Heading --- */
+.main-gallery-title {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 400; /* Unbolded */
+    color: #0f172a;
+    margin: 40px 0 50px 0;
+    letter-spacing: -0.5px;
+}
+.main-gallery-title::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    background: #bc2121;
+    margin: 16px auto 0 auto;
+}
+
 /* ── Tabs design overrides ── */
 .custom-gallery-tabs {
     border-bottom: 2px solid #e2e8f0;
@@ -291,8 +335,8 @@ $stockCovers = [
 }
 .custom-gallery-tabs li.active a,
 .custom-gallery-tabs li a:hover {
-    color: #002b5c !important;
-    border-bottom: 3px solid #002b5c !important;
+    color: #024283 !important; /* Brand Blue */
+    border-bottom: 3px solid #bc2121 !important; /* Brand Red */
     text-decoration: none !important;
 }
 
@@ -328,14 +372,14 @@ $stockCovers = [
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 .album-card:hover, .video-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 28px rgba(0, 43, 92, 0.08);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
 }
 
 /* Images Wrap */
@@ -350,11 +394,52 @@ $stockCovers = [
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .album-card:hover .album-cover,
 .video-card:hover .video-cover {
-    transform: scale(1.05);
+    transform: scale(1.04);
+}
+
+/* Hover overlays */
+.album-img-wrap::after {
+    content: 'View Album';
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.2));
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+.album-card:hover .album-img-wrap::after {
+    opacity: 1;
+}
+
+.video-img-wrap::after {
+    content: 'Play Video';
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.2));
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+.video-card:hover .video-img-wrap::after {
+    opacity: 1;
 }
 
 /* Badges overlay */
@@ -362,7 +447,7 @@ $stockCovers = [
     position: absolute;
     top: 12px;
     left: 12px;
-    background: rgba(0, 43, 92, 0.9);
+    background: rgba(2, 66, 131, 0.9); /* Primary Blue */
     color: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -370,6 +455,7 @@ $stockCovers = [
     border-radius: 40px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    z-index: 3;
 }
 .album-photo-count, .video-duration {
     position: absolute;
@@ -383,6 +469,7 @@ $stockCovers = [
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
+    z-index: 3;
 }
 
 /* Video Play overlay */
@@ -392,19 +479,17 @@ $stockCovers = [
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.15);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.2s;
+    z-index: 1;
 }
 .video-play-overlay i {
     font-size: 3.5rem;
     color: rgba(255,255,255,0.85);
     transition: transform 0.2s ease, color 0.2s;
-}
-.video-card:hover .video-play-overlay {
-    background: rgba(0,0,0,0.4);
 }
 .video-card:hover .video-play-overlay i {
     transform: scale(1.1);
