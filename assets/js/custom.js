@@ -248,7 +248,7 @@ $(document).ready(function($) {
             return;
         }
 
-        let calendarEvents = {};
+        const calendarEvents = getCalendarEvents();
 
         const monthNames = [
             'January','February','March','April','May','June',
@@ -257,18 +257,52 @@ $(document).ready(function($) {
 
         let currentDate = new Date();
 
+        function getCalendarEvents() {
+            return {
+                '2026-07-09': [
+                    {
+                        title: 'University of Hyderabad Research Symposium',
+                        time: '10:00 AM - 1:00 PM',
+                        venue: 'Conference Hall A'
+                    }
+                ],
+                '2026-07-14': [
+                    {
+                        title: 'ANRF-PAIR Innovation Showcase',
+                        time: '11:00 AM - 2:00 PM',
+                        venue: 'Innovation Hub'
+                    },
+                    {
+                        title: 'Research Seminar on Sustainable Health',
+                        time: '3:00 PM - 4:30 PM',
+                        venue: 'Seminar Room 3'
+                    }
+                ],
+                '2026-07-21': [
+                    {
+                        title: 'Strengthening Health Systems Workshop',
+                        time: '10:00 AM - 12:30 PM',
+                        venue: 'Seminar Room 2'
+                    }
+                ]
+            };
+        }
+
         function formatDateLabel(dateKey) {
             const [year, month, day] = dateKey.split('-');
             return `${parseInt(day, 10)} ${monthNames[parseInt(month, 10) - 1]} ${year}`;
         }
 
         function renderNoEvents(dateKey) {
+            const formattedDate = formatDateLabel(dateKey);
+
             noticeBody.innerHTML = `
                 <div class="notice-summary">
-                    <div class="notice-summary-date">${formatDateLabel(dateKey)}</div>
+                    <div class="notice-summary-date">${formattedDate}</div>
                     <div class="notice-empty">No events scheduled for this date.</div>
                 </div>
             `;
+
             selectedText.textContent = 'No events scheduled for this date.';
             selectedText.classList.add('no-event');
         }
@@ -277,41 +311,21 @@ $(document).ready(function($) {
             const eventList = events.map(function(event) {
                 return `
                     <li class="notice-summary-item">
-                        <div class="notice-event-title">
-                            ${event.title}
-                        </div>
-                        <div class="notice-event-meta">
-                            <span class="notice-event-time">
-                                ⏰ ${event.time}
-                            </span>
-                        </div>
-                        <div class="notice-event-meta">
-                            <span class="notice-event-venue">
-                                📍 ${event.venue}
-                            </span>
-                        </div>
-                        <div class="notice-event-meta">
-                            <span class="notice-event-coordinator">
-                                👤 Coordinator: ${event.coordinator}
-                            </span>
-                        </div>
+                        <div class="notice-event-title">→ ${event.title}</div>
+                        <div class="notice-event-meta">• Time: ${event.time}</div>
+                        <div class="notice-event-meta">• Venue: ${event.venue}</div>
                     </li>
                 `;
             }).join('');
 
             noticeBody.innerHTML = `
                 <div class="notice-summary">
-                    <div class="notice-summary-date">
-                        ${formatDateLabel(dateKey)}
-                    </div>
-                    <ul class="notice-summary-list">
-                        ${eventList}
-                    </ul>
+                    <div class="notice-summary-date">${formatDateLabel(dateKey)}</div>
+                    <ul class="notice-summary-list">${eventList}</ul>
                 </div>
             `;
 
-            selectedText.textContent =
-                `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
+            selectedText.textContent = `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
             selectedText.classList.remove('no-event');
         }
 
@@ -371,13 +385,17 @@ $(document).ready(function($) {
             });
         }
 
+        function getActiveDateKey() {
+            return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+        }
+
         document.getElementById('prevMonth').addEventListener('click', function () {
             currentDate.setMonth(currentDate.getMonth() - 1);
             buildCalendar();
             selectedLabel.textContent = 'Selected Date';
             selectedText.textContent = 'Click a date to see events';
             selectedText.classList.add('no-event');
-            renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+            renderNoEvents(getActiveDateKey());
         });
 
         document.getElementById('nextMonth').addEventListener('click', function () {
@@ -386,22 +404,11 @@ $(document).ready(function($) {
             selectedLabel.textContent = 'Selected Date';
             selectedText.textContent = 'Click a date to see events';
             selectedText.classList.add('no-event');
-            renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+            renderNoEvents(getActiveDateKey());
         });
 
-        // Fetch calendar events from dynamic API
-        fetch('get_events.php')
-            .then(response => response.json())
-            .then(data => {
-                calendarEvents = data;
-                buildCalendar();
-                renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
-            })
-            .catch(error => {
-                console.error('Error fetching calendar events:', error);
-                buildCalendar();
-                renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
-            });
+        buildCalendar();
+        renderNoEvents(getActiveDateKey());
     }
 
     initializeEventBoard();

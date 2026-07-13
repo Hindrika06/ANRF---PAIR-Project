@@ -1256,10 +1256,15 @@ ul.list-links a:hover {
 }
 
 /* ======= EVENT NOTICE BOARD ======= */
-.notice-summary {
+#notice-board-body,
+.custom-notice-body {
   max-height: 250px;
   overflow-y: auto;
-  padding-right: 5px;
+  padding: 14px 16px;
+}
+
+.notice-summary {
+  margin: 0;
 }
 
 .notice-summary-date {
@@ -1276,12 +1281,9 @@ ul.list-links a:hover {
 }
 
 .notice-summary-item {
-  padding: 12px 10px;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  background: #fff;
-  border: 1px solid rgba(47, 95, 184, 0.14);
-  box-shadow: 0 10px 20px rgba(47, 95, 184, 0.05);
+  margin-bottom: 12px;
+  padding-left: 12px;
+  border-left: 3px solid #2f5fb8;
 }
 
 .notice-summary-item:last-child {
@@ -1290,30 +1292,20 @@ ul.list-links a:hover {
 
 .notice-event-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: #14213a;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .notice-event-meta {
-  display: grid;
-  gap: 4px;
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.4;
+  line-height: 1.5;
+  margin-left: 8px;
 }
 
-.notice-event-meta span {
-  display: block;
-}
-
-.notice-event-coordinator{
-    display:block;
-    margin-top:4px;
-    color:#666;
-    font-size:12px;
-    font-weight:400;
-    line-height:1.4;
+.notice-event-meta + .notice-event-meta {
+  margin-top: 4px;
 }
 
 .notice-empty {
@@ -1324,14 +1316,10 @@ ul.list-links a:hover {
   padding: 14px 0;
 }
 
-#notice-board-body {
-  max-height: 250px;
-  overflow-y: auto;
-}
-
 @media (max-width: 680px) {
-  .notice-summary-item {
-    padding: 10px 10px;
+  #notice-board-body,
+  .custom-notice-body {
+    max-height: none;
   }
 }
 
