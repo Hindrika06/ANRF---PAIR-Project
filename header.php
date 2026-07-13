@@ -46,15 +46,17 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
            ============================================================ */
         .logo-section {
             background-color: #fff;
-            padding: 12px 0;
+            padding: 10px 0;
+            overflow: visible; /* never clip logos */
         }
 
-        /* Three-column flex row */
+        /* Three-column flex row — perfect vertical centre */
         .logo-container-split {
             display: flex;
-            align-items: center;
+            align-items: center;        /* vertical centre all columns   */
             justify-content: space-between;
             gap: 12px;
+            overflow: visible;          /* prevent arc / image clipping  */
         }
 
         /* Grey separator line — left section only */
@@ -66,7 +68,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             margin: 0 15px;
         }
 
-        /* LEFT: ANRF logo */
+        /* LEFT: ANRF (Anusandhan National Research Foundation) logo */
         .logo-left {
             flex: 1;
             display: flex;
@@ -75,12 +77,20 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         }
         .logo-left a { display: inline-block; line-height: 0; }
         .logo-left-img {
-            max-height: 90px;
+            max-height: 85px;   /* fits comfortably inside the bar */
             width: auto;
             display: block;
         }
 
-        /* CENTER: PAIR badge + title */
+        /* CENTER: ANRF-PAIR logo badge
+           ────────────────────────────────────────────────────────
+           2.png is a landscape image (wider than tall). The logo
+           has "ANRF-PAIR" text at the top and 9 semicircular arcs
+           fanning downward. A max-height that is too large causes
+           the top text to escape the header bar; too small clips
+           the bottom arcs. 70px is the sweet-spot: text and arcs
+           both fully visible with even padding above and below.
+        */
         .logo-center {
             flex: 2;
             display: flex;
@@ -96,9 +106,13 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             gap: 14px;
         }
         .logo-pair-img {
-            max-height: 80px;
+            max-height: 70px;           /* shows full logo incl. arcs    */
             width: auto;
             flex-shrink: 0;
+            display: block;
+            /* ── STATIC: strip every animation / transition ────── */
+            animation: none !important;
+            transition: none !important;
         }
         .logo-center-text {
             display: flex;
@@ -124,7 +138,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             font-style: italic;
         }
 
-        /* RIGHT: UoH logo */
+        /* RIGHT: University of Hyderabad logo */
         .logo-right {
             flex: 1;
             display: flex;
@@ -133,7 +147,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         }
         .logo-right a { display: inline-block; line-height: 0; }
         .logo-right img {
-            max-height: 118px;
+            max-height: 90px;           /* matches left logo height      */
             width: auto;
             display: block;
         }
@@ -263,10 +277,10 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
            RESPONSIVE — TABLET 768px–991px
            ============================================================ */
         @media (min-width: 768px) and (max-width: 991px) {
-            .logo-section { padding: 10px 0; }
-            .logo-left-img  { max-height: 72px; }
-            .logo-pair-img  { max-height: 72px; }
-            .logo-right img { max-height: 66px; }
+            .logo-section { padding: 8px 0; }
+            .logo-left-img  { max-height: 68px; }
+            .logo-pair-img  { max-height: 62px; } /* static, no animation */
+            .logo-right img { max-height: 68px; }
             .project-title-main    { font-size: 16px; }
             .project-title-tagline { font-size: 11px; }
             .logo-center-link { gap: 10px; }
@@ -315,9 +329,9 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                 flex-wrap: nowrap;
             }
 
-            .logo-left-img  { max-height: 78px !important; width: auto; }
-            .logo-pair-img  { max-height: 78px !important; flex-shrink: 0; width: 70px; margin-left: 0; }
-            .logo-right img { max-height: 78px !important; width: auto; max-width: 200px; }
+            .logo-left-img  { max-height: 72px !important; width: auto; }
+            .logo-pair-img  { max-height: 66px !important; flex-shrink: 0; width: auto; margin-left: 0; animation: none !important; transition: none !important; }
+            .logo-right img { max-height: 72px !important; width: auto; max-width: 200px; }
 
             .logo-center-text { min-width: 0; overflow: hidden; }
             .project-title-main {
@@ -461,9 +475,9 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         @media (max-width: 480px) {
             .logo-section { padding: 6px 0; }
             .logo-container-split { gap: 5px !important; padding: 0 6px; justify-content: space-between; }
-            .logo-left-img  { max-height: 58px !important; width: auto; }
-            .logo-pair-img  { max-height: 58px !important; width: 52px; }
-            .logo-right img { max-height: 58px !important; width: auto; max-width: 150px; }
+            .logo-left-img  { max-height: 52px !important; width: auto; }
+            .logo-pair-img  { max-height: 48px !important; width: auto; animation: none !important; transition: none !important; }
+            .logo-right img { max-height: 52px !important; width: auto; max-width: 150px; }
             .logo-center-link { gap: 6px; }
             .project-title-main    { font-size: 6px !important; }
             .project-title-tagline { font-size: 5px  !important; margin-top: 2px; }
@@ -489,193 +503,123 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         }
         <?php if ($isHomePage): ?>
         /* ============================================================
-           FULL SCREEN PRELOADER (CINEMATIC DARK OVERLAY & BLUR)
+           PRELOADER — stroke-dashoffset SVG arc animation
+           Animation sequence (all times from page paint):
+             t=0ms–850ms  : Arc 1 (outermost) draws  [delay 0ms]
+             t=150ms–1000ms: Arc 2 draws              [delay 150ms]
+             t=300ms–1150ms: Arc 3 draws              [delay 300ms]
+             t=450ms–1300ms: Arc 4 draws              [delay 450ms]
+             t=600ms–1450ms: Arc 5 (innermost) draws  [delay 600ms]
+             t=1500ms     : Red dot elastic-pops
+             t=1900ms     : "ANRF-PAIR" text fades in
            ============================================================ */
-        #preloader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            z-index: 999999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            box-sizing: border-box;
-            
-            /* Preloader Dissolution Transitions */
-            transition: backdrop-filter 500ms ease-in-out, -webkit-backdrop-filter 500ms ease-in-out, opacity 500ms ease-in-out;
-        }
-
-        body:not(.preloader-active) #preloader {
-            backdrop-filter: blur(0px);
-            -webkit-backdrop-filter: blur(0px);
-            opacity: 0;
-        }
-
-        #preloader .preloader-logo-container {
-            width: 240px;
-            height: 180px;
-            display: block;
-            mix-blend-mode: multiply;
-        }
-
-        #preloader svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Preloader CSS Animations */
-        .layer-arc-5 {
-            opacity: 0;
-            animation: preloader-fade-in 250ms ease-in-out forwards;
-            animation-delay: 0ms;
-        }
-        .layer-arc-4 {
-            opacity: 0;
-            animation: preloader-fade-in 250ms ease-in-out forwards;
-            animation-delay: 200ms;
-        }
-        .layer-arc-3 {
-            opacity: 0;
-            animation: preloader-fade-in 250ms ease-in-out forwards;
-            animation-delay: 400ms;
-        }
-        .layer-arc-2 {
-            opacity: 0;
-            animation: preloader-fade-in 250ms ease-in-out forwards;
-            animation-delay: 600ms;
-        }
-        .layer-arc-1 {
-            opacity: 0;
-            animation: preloader-fade-in 250ms ease-in-out forwards;
-            animation-delay: 800ms;
-        }
-
-        .layer-dot {
-            opacity: 0;
-            transform-origin: 60px 31px;
-            animation: preloader-dot-animation 250ms ease-in-out forwards;
-            animation-delay: 1000ms;
-        }
-
-        .layer-text {
-            opacity: 0;
-            animation: preloader-text-animation 250ms ease-in-out forwards;
-            animation-delay: 1150ms;
-        }
-
-        .layer-final {
-            opacity: 0;
-            animation: preloader-fade-in 100ms ease-in-out forwards;
-            animation-delay: 1400ms;
-        }
-
-        @keyframes preloader-fade-in {
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes preloader-dot-animation {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1.0);
-            }
-        }
-
-        @keyframes preloader-text-animation {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
 
         body.preloader-active {
             overflow: hidden !important;
             height: 100vh !important;
         }
 
-        #preloader .preloader-loading-block {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
+        /* ── Overlay ──────────────────────────────────────── */
+        #preloader {
+            position: fixed;
+            inset: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 12px;
+            background: rgba(255, 255, 255, 0);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 999999;
+            opacity: 1;
+            transition: backdrop-filter 500ms ease-in-out,
+                        -webkit-backdrop-filter 500ms ease-in-out,
+                        opacity 500ms ease-in-out;
+        }
+
+        body:not(.preloader-active) #preloader {
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
             opacity: 0;
-            animation: preloader-fade-in 400ms ease-in-out 1600ms forwards;
+            pointer-events: none;
         }
 
-        #preloader .preloader-text {
-            color: #024283;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            display: flex;
+        /* ── SVG canvas ───────────────────────────────────── */
+        #preloader .preloader-logo-container {
+            width: clamp(220px, 38vmin, 360px);
+            height: auto;
+            display: block;
         }
 
-        #preloader .preloader-text span {
-            display: inline-block;
-            animation: preloader-wave 1.4s ease-in-out infinite;
+        #preloader svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            overflow: visible;
         }
 
-        #preloader .preloader-text span:nth-child(1)  { animation-delay: 0.00s; }
-        #preloader .preloader-text span:nth-child(2)  { animation-delay: 0.08s; }
-        #preloader .preloader-text span:nth-child(3)  { animation-delay: 0.16s; }
-        #preloader .preloader-text span:nth-child(4)  { animation-delay: 0.24s; }
-        #preloader .preloader-text span:nth-child(5)  { animation-delay: 0.32s; }
-        #preloader .preloader-text span:nth-child(6)  { animation-delay: 0.40s; }
-        #preloader .preloader-text span:nth-child(7)  { animation-delay: 0.48s; }
-        #preloader .preloader-text span:nth-child(8)  { animation-delay: 0.56s; }
-        #preloader .preloader-text span:nth-child(9)  { animation-delay: 0.64s; }
-        #preloader .preloader-text span:nth-child(10) { animation-delay: 0.72s; }
-
-        @keyframes preloader-wave {
-            0%, 40%, 100% { transform: translateY(0); }
-            20% { transform: translateY(-4px); }
+        /* ── Arcs — shared ────────────────────────────────── */
+        /*
+         * All arcs are lower semicircles, center (200,118).
+         * Path formula: M (200−r) 118  A r r 0 0 1 (200+r) 118
+         * stroke-dasharray = πr (half circumference of full circle)
+         *
+         *  Arc  Radius   πr (rounded)
+         *  1    155      487
+         *  2    125      393
+         *  3     95      298
+         *  4     65      204
+         *  5     35      110
+         */
+        .pl-arc {
+            fill: none;
+            stroke: #b8aed4;
+            stroke-width: 7;
+            stroke-linecap: round;
+            animation-name: pl-draw-arc;
+            animation-duration: 850ms;
+            animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+            animation-fill-mode: both;
         }
 
-        #preloader .preloader-bar-track {
-            width: 140px;
-            height: 3px;
-            background: rgba(2, 66, 131, 0.12);
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
+        /* Arc 1 — outermost, r=155, circ≈487 */
+        .pl-arc-1 { stroke-dasharray: 487; stroke-dashoffset: 487; animation-delay: 0ms;   }
+        /* Arc 2 — r=125, circ≈393 */
+        .pl-arc-2 { stroke-dasharray: 393; stroke-dashoffset: 393; animation-delay: 150ms; }
+        /* Arc 3 — r=95, circ≈298 */
+        .pl-arc-3 { stroke-dasharray: 298; stroke-dashoffset: 298; animation-delay: 300ms; }
+        /* Arc 4 — r=65, circ≈204 */
+        .pl-arc-4 { stroke-dasharray: 204; stroke-dashoffset: 204; animation-delay: 450ms; }
+        /* Arc 5 — innermost, r=35, circ≈110 */
+        .pl-arc-5 { stroke-dasharray: 110; stroke-dashoffset: 110; animation-delay: 600ms; }
+
+        @keyframes pl-draw-arc {
+            to { stroke-dashoffset: 0; }
         }
 
-        #preloader .preloader-bar-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 45%;
-            background: linear-gradient(90deg, #024283 0%, #0369a1 50%, #024283 100%);
-            border-radius: 20px;
-            background-size: 200% 100%;
-            animation: preloader-shimmer 1.3s ease-in-out infinite;
+        /* ── Red centre dot — elastic pop ─────────────────── */
+        .pl-dot {
+            transform-box: fill-box;
+            transform-origin: center;
+            transform: scale(0);
+            animation: pl-pop-dot 650ms cubic-bezier(0.34, 1.56, 0.64, 1) 1500ms both;
         }
 
-        @keyframes preloader-shimmer {
-            0%   { left: -60%; }
-            100% { left: 110%; }
+        @keyframes pl-pop-dot {
+            0%   { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* ── "ANRF-PAIR" text — fade + rise ──────────────── */
+        .pl-text {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: pl-fade-text 550ms ease-out 1900ms both;
+        }
+
+        @keyframes pl-fade-text {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0);   }
         }
         <?php endif; ?>
     </style>
@@ -759,11 +703,13 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                     }
                 }
 
-                // 1. Minimum animation duration (1.9s)
+                // 1. Minimum animation duration — must exceed the full animation sequence:
+                //    Last arc finishes at ~1450ms, dot pops at ~2150ms, text fades at ~2450ms.
+                //    Adding 250ms buffer → 2700ms total minimum hold.
                 setTimeout(function() {
                     animationDone = true;
                     attemptDismiss();
-                }, 1900);
+                }, 2700);
 
                 // 2. Wait for slider images
                 var sliderImg = document.querySelector("#homepage-slider img");
@@ -811,71 +757,94 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
 
 <body class="page-homepage-courses">
 <?php if ($isHomePage): ?>
-<div id="preloader">
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  ANRF-PAIR PRELOADER — stroke-dashoffset SVG arc animation  ║
+  ║  viewBox : 0 0 400 300                                       ║
+  ║  Arc center : (200, 118)  — all arcs are lower semicircles   ║
+  ║  Arc order  : drawn outside-in, arc-1 first, arc-5 last      ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<div id="preloader" role="status" aria-label="Loading ANRF-PAIR, please wait">
     <div class="preloader-logo-container">
-        <svg viewBox="0 0 120 90" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <defs>
-                <clipPath id="clip-bottom">
-                    <rect x="0" y="20" width="120" height="70" />
-                </clipPath>
-                <clipPath id="clip-text">
-                    <rect x="0" y="0" width="120" height="20" />
-                </clipPath>
-                <clipPath id="clip-dot">
-                    <circle cx="60" cy="31" r="9" />
-                </clipPath>
-                
-                <!-- SVG concentric arc masks -->
-                <clipPath id="clip-ring-1">
-                    <path d="M 60,11.5 A 19.5,19.5 0 1,0 60,50.5 A 19.5,19.5 0 1,0 60,11.5
-                             M 60,21 A 10,10 0 1,1 60,41 A 10,10 0 1,1 60,21" clip-rule="evenodd" />
-                </clipPath>
-                <clipPath id="clip-ring-2">
-                    <path d="M 60,4 A 27,27 0 1,0 60,58 A 27,27 0 1,0 60,4
-                             M 60,11.5 A 19.5,19.5 0 1,1 60,50.5 A 19.5,19.5 0 1,1 60,11.5" clip-rule="evenodd" />
-                </clipPath>
-                <clipPath id="clip-ring-3">
-                    <path d="M 60,-4 A 35,35 0 1,0 60,66 A 35,35 0 1,0 60,-4
-                             M 60,4 A 27,27 0 1,1 60,58 A 27,27 0 1,1 60,4" clip-rule="evenodd" />
-                </clipPath>
-                <clipPath id="clip-ring-4">
-                    <path d="M 60,-11.5 A 42.5,42.5 0 1,0 60,73.5 A 42.5,42.5 0 1,0 60,-11.5
-                             M 60,-4 A 35,35 0 1,1 60,66 A 35,35 0 1,1 60,-4" clip-rule="evenodd" />
-                </clipPath>
-                <clipPath id="clip-ring-5">
-                    <path d="M 60,-27 A 58,58 0 1,0 60,89 A 58,58 0 1,0 60,-27
-                             M 60,-11.5 A 42.5,42.5 0 1,1 60,73.5 A 42.5,42.5 0 1,1 60,-11.5" clip-rule="evenodd" />
-                </clipPath>
-            </defs>
-            
-            <!-- Animated SVG layers using the original 2.png image -->
-            <g class="layer-text" clip-path="url(#clip-text)">
-                <image href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
-            </g>
-            <g class="layer-dot" clip-path="url(#clip-dot)">
-                <image href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
-            </g>
-            <g clip-path="url(#clip-bottom)">
-                <image class="layer-arc-5" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-5)" />
-                <image class="layer-arc-4" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-4)" />
-                <image class="layer-arc-3" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-3)" />
-                <image class="layer-arc-2" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-2)" />
-                <image class="layer-arc-1" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" clip-path="url(#clip-ring-1)" />
-            </g>
-            
-            <!-- Final overlay of original unclipped image to guarantee absolute pixel-identity -->
-            <image class="layer-final" href="2.png" xlink:href="2.png" x="0" y="0" width="120" height="90" />
-        </svg>
-    </div>
+        <svg viewBox="0 0 400 300"
+             xmlns="http://www.w3.org/2000/svg"
+             aria-hidden="true">
 
-    <!-- Loading text + progress bar -->
-    <div class="preloader-loading-block">
-        <div class="preloader-text" aria-label="Loading">
-            <span>L</span><span>O</span><span>A</span><span>D</span><span>I</span><span>N</span><span>G</span><span>&nbsp;</span><span>.</span><span>.</span>
-        </div>
-        <div class="preloader-bar-track">
-            <div class="preloader-bar-fill"></div>
-        </div>
+            <defs>
+                <!--
+                  Rich radial gradient for the red dot:
+                  bright highlight top-left, deep crimson core, near-black edge.
+                -->
+                <radialGradient id="pl-dot-grad" cx="36%" cy="30%" r="68%">
+                    <stop offset="0%"   stop-color="#ff5252"/>
+                    <stop offset="50%"  stop-color="#c62828"/>
+                    <stop offset="100%" stop-color="#7b0000"/>
+                </radialGradient>
+            </defs>
+
+            <!--
+              ┌─────────────────────────────────────────────────────┐
+              │  5 CONCENTRIC ARCS — drawn OUTSIDE → IN            │
+              │                                                     │
+              │  All arcs share centre point (200, 118).           │
+              │  Each is a lower semicircle (sweep-flag = 1).       │
+              │  Path formula:                                      │
+              │    M (200−r) 118  A r r 0 0 1 (200+r) 118          │
+              │                                                     │
+              │  Arc  Radius  stroke-dasharray (=πr, rounded)      │
+              │   1    155         487   ← animates first           │
+              │   2    125         393                              │
+              │   3     95         298                              │
+              │   4     65         204                              │
+              │   5     35         110   ← animates last            │
+              └─────────────────────────────────────────────────────┘
+            -->
+
+            <!-- Arc 1 — outermost — r=155, dasharray=487 -->
+            <path class="pl-arc pl-arc-1"
+                  d="M 45 118 A 155 155 0 0 0 355 118"/>
+
+            <!-- Arc 2 — r=125, dasharray=393 -->
+            <path class="pl-arc pl-arc-2"
+                  d="M 75 118 A 125 125 0 0 0 325 118"/>
+
+            <!-- Arc 3 — r=95, dasharray=298 -->
+            <path class="pl-arc pl-arc-3"
+                  d="M 105 118 A 95 95 0 0 0 295 118"/>
+
+            <!-- Arc 4 — r=65, dasharray=204 -->
+            <path class="pl-arc pl-arc-4"
+                  d="M 135 118 A 65 65 0 0 0 265 118"/>
+
+            <!-- Arc 5 — innermost — r=35, dasharray=110 -->
+            <path class="pl-arc pl-arc-5"
+                  d="M 165 118 A 35 35 0 0 0 235 118"/>
+
+            <!--
+              RED CENTRE DOT
+              Scales from 0→1 with elastic overshoot after arc-5 finishes.
+              Positioned at the arc origin (200, 118), r=20.
+            -->
+            <circle class="pl-dot"
+                    cx="200" cy="118" r="20"
+                    fill="url(#pl-dot-grad)"/>
+
+            <!--
+              "ANRF-PAIR" LOGOTYPE
+              Fades in + rises slightly immediately after the dot appears.
+              Baseline at y=67, font-size 54, weight 900 — matching the logo.
+            -->
+            <text class="pl-text"
+                  x="200" y="67"
+                  text-anchor="middle"
+                  font-family="'Montserrat', 'Arial Black', Arial, sans-serif"
+                  font-weight="900"
+                  font-size="54"
+                  fill="#111111"
+                  letter-spacing="-1.5">ANRF-PAIR</text>
+
+        </svg>
     </div>
 </div>
 <?php endif; ?>
@@ -891,24 +860,31 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         <div class="container">
             <div class="logo-container-split">
 
-                <!-- LEFT: ANRF logo -->
+                <!-- LEFT: Anusandhan National Research Foundation (ANRF) logo -->
                 <div class="logo-left">
-                    <a href="https://anrfonline.in/ANRF/HomePage">
-                        <img src="logos/ANRF Image.png" alt="ANRF Logo" class="logo-left-img">
+                    <a href="https://anrfonline.in/ANRF/HomePage" target="_blank" rel="noopener">
+                        <img src="logos/ANRF Image.png"
+                             alt="Anusandhan National Research Foundation"
+                             class="logo-left-img">
                     </a>
                 </div>
 
-                <!-- CENTER: PAIR badge + title text -->
+                <!-- CENTER: ANRF-PAIR logo — STATIC, no animations
+                     2.png is the project badge (landscape, arcs open downward).
+                     max-height:70px keeps text + all arcs within the bar.     -->
                 <div class="logo-center">
                     <a href="index.php" class="logo-center-link">
-                        <img src="2.png" alt="ANRF-PAIR Logo" class="logo-pair-img">
+                        <img src="2.png"
+                             alt="ANRF-PAIR Project Logo"
+                             class="logo-pair-img"
+                             style="animation:none!important;transition:none!important;">
                     </a>
                 </div>
 
                 <!-- RIGHT: University of Hyderabad logo -->
                 <div class="logo-right">
-                    <a href="https://uohyd.ac.in/">
-                        <img src="3.png" alt="University of Hyderabad Logo">
+                    <a href="https://uohyd.ac.in/" target="_blank" rel="noopener">
+                        <img src="3.png" alt="University of Hyderabad">
                     </a>
                 </div>
 
