@@ -35,26 +35,26 @@
     background:#bc2121;
     color:#fff;
     width:190px;              /* Fixed width */
-    height:55px;              /* Fixed height */
+    height:38px;              /* Slimmer height */
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:16px;
+    font-size:14px;
     font-weight:700;
 }
 
 .whatsnew-scroll{
     flex:1;
-    background:#0056b3;
-    height:55px;              /* Same height */
+    background:#0b4c8c;
+    height:38px;              /* Slimmer height */
     display:flex;
     align-items:center;
     padding:0 15px;
 }
 
 .whatsnew-scroll marquee{
-    line-height:55px;
-    height:55px;
+    line-height:38px;
+    height:38px;
 }
 
 .whatsnew-scroll a{

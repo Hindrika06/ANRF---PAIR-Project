@@ -98,7 +98,7 @@
     }
 
     .custom-calendar-header {
-        background: #2f5fb8;
+        background: #0b4c8c;
         color: #fff;
         text-align: center;
         padding: 12px 10px;
@@ -150,9 +150,9 @@
     }
 
     .custom-nav-btn:hover {
-        background: #2f5fb8;
+        background: #0b4c8c;
         color: #fff;
-        border-color: #2f5fb8;
+        border-color: #0b4c8c;
     }
 
     .custom-calendar-table {
@@ -183,7 +183,7 @@
     }
 
     .custom-calendar-table td.today {
-        background: #2f5fb8;
+        background: #0b4c8c;
         color: #fff;
         border-radius: 50%;
         font-weight: bold;
@@ -248,7 +248,7 @@
     }
 
     .custom-notice-header {
-        background: #2f5fb8;
+        background: #0b4c8c;
         color: #fff;
         text-align: center;
         padding: 12px 10px;
@@ -276,7 +276,7 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #2f5fb8;
+        background: #0b4c8c;
         flex-shrink: 0;
         margin-top: 5px;
     }
@@ -311,7 +311,7 @@
     }
 
     .sidebar-ql-header {
-        background: #2f5fb8;
+        background: #0b4c8c;
         color: #fff;
         text-align: center;
         padding: 12px 10px;
