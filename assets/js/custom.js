@@ -314,11 +314,12 @@ $(document).ready(function($) {
         function renderEvents(dateKey, events) {
             const formattedDate = formatDateLabel(dateKey);
             const eventList = events.map(function(event) {
-                const meta = `${event.time} | ${event.venue} | ${event.coordinator}`;
+                const venueCoord = `${event.venue} | ${event.coordinator}`;
                 return `
                     <li class="notice-summary-item">
-                        <div class="notice-event-title">→ ${event.title}</div>
-                        <div class="notice-event-meta notice-event-meta--single" title="${meta}">${meta}</div>
+                        <div class="notice-event-date">${formattedDate}</div>
+                        <div class="notice-event-title">${event.title}</div>
+                        <div class="notice-event-meta notice-event-meta--single" title="${venueCoord}">${venueCoord}</div>
                     </li>
                 `;
             }).join('');
