@@ -959,7 +959,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                                 <ul class="list-unstyled child-navigation">
                                     <li><a href="participating-institutions.php"><i class="fa fa-sitemap"></i> Participating Institutions</a></li>
                                     <li><a href="collobrations.php"><i class="fa fa-exchange"></i> Collaborations</a></li>
-                                    <li><a href="institute.php"><i class="fa fa-exchange"></i> Institutions KPIs</a></li>
+                                    <li><a href="institute.php"><i class="fa fa-bar-chart-o"></i> Institutions KPIs</a></li>
                                 </ul>
                             </li>
 
