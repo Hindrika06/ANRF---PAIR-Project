@@ -1,6 +1,7 @@
 <?php
 $pageTitle  = $pageTitle  ?? 'ANRF–PAIR Project | Innovations in Health and Medical Technologies';
 $activePage = $activePage ?? '';
+$isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER['PHP_SELF'], '/admin/') === false);
 ?>
 <!DOCTYPE html>
 <html lang="en-US">
@@ -486,6 +487,7 @@ $activePage = $activePage ?? '';
             .project-title-main    { font-size: 9px !important; }
             .project-title-tagline { display: none !important; }
         }
+        <?php if ($isHomePage): ?>
         /* ============================================================
            FULL SCREEN PRELOADER (CINEMATIC DARK OVERLAY & BLUR)
            ============================================================ */
@@ -604,41 +606,36 @@ $activePage = $activePage ?? '';
 
         body.preloader-active {
             overflow: hidden !important;
+            height: 100vh !important;
         }
 
-        /* ── Loading Text & Progress Bar ─────────────────────────── */
         #preloader .preloader-loading-block {
             position: absolute;
-            bottom: calc(50% - 130px);
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             opacity: 0;
             animation: preloader-fade-in 400ms ease-in-out 1600ms forwards;
         }
 
-        /* Animated letter wave */
         #preloader .preloader-text {
+            color: #024283;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
             display: flex;
-            gap: 2px;
-            align-items: flex-end;
         }
 
         #preloader .preloader-text span {
             display: inline-block;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.18em;
-            color: #1a3a6b;
-            text-transform: uppercase;
             animation: preloader-wave 1.4s ease-in-out infinite;
         }
 
-        /* Stagger each letter */
         #preloader .preloader-text span:nth-child(1)  { animation-delay: 0.00s; }
         #preloader .preloader-text span:nth-child(2)  { animation-delay: 0.08s; }
         #preloader .preloader-text span:nth-child(3)  { animation-delay: 0.16s; }
@@ -651,16 +648,15 @@ $activePage = $activePage ?? '';
         #preloader .preloader-text span:nth-child(10) { animation-delay: 0.72s; }
 
         @keyframes preloader-wave {
-            0%, 60%, 100% { transform: translateY(0px);   color: #1a3a6b; }
-            30%            { transform: translateY(-7px);  color: #0d5cbf; }
+            0%, 40%, 100% { transform: translateY(0); }
+            20% { transform: translateY(-4px); }
         }
 
-        /* Shimmer progress bar */
         #preloader .preloader-bar-track {
-            width: 180px;
+            width: 140px;
             height: 3px;
-            border-radius: 99px;
-            background: rgba(26, 58, 107, 0.15);
+            background: rgba(2, 66, 131, 0.12);
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
         }
@@ -668,15 +664,12 @@ $activePage = $activePage ?? '';
         #preloader .preloader-bar-fill {
             position: absolute;
             top: 0;
-            left: -60%;
+            left: 0;
             height: 100%;
-            width: 60%;
-            border-radius: 99px;
-            background: linear-gradient(90deg,
-                transparent 0%,
-                #0d5cbf     40%,
-                #4a9eff     60%,
-                transparent 100%);
+            width: 45%;
+            background: linear-gradient(90deg, #024283 0%, #0369a1 50%, #024283 100%);
+            border-radius: 20px;
+            background-size: 200% 100%;
             animation: preloader-shimmer 1.3s ease-in-out infinite;
         }
 
@@ -684,33 +677,140 @@ $activePage = $activePage ?? '';
             0%   { left: -60%; }
             100% { left: 110%; }
         }
+        <?php endif; ?>
     </style>
     <script>
-        console.log("Preloader: Script loaded in head.");
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("Preloader: DOMContentLoaded fired, starting animation.");
-            document.body.classList.add("preloader-active");
-            
-            setTimeout(function() {
-                console.log("Preloader: Holding time complete, dissolving preloader.");
-                document.body.classList.remove("preloader-active");
+        (function() {
+            var isHomePage = <?php echo json_encode($isHomePage); ?>;
+            if (isHomePage) {
+                var hasLoadedHome = sessionStorage.getItem('homePageLoaded');
+                var isRefresh = false;
+                try {
+                    if (window.performance && window.performance.getEntriesByType) {
+                        var navs = window.performance.getEntriesByType('navigation');
+                        if (navs.length > 0 && navs[0].type === 'reload') {
+                            isRefresh = true;
+                        }
+                    } else if (window.performance && window.performance.navigation) {
+                        if (window.performance.navigation.type === 1) {
+                            isRefresh = true;
+                        }
+                    }
+                } catch(e) {}
                 
+                if (!hasLoadedHome || isRefresh) {
+                    console.log("Preloader: Home page first load or refresh detected. Displaying preloader.");
+                    return;
+                }
+            }
+            // Otherwise, inject style to hide preloader immediately and run normal flow
+            var style = document.createElement('style');
+            style.innerHTML = '#preloader { display: none !important; opacity: 0 !important; pointer-events: none !important; }';
+            document.head.appendChild(style);
+        })();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var isHomePage = <?php echo json_encode($isHomePage); ?>;
+            var preloader = document.getElementById("preloader");
+            if (!preloader) return;
+
+            // Check if we should show the preloader
+            var hasLoadedHome = sessionStorage.getItem('homePageLoaded');
+            var isRefresh = false;
+            try {
+                if (window.performance && window.performance.getEntriesByType) {
+                    var navs = window.performance.getEntriesByType('navigation');
+                    if (navs.length > 0 && navs[0].type === 'reload') {
+                        isRefresh = true;
+                    }
+                } else if (window.performance && window.performance.navigation) {
+                    if (window.performance.navigation.type === 1) {
+                        isRefresh = true;
+                    }
+                }
+            } catch(e) {}
+
+            var showPreloader = isHomePage && (!hasLoadedHome || isRefresh);
+
+            if (showPreloader) {
+                console.log("Preloader: Activating preloader.");
+                document.body.classList.add("preloader-active");
+
+                var animationDone = false;
+                var assetsLoaded = false;
+
+                function attemptDismiss() {
+                    if (animationDone && assetsLoaded) {
+                        console.log("Preloader: Holding time complete and assets loaded. Dissolving preloader.");
+                        document.body.classList.remove("preloader-active");
+                        
+                        // Mark as loaded so next visits in the same session bypass the preloader
+                        sessionStorage.setItem('homePageLoaded', 'true');
+
+                        setTimeout(function() {
+                            console.log("Preloader: Dissolve complete, removing preloader and starting autoplay.");
+                            if (preloader) {
+                                preloader.remove();
+                            }
+                            if (typeof window.startSliderAutoplay === "function") {
+                                window.startSliderAutoplay();
+                            }
+                        }, 500);
+                    }
+                }
+
+                // 1. Minimum animation duration (1.9s)
                 setTimeout(function() {
-                    console.log("Preloader: Dissolve complete, removing preloader and starting autoplay.");
-                    var preloader = document.getElementById("preloader");
-                    if (preloader) {
-                        preloader.remove();
+                    animationDone = true;
+                    attemptDismiss();
+                }, 1900);
+
+                // 2. Wait for slider images
+                var sliderImg = document.querySelector("#homepage-slider img");
+                if (sliderImg) {
+                    if (sliderImg.complete) {
+                        assetsLoaded = true;
+                        attemptDismiss();
+                    } else {
+                        sliderImg.addEventListener("load", function() {
+                            console.log("Preloader: Slider image loaded.");
+                            assetsLoaded = true;
+                            attemptDismiss();
+                        });
+                        sliderImg.addEventListener("error", function() {
+                            console.log("Preloader: Slider image load error.");
+                            assetsLoaded = true;
+                            attemptDismiss();
+                        });
                     }
-                    if (typeof window.startSliderAutoplay === "function") {
-                        window.startSliderAutoplay();
-                    }
-                }, 500); // 500ms preloader fade out and blur dissolution
-            }, 1900); // 1.4s logo reveal + 500ms hold = 1.9s
+                } else {
+                    assetsLoaded = true;
+                    attemptDismiss();
+                }
+            } else {
+                // Not showing preloader - clean up preloader element immediately
+                console.log("Preloader: Bypassing preloader.");
+                if (preloader) {
+                    preloader.remove();
+                }
+                // Start autoplay immediately if available
+                if (typeof window.startSliderAutoplay === "function") {
+                    window.startSliderAutoplay();
+                } else {
+                    // Check again after a tiny timeout or on window load just in case
+                    window.addEventListener("load", function() {
+                        if (typeof window.startSliderAutoplay === "function") {
+                            window.startSliderAutoplay();
+                        }
+                    });
+                }
+            }
         });
     </script>
 </head>
 
 <body class="page-homepage-courses">
+<?php if ($isHomePage): ?>
 <div id="preloader">
     <div class="preloader-logo-container">
         <svg viewBox="0 0 120 90" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -778,6 +878,7 @@ $activePage = $activePage ?? '';
         </div>
     </div>
 </div>
+<?php endif; ?>
 <div class="wrapper">
 
 <!-- ===== HEADER ===================================================== -->

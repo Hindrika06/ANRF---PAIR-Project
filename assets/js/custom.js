@@ -248,38 +248,7 @@ $(document).ready(function($) {
             return;
         }
 
-        const calendarEvents = {
-            '2026-07-09': [
-                {
-                    title: 'University of Hyderabad Research Symposium',
-                    time: '10:00 AM - 1:00 PM',
-                    venue: 'Conference Hall A',
-                    coordinator: "Dr. Ramesh Kumar"
-                }
-            ],
-            '2026-07-14': [
-                {
-                    title: 'ANRF-PAIR Innovation Showcase',
-                    time: '11:00 AM - 2:00 PM',
-                    venue: 'Innovation Hub',
-                    coordinator: "Dr. Priya Sharma"
-                },
-                {
-                    title: 'Research Seminar on Sustainable Health',
-                    time: '3:00 PM - 4:30 PM',
-                    venue: 'Seminar Room 3',
-                    coordinator: "Dr. Anil Patel"
-                }
-            ],
-            '2026-07-21': [
-                {
-                    title: 'Strengthening Health Systems Workshop',
-                    time: '10:00 AM - 12:30 PM',
-                    venue: 'Seminar Room 2',
-                    coordinator: "Dr. Meera Reddy"
-                }
-            ]
-        };
+        let calendarEvents = {};
 
         const monthNames = [
             'January','February','March','April','May','June',
@@ -305,56 +274,46 @@ $(document).ready(function($) {
         }
 
         function renderEvents(dateKey, events) {
+            const eventList = events.map(function(event) {
+                return `
+                    <li class="notice-summary-item">
+                        <div class="notice-event-title">
+                            ${event.title}
+                        </div>
+                        <div class="notice-event-meta">
+                            <span class="notice-event-time">
+                                ⏰ ${event.time}
+                            </span>
+                        </div>
+                        <div class="notice-event-meta">
+                            <span class="notice-event-venue">
+                                📍 ${event.venue}
+                            </span>
+                        </div>
+                        <div class="notice-event-meta">
+                            <span class="notice-event-coordinator">
+                                👤 Coordinator: ${event.coordinator}
+                            </span>
+                        </div>
+                    </li>
+                `;
+            }).join('');
 
-    const eventList = events.map(function(event) {
-
-        return `
-            <li class="notice-summary-item">
-
-                <div class="notice-event-title">
-                    ${event.title}
+            noticeBody.innerHTML = `
+                <div class="notice-summary">
+                    <div class="notice-summary-date">
+                        ${formatDateLabel(dateKey)}
+                    </div>
+                    <ul class="notice-summary-list">
+                        ${eventList}
+                    </ul>
                 </div>
+            `;
 
-                <div class="notice-event-meta">
-                    <span class="notice-event-time">
-                        ⏰ ${event.time}
-                    </span>
-                </div>
-
-                <div class="notice-event-meta">
-                    <span class="notice-event-venue">
-                        📍 ${event.venue}
-                    </span>
-                </div>
-
-                <div class="notice-event-meta">
-                    <span class="notice-event-coordinator">
-                        👤 Coordinator: ${event.coordinator}
-                    </span>
-                </div>
-
-            </li>
-        `;
-
-    }).join('');
-
-    noticeBody.innerHTML = `
-        <div class="notice-summary">
-            <div class="notice-summary-date">
-                ${formatDateLabel(dateKey)}
-            </div>
-
-            <ul class="notice-summary-list">
-                ${eventList}
-            </ul>
-        </div>
-    `;
-
-    selectedText.textContent =
-        `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
-
-    selectedText.classList.remove('no-event');
-}
+            selectedText.textContent =
+                `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
+            selectedText.classList.remove('no-event');
+        }
 
         function buildCalendar() {
             const monthIndex = currentDate.getMonth();
@@ -430,8 +389,19 @@ $(document).ready(function($) {
             renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
         });
 
-        buildCalendar();
-        renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+        // Fetch calendar events from dynamic API
+        fetch('get_events.php')
+            .then(response => response.json())
+            .then(data => {
+                calendarEvents = data;
+                buildCalendar();
+                renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+            })
+            .catch(error => {
+                console.error('Error fetching calendar events:', error);
+                buildCalendar();
+                renderNoEvents(formatDateLabel(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`));
+            });
     }
 
     initializeEventBoard();

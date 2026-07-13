@@ -52,35 +52,52 @@
         .custom-sidebar ul.metismenu li a {
             color: #a7d9c8 !important;
         }
-        .custom-sidebar ul.metismenu li a i {
-            color: #6ec6aa !important;
+        body.theme-admin .custom-sidebar ul.metismenu li a i {
+            color: #ffffff !important;
         }
         .custom-sidebar ul.metismenu li a:hover {
             background: rgba(255,255,255,0.10) !important;
             color: #ffffff !important;
             transform: translateX(5px);
         }
-        .custom-sidebar ul.metismenu li a:hover i {
-            color: #4ade80 !important;
+        body.theme-admin .custom-sidebar ul.metismenu li a:hover i {
+            color: #ffffff !important;
         }
-        .custom-sidebar ul.metismenu li.active > a,
-        .custom-sidebar ul.metismenu li a.active {
+        body.theme-admin .custom-sidebar ul.metismenu li.mm-active > a,
+        body.theme-admin .custom-sidebar ul.metismenu li.active > a,
+        body.theme-admin .custom-sidebar ul.metismenu li a.mm-active,
+        body.theme-admin .custom-sidebar ul.metismenu li a.active {
             background: rgba(255,255,255,0.15) !important;
             color: #ffffff !important;
             font-weight: 700;
-            border-left: 3px solid #4ade80;
+            border-left: none !important;
+        }
+        body.theme-admin .custom-sidebar ul.metismenu > li > a:before {
+            background: #ffffff !important;
         }
 
-        /* ── Portal Badge: vibrant emerald pill ── */
+        /* ── Portal Badge: minimal navigation title ── */
         .custom-sidebar .portal-badge {
-            background: linear-gradient(135deg, #065f46, #047857) !important;
-            color: #d1fae5 !important;
-            border: 1px solid rgba(74,222,128,0.3) !important;
-            box-shadow: 0 2px 8px rgba(4,120,87,0.4) !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            margin-top: 5px !important;
         }
-        .custom-sidebar .portal-badge i,
+        .custom-sidebar .portal-badge i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+        }
         .custom-sidebar .portal-badge span {
-            color: #d1fae5 !important;
+            color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
         }
 
         /* ── Sidebar Footer ── */
@@ -215,6 +232,30 @@
             opacity: 1 !important;
         }
 
+        /* ── Portal Badge: minimal navigation title ── */
+        body.theme-super-admin .custom-sidebar .portal-badge {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            margin-top: 5px !important;
+        }
+        body.theme-super-admin .custom-sidebar .portal-badge i {
+            color: #ffffff !important;
+            font-size: 14px !important;
+        }
+        body.theme-super-admin .custom-sidebar .portal-badge span {
+            color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.1em !important;
+            text-transform: uppercase !important;
+        }
+
         /* ── 1. Sidebar: Rich Sapphire gradient with subtle shine ── */
         .custom-sidebar {
             background: linear-gradient(180deg, #01244a 0%, #024283 50%, #00152b 100%) !important;
@@ -239,8 +280,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
-        .custom-sidebar ul.metismenu li a i {
-            color: #60a5fa !important;
+        body.theme-super-admin .custom-sidebar ul.metismenu li a i {
+            color: #ffffff !important;
             transition: color 0.3s ease !important;
         }
 
@@ -250,17 +291,22 @@
             transform: translateX(5px) !important;
         }
 
-        .custom-sidebar ul.metismenu li a:hover i {
-            color: #38bdf8 !important;
+        body.theme-super-admin .custom-sidebar ul.metismenu li a:hover i {
+            color: #ffffff !important;
         }
 
-        .custom-sidebar ul.metismenu li.active > a,
-        .custom-sidebar ul.metismenu li a.active {
+        body.theme-super-admin .custom-sidebar ul.metismenu li.mm-active > a,
+        body.theme-super-admin .custom-sidebar ul.metismenu li.active > a,
+        body.theme-super-admin .custom-sidebar ul.metismenu li a.mm-active,
+        body.theme-super-admin .custom-sidebar ul.metismenu li a.active {
             background: rgba(255, 255, 255, 0.16) !important;
             color: #ffffff !important;
             font-weight: 700;
-            border-left: 3px solid #38bdf8 !important;
+            border-left: none !important;
             box-shadow: inset 4px 0 10px rgba(0,0,0,0.1);
+        }
+        body.theme-super-admin .custom-sidebar ul.metismenu > li > a:before {
+            background: #ffffff !important;
         }
 
         /* ── Portal Badge: Glossy sapphire pill with neon glow border ── */
@@ -470,69 +516,7 @@
 						
 							
 							
-							<li class="nav-item dropdown notification_dropdown">
-                                <a class="nav-link " href="javascript:void(0);" data-bs-toggle="dropdown">
-									<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M22.1666 5.83331H20.9999V3.49998C20.9999 3.19056 20.877 2.89381 20.6582 2.67502C20.4394 2.45623 20.1427 2.33331 19.8333 2.33331C19.5238 2.33331 19.2271 2.45623 19.0083 2.67502C18.7895 2.89381 18.6666 3.19056 18.6666 3.49998V5.83331H9.33325V3.49998C9.33325 3.19056 9.21034 2.89381 8.99154 2.67502C8.77275 2.45623 8.47601 2.33331 8.16659 2.33331C7.85717 2.33331 7.56042 2.45623 7.34163 2.67502C7.12284 2.89381 6.99992 3.19056 6.99992 3.49998V5.83331H5.83325C4.90499 5.83331 4.01476 6.20206 3.35838 6.85844C2.702 7.51482 2.33325 8.40506 2.33325 9.33331V10.5H25.6666V9.33331C25.6666 8.40506 25.2978 7.51482 24.6415 6.85844C23.9851 6.20206 23.0948 5.83331 22.1666 5.83331Z" fill="#717579"/>
-										<path d="M2.33325 22.1666C2.33325 23.0949 2.702 23.9851 3.35838 24.6415C4.01476 25.2979 4.90499 25.6666 5.83325 25.6666H22.1666C23.0948 25.6666 23.9851 25.2979 24.6415 24.6415C25.2978 23.9851 25.6666 23.0949 25.6666 22.1666V12.8333H2.33325V22.1666Z" fill="#717579"/>
-									</svg>
-									<span class="badge light text-white bg-success rounded-circle">!</span>
-                                </a>
-								<div class="dropdown-menu dropdown-menu-end">
-									<div id="DZ_W_TimeLine02" class="widget-timeline dlab-scroll style-1 ps ps--active-y p-3 height370">
-										<ul class="timeline">
-											<li>
-												<div class="timeline-badge primary"></div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>10 minutes ago</span>
-													<h6 class="mb-0">Youtube, a video-sharing website, goes live <strong class="text-primary">$500</strong>.</h6>
-												</a>
-											</li>
-											<li>
-												<div class="timeline-badge info">
-												</div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>20 minutes ago</span>
-													<h6 class="mb-0">New order placed <strong class="text-info">#XF-2356.</strong></h6>
-													<p class="mb-0">Quisque a consequat ante Sit amet magna at volutapt...</p>
-												</a>
-											</li>
-											<li>
-												<div class="timeline-badge danger">
-												</div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>30 minutes ago</span>
-													<h6 class="mb-0">john just buy your product <strong class="text-warning">Sell $250</strong></h6>
-												</a>
-											</li>
-											<li>
-												<div class="timeline-badge success">
-												</div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>15 minutes ago</span>
-													<h6 class="mb-0">StumbleUpon is acquired by eBay. </h6>
-												</a>
-											</li>
-											<li>
-												<div class="timeline-badge warning">
-												</div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>20 minutes ago</span>
-													<h6 class="mb-0">Mashable, a news website and blog, goes live.</h6>
-												</a>
-											</li>
-											<li>
-												<div class="timeline-badge dark">
-												</div>
-												<a class="timeline-panel text-muted" href="javascript:void(0);">
-													<span>20 minutes ago</span>
-													<h6 class="mb-0">Mashable, a news website and blog, goes live.</h6>
-												</a>
-											</li>
-										</ul>
-									</div>
-								</div>
-							</li>
+
 							
 							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px;">
 								<a class="nav-link p-0" href="logout.php" title="Logout" style="display: flex; align-items: center;">

@@ -6,67 +6,48 @@ session_start();
 require_once 'config/db.php';
 
 $error = "";
-$institute = "";
-
-$institutes = [
-    'cuk'    => 'Central University of Karnataka (CUK)',
-    'kannur' => 'Kannur University',
-    'mgu'    => 'Mahatma Gandhi University (MGU)',
-    'ou'     => 'Osmania University (OU)',
-    'svu'    => 'Sri Venkateswara University (SVU)',
-    'yvu'    => 'Yogi Vemana University (YVU)',
-];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $username  = trim($_POST['username']);
-    $password  = trim($_POST['password']);
-    $institute = trim($_POST['institute'] ?? '');
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    if ($institute === '' || !isset($institutes[$institute])) {
-        $error = "Please select your institute!";
-    } else {
+    $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE username = ?");
+    $stmt->execute([$username]);
 
-        $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE username = ?");
-        $stmt->execute([$username]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+        $role = $row['role'] ?? 'admin';
 
-        if ($row) {
-            $role = $row['role'] ?? 'admin';
-            $isAuthorizedForInstitute = ($role === 'super_admin') || ($row['institute_prefix'] === $institute);
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['user_id']          = $row['id'];
+            $_SESSION['username']         = $row['username'];
+            $_SESSION['institute_prefix'] = $row['institute_prefix'];
+            $_SESSION['role']             = $role;
+            $_SESSION['active_prefix']    = $row['institute_prefix'];
 
-            if (!$isAuthorizedForInstitute) {
-                $error = "This account is not authorized for the selected institute!";
-            } elseif (password_verify($password, $row['password'])) {
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
-                $_SESSION['institute_prefix'] = $row['institute_prefix'];
-                $_SESSION['role'] = $role;
-                $_SESSION['active_prefix'] = $institute;
+            header("Location: publications.php");
+            exit();
+        } elseif ($password === $row['password']) {
+            // Migrate plain-text password to hash on first login
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            $update  = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+            $update->execute([$newHash, $row['id']]);
 
-                header("Location: publications.php");
-                exit();
-            } elseif ($password === $row['password']) {
-                // If the stored password is plain text, migrate it to a hash on first successful login.
-                $newHash = password_hash($password, PASSWORD_DEFAULT);
-                $update = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-                $update->execute([$newHash, $row['id']]);
+            $_SESSION['user_id']          = $row['id'];
+            $_SESSION['username']         = $row['username'];
+            $_SESSION['institute_prefix'] = $row['institute_prefix'];
+            $_SESSION['role']             = $role;
+            $_SESSION['active_prefix']    = $row['institute_prefix'];
 
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['username'];
-                $_SESSION['institute_prefix'] = $row['institute_prefix'];
-                $_SESSION['role'] = $role;
-                $_SESSION['active_prefix'] = $institute;
-
-                header("Location: publications.php");
-                exit();
-            } else {
-                $error = "Invalid password!";
-            }
+            header("Location: publications.php");
+            exit();
         } else {
-            $error = "User not found!";
+            $error = "Invalid password!";
         }
+    } else {
+        $error = "User not found!";
     }
 }
 ?>
@@ -230,20 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .input-wrap input::placeholder { color: #94A3B8; }
 
-        .input-wrap select {
-            appearance: none;
-            -webkit-appearance: none;
-            padding-right: 42px;
-            cursor: pointer;
-        }
-        .select-chevron {
-            position: absolute;
-            right: 18px;
-            display: flex;
-            color: var(--color-muted);
-            pointer-events: none;
-        }
-        .select-chevron svg { width: 16px; height: 16px; }
+
 
         .input-wrap input:focus,
         .input-wrap select:focus {
@@ -463,26 +431,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ?>
 
             <form method="POST" id="loginForm">
-
-                <div class="field-group">
-                    <label for="institute">Institute</label>
-                    <div class="input-wrap">
-                        <span class="input-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6"/><path d="M4 10v9M9 10v9M15 10v9M20 10v9"/><path d="M2 19h20"/></svg>
-                        </span>
-                        <select id="institute" name="institute" required>
-                            <option value="" disabled <?php echo ($institute === '') ? 'selected' : ''; ?>>Select the Institute</option>
-                            <?php foreach ($institutes as $prefix => $label): ?>
-                                <option value="<?php echo htmlspecialchars($prefix); ?>" <?php echo ($institute === $prefix) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($label); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <span class="select-chevron" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                        </span>
-                    </div>
-                </div>
 
                 <div class="field-group">
                     <label for="username">Email</label>

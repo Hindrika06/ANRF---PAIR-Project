@@ -176,11 +176,23 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
                     <span class="nav-text">Gallery</span>
                 </a>
             </li>
+            <li>
+                <a href="event_calendar.php" aria-expanded="false">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="nav-text">Event Calendar</span>
+                </a>
+            </li>
             <?php if (isSuperAdmin()): ?>
             <li>
                 <a href="manage_admins.php" aria-expanded="false">
                     <i class="fas fa-users-cog"></i>
                     <span class="nav-text">Manage Admins</span>
+                </a>
+            </li>
+            <li>
+                <a href="team_management.php" aria-expanded="false">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">Team Management</span>
                 </a>
             </li>
             <?php endif; ?>
