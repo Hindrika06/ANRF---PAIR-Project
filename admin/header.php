@@ -44,9 +44,9 @@
             opacity: 1 !important;
         }
 
-        /* ── 1. Sidebar: Rich Teal-Green gradient ── */
+        /* ── 1. Sidebar: Solid Dark Teal ── */
         .custom-sidebar {
-            background: linear-gradient(180deg, #0f4c3a 0%, #1a6b52 55%, #0d3d2f 100%) !important;
+            background: #0f4c3a !important;
             box-shadow: 4px 0 20px rgba(15, 76, 58, 0.4) !important;
         }
         .custom-sidebar ul.metismenu li a {
@@ -146,7 +146,7 @@
 
         /* ── 3. Table Headers: rich teal ── */
         .table-theme-sapphire thead th {
-            background: linear-gradient(90deg,#065f46,#059669) !important;
+            background: #059669 !important;
             color: #ecfdf5 !important;
             border-bottom: none !important;
             letter-spacing: 0.6px !important;
@@ -203,19 +203,19 @@
         <?php
         $currentPage = basename($_SERVER['PHP_SELF']);
         if ($currentPage === 'publications.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important; }';
+            echo '.kpi-widget-card { background: #0e7490 !important; }';
         } elseif ($currentPage === 'progress_reports.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important; }';
+            echo '.kpi-widget-card { background: #5b21b6 !important; }';
         } elseif ($currentPage === 'patents.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; }';
+            echo '.kpi-widget-card { background: #d97706 !important; }';
         } elseif ($currentPage === 'conferences.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; }';
+            echo '.kpi-widget-card { background: #047857 !important; }';
         } elseif ($currentPage === 'webinars.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #e11d48 0%, #be185d 100%) !important; }';
+            echo '.kpi-widget-card { background: #be185d !important; }';
         } elseif ($currentPage === 'internships.php') {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important; }';
+            echo '.kpi-widget-card { background: #3730a3 !important; }';
         } else {
-            echo '.kpi-widget-card { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; }';
+            echo '.kpi-widget-card { background: #047857 !important; }';
         }
         ?>
     </style>
@@ -256,23 +256,15 @@
             text-transform: uppercase !important;
         }
 
-        /* ── 1. Sidebar: Rich Sapphire gradient with subtle shine ── */
+        /* ── 1. Sidebar: Solid Premium Dark Sapphire ── */
         .custom-sidebar {
-            background: linear-gradient(180deg, #01244a 0%, #024283 50%, #00152b 100%) !important;
+            background: #01244a !important;
             box-shadow: 4px 0 20px rgba(2, 66, 131, 0.35) !important;
         }
 
         /* Ambient shine overlay for the sidebar */
         .custom-sidebar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
-            pointer-events: none;
-            z-index: 1;
+            display: none !important;
         }
 
         .custom-sidebar ul.metismenu li a {
@@ -311,7 +303,7 @@
 
         /* ── Portal Badge: Glossy sapphire pill with neon glow border ── */
         .custom-sidebar .portal-badge {
-            background: linear-gradient(135deg, #0b2e5c 0%, #0f3a72 100%) !important;
+            background: #0b2e5c !important;
             color: #ffffff !important;
             border: 1px solid rgba(56, 189, 248, 0.35) !important;
             box-shadow: 0 4px 12px rgba(2, 66, 131, 0.4) !important;
@@ -370,7 +362,7 @@
 
         /* ── 3. Table Headers & Rows: sapphire gradient & soft blue hover ── */
         body.theme-super-admin .table-theme-sapphire thead th {
-            background: linear-gradient(90deg, #024283 0%, #1e40af 100%) !important;
+            background: #024283 !important;
             color: #ffffff !important;
             border-bottom: none !important;
             letter-spacing: 0.6px !important;
@@ -423,15 +415,7 @@
 
         /* Premium Gloss/Shine Highlight Overlay for KPI Cards */
         body.theme-super-admin .kpi-widget-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0) 50.1%, rgba(0, 0, 0, 0.05) 100%) !important;
-            pointer-events: none;
-            z-index: 2;
+            display: none !important;
         }
 
         body.theme-super-admin .kpi-widget-card:hover {
@@ -456,36 +440,36 @@
         <?php
         $currentPage = basename($_SERVER['PHP_SELF']);
         if ($currentPage === 'publications.php') {
-            // Keep the RED color identity, but style as a gorgeous gradient
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 50%, #7f0000 100%) !important; box-shadow: 0 6px 20px rgba(183, 28, 28, 0.25) !important; }';
+            // Solid RED color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #b71c1c !important; box-shadow: 0 6px 20px rgba(183, 28, 28, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(183, 28, 28, 0.35) !important; }';
         } elseif ($currentPage === 'progress_reports.php') {
-            // Keep the PURPLE color identity, but style as a gorgeous gradient
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #1e1b4b 100%) !important; box-shadow: 0 6px 20px rgba(124, 58, 237, 0.25) !important; }';
+            // Solid PURPLE color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #5b21b6 !important; box-shadow: 0 6px 20px rgba(124, 58, 237, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(124, 58, 237, 0.35) !important; }';
         } elseif ($currentPage === 'patents.php') {
-            // Keep the VIOLET/PURPLE color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 50%, #4c1d95 100%) !important; box-shadow: 0 6px 20px rgba(109, 40, 217, 0.25) !important; }';
+            // Solid VIOLET/PURPLE color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #6d28d9 !important; box-shadow: 0 6px 20px rgba(109, 40, 217, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(109, 40, 217, 0.35) !important; }';
         } elseif ($currentPage === 'conferences.php') {
-            // Keep the GREEN color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #22c55e 0%, #15803d 50%, #14532d 100%) !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.25) !important; }';
+            // Solid GREEN color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #15803d !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(21, 128, 61, 0.35) !important; }';
         } elseif ($currentPage === 'webinars.php') {
-            // Keep the ROSE/PINK color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #e11d48 0%, #be185d 50%, #881337 100%) !important; box-shadow: 0 6px 20px rgba(190, 24, 93, 0.25) !important; }';
+            // Solid ROSE/PINK color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #be185d !important; box-shadow: 0 6px 20px rgba(190, 24, 93, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(190, 24, 93, 0.35) !important; }';
         } elseif ($currentPage === 'internships.php') {
-            // Keep the INDIGO color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 50%, #1e1b4b 100%) !important; box-shadow: 0 6px 20px rgba(55, 48, 163, 0.25) !important; }';
+            // Solid INDIGO color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #3730a3 !important; box-shadow: 0 6px 20px rgba(55, 48, 163, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(55, 48, 163, 0.35) !important; }';
         } elseif ($currentPage === 'gallery.php') {
-            // Keep the TEAL color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #115e59 100%) !important; box-shadow: 0 6px 20px rgba(15, 118, 110, 0.25) !important; }';
+            // Solid TEAL color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #0f766e !important; box-shadow: 0 6px 20px rgba(15, 118, 110, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(15, 118, 110, 0.35) !important; }';
         } else {
-            // Default to sapphire gradient
-            echo 'body.theme-super-admin .kpi-widget-card { background: linear-gradient(135deg, #024283 0%, #1e40af 50%, #172554 100%) !important; box-shadow: 0 6px 20px rgba(2, 66, 131, 0.25) !important; }';
+            // Solid sapphire
+            echo 'body.theme-super-admin .kpi-widget-card { background: #024283 !important; box-shadow: 0 6px 20px rgba(2, 66, 131, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(2, 66, 131, 0.35) !important; }';
         }
         ?>

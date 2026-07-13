@@ -300,7 +300,7 @@ $total_categories   = count($categories_count);
         color: #ffffff;
         border: none;
         box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        background: linear-gradient(135deg, #0f766e, #14b8a6) !important;
+        background: #0f766e !important;
     }
     .kpi-card-body { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
     .kpi-icon-circle {
