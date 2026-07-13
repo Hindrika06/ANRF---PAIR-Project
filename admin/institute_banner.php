@@ -149,5 +149,5 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
-.badge-super { background: linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; }
+.badge-super { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #fff; }
 </style>

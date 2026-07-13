@@ -44,13 +44,13 @@
             opacity: 1 !important;
         }
 
-        /* ── 1. Sidebar: Solid Dark Teal ── */
+        /* ── 1. Sidebar: Solid Dark Red ── */
         .custom-sidebar {
-            background: #0f4c3a !important;
-            box-shadow: 4px 0 20px rgba(15, 76, 58, 0.4) !important;
+            background: #7a0e0e !important;
+            box-shadow: 4px 0 20px rgba(188, 33, 33, 0.4) !important;
         }
         .custom-sidebar ul.metismenu li a {
-            color: #a7d9c8 !important;
+            color: #f5b8b8 !important;
         }
         body.theme-admin .custom-sidebar ul.metismenu li a i {
             color: #ffffff !important;
@@ -118,69 +118,74 @@
 
         /* ── Sidebar brand name color override ── */
         .brand-institute-name {
-            color: #047857 !important;
+            color: #bc2121 !important;
         }
 
-        /* ── 2. Top Header bar: teal accent ── */
+        /* ── 2. Top Header bar: red accent ── */
         .header {
             background: #ffffff !important;
-            border-bottom: 3px solid #059669 !important;
+            border-bottom: 3px solid #bc2121 !important;
         }
         .header .dashboard_bar {
-            color: #065f46 !important;
+            color: #bc2121 !important;
             font-weight: 700 !important;
         }
         .input-group.search-area .form-control {
-            border-color: #a7f3d0 !important;
-            background: #f0fdf4 !important;
+            border-color: #f5b8b8 !important;
+            background: #fff8f8 !important;
         }
         .input-group.search-area .form-control:focus {
-            border-color: #059669 !important;
-            box-shadow: 0 0 0 3px rgba(5,150,105,0.15) !important;
+            border-color: #bc2121 !important;
+            box-shadow: 0 0 0 3px rgba(188, 33, 33, 0.15) !important;
         }
         .input-group.search-area .input-group-text {
-            border-color: #a7f3d0 !important;
-            background: #ecfdf5 !important;
-            color: #059669 !important;
+            border-color: #f5b8b8 !important;
+            background: #bc2121 !important;
+            color: #ffffff !important;
+            border-radius: 0 6px 6px 0;
+        }
+        .input-group.search-area .input-group-text a,
+        .input-group.search-area .input-group-text i {
+            color: #ffffff !important;
         }
 
-        /* ── 3. Table Headers: rich teal ── */
+        /* ── 3. Table Headers: rich red ── */
         .table-theme-sapphire thead th {
-            background: #059669 !important;
-            color: #ecfdf5 !important;
+            background: #bc2121 !important;
+            color: #ffffff !important;
             border-bottom: none !important;
             letter-spacing: 0.6px !important;
         }
         .table-theme-sapphire tbody tr:nth-child(even) {
-            background-color: #f0fdf4 !important;
+            background-color: #fff5f5 !important;
         }
         .table-theme-sapphire tbody tr:hover {
-            background-color: #d1fae5 !important;
+            background-color: #fee2e2 !important;
         }
 
         /* ── 4. Titles & Links ── */
         .card-title, .registry-task-link {
-            color: #065f46 !important;
+            color: #7a0e0e !important;
         }
         .registry-task-link:hover {
-            color: #059669 !important;
+            color: #bc2121 !important;
         }
         .index-badge-circle {
-            background-color: #059669 !important;
+            background-color: #bc2121 !important;
         }
         .registry-tag-pill {
-            color: #047857 !important;
-            background-color: #d1fae5 !important;
+            color: #7a0e0e !important;
+            background-color: #fee2e2 !important;
         }
 
         /* ── 5. Pagination ── */
         .pagination-theme-sapphire .page-item.active .page-link {
-            background-color: #059669 !important;
-            border-color: #059669 !important;
+            background-color: #bc2121 !important;
+            border-color: #bc2121 !important;
             color: #fff !important;
         }
         .pagination-theme-sapphire .page-link {
-            color: #059669 !important;
+            color: #bc2121 !important;
         }
 
         /* ── 6. KPI Cards: colourful gradient tiles per page ── */
@@ -209,7 +214,7 @@
         } elseif ($currentPage === 'patents.php') {
             echo '.kpi-widget-card { background: #d97706 !important; }';
         } elseif ($currentPage === 'conferences.php') {
-            echo '.kpi-widget-card { background: #047857 !important; }';
+            echo '.kpi-widget-card { background: #0369a1 !important; }';
         } elseif ($currentPage === 'webinars.php') {
             echo '.kpi-widget-card { background: #be185d !important; }';
         } elseif ($currentPage === 'internships.php') {
@@ -217,7 +222,7 @@
         } elseif ($currentPage === 'event_calendar.php' || $currentPage === 'team_management.php') {
             echo '.kpi-widget-card { background: #886cc0 !important; }';
         } else {
-            echo '.kpi-widget-card { background: #047857 !important; }';
+            echo '.kpi-widget-card { background: #bc2121 !important; }';
         }
         ?>
     </style>
@@ -348,18 +353,23 @@
             font-weight: 700 !important;
         }
         .input-group.search-area .form-control {
-            border-color: #bfdbfe !important;
-            background: #f8fafc !important;
+            border-color: #f5b8b8 !important;
+            background: #fff8f8 !important;
         }
         .input-group.search-area .form-control:focus {
-            border-color: #024283 !important;
-            box-shadow: 0 0 0 3px rgba(2, 66, 131, 0.15) !important;
+            border-color: #bc2121 !important;
+            box-shadow: 0 0 0 3px rgba(188, 33, 33, 0.15) !important;
             background: #ffffff !important;
         }
         .input-group.search-area .input-group-text {
-            border-color: #bfdbfe !important;
-            background: #eff6ff !important;
-            color: #024283 !important;
+            border-color: #f5b8b8 !important;
+            background: #bc2121 !important;
+            color: #ffffff !important;
+            border-radius: 0 6px 6px 0;
+        }
+        .input-group.search-area .input-group-text a,
+        .input-group.search-area .input-group-text i {
+            color: #ffffff !important;
         }
 
         /* ── 3. Table Headers & Rows: sapphire gradient & soft blue hover ── */

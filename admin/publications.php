@@ -174,7 +174,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
     }
 
     .table-theme-sapphire thead th {
-        background-color: #024283 !important;
+        background-color: #bc2121 !important;
         color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 11px !important;
@@ -331,14 +331,32 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
         color: #024283;
     }
 
-    /* ──── UNIFIED RED KPI STYLES (#bc2121) ──── */
+    /* ──── UNIFIED KPI CARD COLOR (#bc2121) ──── */
     .kpi-widget-card {
-        border-radius: 10px !important;
-        padding: 20px 24px;
+        border-radius: 14px !important;
+        padding: 22px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #bc2121 !important;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%) !important;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card::after {
+        content: '';
+        position: absolute;
+        top: -30px;
+        right: -30px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        pointer-events: none;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 32px rgba(37, 99, 235, 0.5);
     }
     .kpi-card-body {
         display: flex;
@@ -484,12 +502,13 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
-                        <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
+                        <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-book-open me-2"></i>REGISTERED PUBLICATIONS LIST
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
-                        <button type="button" class="btn btn-success btn-sm text-white px-3"
-                                data-bs-toggle="modal" data-bs-target="#publicationModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
+                        <button type="button" class="btn btn-sm text-white px-3"
+                                data-bs-toggle="modal" data-bs-target="#publicationModal" id="addNewBtn"
+                                style="border-radius: 6px; font-weight: 600; background: #bc2121; border: none;">
                             <i class="fa fa-plus me-1"></i> Add Publication
                         </button>
                         <?php endif; ?>

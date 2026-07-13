@@ -47,23 +47,7 @@
 </style>
 
 <script>
-// Show loader when page starts loading
-document.addEventListener('DOMContentLoaded', function() {
-    const loader = document.getElementById('pageLoader');
-    if (loader) {
-        loader.classList.add('active');
-    }
-});
-
-// Hide loader when page fully loads
-window.addEventListener('load', function() {
-    const loader = document.getElementById('pageLoader');
-    if (loader) {
-        setTimeout(() => {
-            loader.classList.remove('active');
-        }, 300);
-    }
-});
+// Page loader is disabled to make page transitions instant and smooth.
 </script>
 
 <!-- ==========================================

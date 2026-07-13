@@ -256,8 +256,8 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #53a1f1 !important;
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+        background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -336,7 +336,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #3b82f6 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-video"></i></div>
                             <span class="kpi-title-text">Total Webinars</span>
@@ -348,7 +348,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #10b981 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
                             <span class="kpi-title-text">Upcoming Webinars</span>
@@ -360,7 +360,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #8b5cf6 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-graduation-cap"></i></div>
                             <span class="kpi-title-text">Active Institute</span>

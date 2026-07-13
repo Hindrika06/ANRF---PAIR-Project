@@ -261,8 +261,8 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #bc2121 !important;
+        box-shadow: 0 8px 24px rgba(14, 116, 144, 0.3);
+        background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -341,7 +341,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #bc2121 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-hotel"></i></div>
                             <span class="kpi-title-text">Total Conferences</span>
@@ -353,7 +353,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #10b981 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-clock"></i></div>
                             <span class="kpi-title-text">Upcoming Conferences</span>
@@ -365,7 +365,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background-color: #4b5563 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-earth-americas"></i></div>
                             <span class="kpi-title-text">Active Institute</span>

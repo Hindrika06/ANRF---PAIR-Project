@@ -94,13 +94,13 @@ $pageTitle = "Dashboard | ANRF-PAIR Portal";
         font-size: 20px;
         margin-bottom: 15px;
     }
-    /* Theme overrides for non-super admins (emerald style) */
+    /* Theme overrides for non-super admins (red style) */
     body.theme-admin .metric-icon-box {
-        background: rgba(15, 76, 58, 0.08);
-        color: #0f4c3a;
+        background: rgba(188, 33, 33, 0.08);
+        color: #bc2121;
     }
     body.theme-admin .metric-card:hover {
-        border-color: #0f4c3a;
+        border-color: #bc2121;
     }
     .metric-num {
         font-size: 28px;

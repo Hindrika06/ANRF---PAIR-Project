@@ -45,19 +45,19 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
     transform: scale(1.03); /* Subtle pop when hovering over the logo */
 }
 .brand-institute-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    line-height: 1.25;
-    color: #024283;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.35;
+    color: #bc2121;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
 }
 
 /* --- Attractive Sidebar Styling --- */
 .custom-sidebar {
-    background:#024283;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    background: #7a0e0e;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 .custom-sidebar ul.metismenu {
@@ -103,7 +103,7 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 
 /* --- Logout Button Custom Styling --- */
 .custom-sidebar .sidebar-footer {
-    background: #1B3A6B;
+    background: rgba(0,0,0,0.25);
 }
 
 .custom-sidebar ul.metismenu li a.logout-btn {
@@ -118,6 +118,79 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 .custom-sidebar ul.metismenu li a.logout-btn i {
     color: #ffffff !important;
 }
+
+/* --- Portal Badge with Gradient Shine --- */
+.portal-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0f3a72 0%, #1e40af 100%);
+    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.portal-badge::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 30%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    animation: badgeShine 4s infinite ease-in-out;
+}
+
+@keyframes badgeShine {
+    0% { left: -60%; }
+    20% { left: 140%; }
+    100% { left: 140%; }
+}
+
+/* --- Sidebar Active Link with Gradient Shine --- */
+.custom-sidebar ul.metismenu li.mm-active > a {
+    background: linear-gradient(135deg, rgba(136, 108, 192, 0.25) 0%, rgba(170, 108, 192, 0.15) 100%) !important;
+    color: #ffffff !important;
+    border-left: 4px solid var(--primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-sidebar ul.metismenu li.mm-active > a::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 30%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    animation: menuShine 5s infinite ease-in-out;
+}
+
+@keyframes menuShine {
+    0% { left: -60%; }
+    15% { left: 140%; }
+    100% { left: 140%; }
+}
 </style>
 
 <!--**********************************
@@ -127,7 +200,7 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 <div class="dlabnav custom-sidebar">
     <div class="dlabnav-scroll" style="display: flex; flex-direction: column; height: 100%;">
         <div style="padding: 12px 18px 10px; color: #fff; font-size: 12px; opacity: 0.95;">
-            <div class="portal-badge" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;background:#0f3a72;color:#ffffff;font-weight:800;letter-spacing:0.04em;white-space:nowrap;">
+            <div class="portal-badge">
                 <i class="fas <?= isSuperAdmin() ? 'fa-shield-alt' : 'fa-user-shield' ?>" style="color:#ffffff;"></i>
                 <span><?= isSuperAdmin() ? '🛡️ SUPER ADMIN PORTAL' : '👤 ADMIN PORTAL' ?></span>
             </div>
@@ -147,92 +220,150 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
                 </a>
             </li>
             <li>
-                <a href="patents.php" aria-expanded="false">
+                <a href="patents.php">
                     <i class="fas fa-certificate"></i>
                     <span class="nav-text">Patents</span>
                 </a>
             </li>
             <li>
-                <a href="conferences.php" aria-expanded="false">
+                <a href="conferences.php">
                     <i class="fas fa-users"></i>
                     <span class="nav-text">Conferences</span>
                 </a>
             </li>
             <li>
-                <a href="webinars.php" aria-expanded="false">
+                <a href="webinars.php">
                     <i class="fas fa-video"></i>
                     <span class="nav-text">Webinars</span>
                 </a>
             </li>
             <li>
-                <a href="internships.php" aria-expanded="false">
+                <a href="internships.php">
                     <i class="fas fa-user-graduate"></i>
                     <span class="nav-text">Internships</span>
                 </a>
             </li>
             <li>
-                <a href="progress_reports.php" aria-expanded="false">
+                <a href="progress_reports.php">
                     <i class="fas fa-chart-line"></i>
                     <span class="nav-text">Progress Reports</span>
                 </a>
             </li>
-            <li>
-                <a href="gallery_albums_management.php" aria-expanded="false">
-                    <i class="fas fa-images"></i>
-                    <span class="nav-text">Gallery Albums</span>
+
+            <!-- Gallery Dropdown Group -->
+            <li class="nav-group" id="nav-gallery-group">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('gallery-sub')">
+                    <i class="fas fa-photo-video"></i>
+                    <span class="nav-text">Gallery</span>
+                    <i class="fas fa-chevron-down nav-arrow" id="gallery-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
+                <ul class="nav-group-sub" id="gallery-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                    <li>
+                        <a href="gallery_albums_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-images" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Gallery Albums</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="gallery.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-link" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Drive Event Links</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
+
             <li>
-                <a href="gallery.php" aria-expanded="false">
-                    <i class="fas fa-link"></i>
-                    <span class="nav-text">Drive Event Links</span>
-                </a>
-            </li>
-            <li>
-                <a href="event_calendar.php" aria-expanded="false">
+                <a href="event_calendar.php">
                     <i class="fas fa-calendar-alt"></i>
                     <span class="nav-text">Event Calendar</span>
                 </a>
             </li>
             <li>
-                <a href="collaborations_management.php" aria-expanded="false">
+                <a href="collaborations_management.php">
                     <i class="fas fa-handshake"></i>
                     <span class="nav-text">Collaborations</span>
                 </a>
             </li>
             <li>
-                <a href="research_infrastructure.php" aria-expanded="false">
+                <a href="research_infrastructure.php">
                     <i class="fas fa-flask"></i>
-                    <span class="nav-text">Research & Infrastructure</span>
+                    <span class="nav-text">Research &amp; Infrastructure</span>
                 </a>
             </li>
+
             <?php if (isSuperAdmin()): ?>
-            <li>
-                <a href="banner_management.php" aria-expanded="false">
-                    <i class="fas fa-image"></i>
-                    <span class="nav-text">Homepage Banners</span>
+            <!-- Site Management Dropdown Group (Super Admin only) -->
+            <li class="nav-group" id="nav-sitemgmt-group">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('sitemgmt-sub')">
+                    <i class="fas fa-cogs"></i>
+                    <span class="nav-text">Site Management</span>
+                    <i class="fas fa-chevron-down nav-arrow" id="sitemgmt-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
-            </li>
-            <li>
-                <a href="announcements_management.php" aria-expanded="false">
-                    <i class="fas fa-bullhorn"></i>
-                    <span class="nav-text">Scrolling Ticker</span>
-                </a>
-            </li>
-            <li>
-                <a href="team_management.php" aria-expanded="false">
-                    <i class="fas fa-user-cog"></i>
-                    <span class="nav-text">Team Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="manage_admins.php" aria-expanded="false">
-                    <i class="fas fa-users-cog"></i>
-                    <span class="nav-text">Manage Admins</span>
-                </a>
+                <ul class="nav-group-sub" id="sitemgmt-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                    <li>
+                        <a href="banner_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-image" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Homepage Banners</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="announcements_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-bullhorn" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Scrolling Ticker</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="team_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-user-cog" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Team Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="manage_admins.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-users-cog" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Manage Admins</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
             <?php endif; ?>
+
+
         </ul>
+
+        <script>
+        function toggleNavGroup(subId) {
+            var sub = document.getElementById(subId);
+            var arrowId = subId.replace('-sub', '-arrow');
+            var arrow = document.getElementById(arrowId);
+            if (!sub) return;
+            var isOpen = sub.style.display === 'block';
+            // Close all open groups first
+            document.querySelectorAll('.nav-group-sub').forEach(function(el) {
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.nav-arrow').forEach(function(el) {
+                el.style.transform = '';
+            });
+            // Toggle clicked group
+            if (!isOpen) {
+                sub.style.display = 'block';
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+        // Auto-open the group that contains the active page on load
+        document.addEventListener('DOMContentLoaded', function() {
+            var currentPage = window.location.pathname.split('/').pop();
+            var galleryPages = ['gallery_albums_management.php', 'gallery.php'];
+            var sitemgmtPages = ['banner_management.php', 'announcements_management.php', 'team_management.php', 'manage_admins.php'];
+            if (galleryPages.indexOf(currentPage) !== -1) {
+                toggleNavGroup('gallery-sub');
+            } else if (sitemgmtPages.indexOf(currentPage) !== -1) {
+                toggleNavGroup('sitemgmt-sub');
+            }
+        });
+        </script>
 
         <!-- Logout Button Section -->
         <div class="sidebar-footer" style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
