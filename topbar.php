@@ -77,47 +77,85 @@
     /* Dropdown menu positioning and styling */
     .topbar-login {
         position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
     }
+    
+    /* Login button styled as a white background strip/pill */
+    .topbar-login > a.topbar-dropdown-toggle {
+        background-color: #ffffff !important;
+        color: #BC2121 !important;
+        padding: 5px 12px !important;
+        border-radius: 4px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 13px !important;
+        font-weight: bold !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        line-height: 1.2 !important;
+    }
+    
+    .topbar-login > a.topbar-dropdown-toggle:hover {
+        background-color: #f3f4f6 !important;
+        color: #a01818 !important;
+        text-decoration: none !important;
+    }
+    
+    .topbar-login > a.topbar-dropdown-toggle i {
+        color: #BC2121 !important;
+        font-size: 12px !important;
+    }
+
+    /* Dropdown menu with matching white theme */
     .topbar-dropdown-menu {
         display: none !important;
         position: absolute !important;
         top: 100% !important;
         right: 0 !important;
-        background-color: #BC2121 !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
         list-style: none !important;
-        padding: 0 !important;
-        margin: calc(var(--logo-h) * 0.1) 0 0 0 !important;
-        min-width: 160px !important;
+        padding: 4px 0 !important;
+        margin: 5px 0 0 0 !important;
+        min-width: 150px !important;
         z-index: 10000 !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
         border-radius: 4px !important;
         overflow: hidden !important;
     }
+    
     .topbar-dropdown-menu li {
         margin: 0 !important;
         padding: 0 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    .topbar-dropdown-menu li:last-child {
         border-bottom: none !important;
     }
+    
     .topbar-dropdown-menu li a {
         display: block !important;
-        padding: 8px 15px !important;
-        color: #fff !important;
-        font-size: 13px !important; /* Dropdown items font size */
+        padding: 8px 14px !important;
+        color: #374151 !important; /* Dark gray text */
+        font-size: 12px !important;
         text-decoration: none !important;
-        transition: background-color 0.2s !important;
-        opacity: 0.9 !important;
-        text-align: left !important;
-        font-weight: normal !important; /* normal weight inside the dropdown menu is cleaner */
-    }
-    .topbar-dropdown-menu li a:hover {
-        background-color: rgba(0, 0, 0, 0.15) !important;
+        transition: background-color 0.2s, color 0.2s !important;
         opacity: 1 !important;
+        text-align: left !important;
+        font-weight: 600 !important;
+    }
+    
+    .topbar-dropdown-menu li a i {
+        color: #BC2121 !important;
+        font-size: 11px !important;
+        margin-right: 6px !important;
+    }
+    
+    .topbar-dropdown-menu li a:hover {
+        background-color: #f3f4f6 !important;
+        color: #BC2121 !important;
         text-decoration: none !important;
     }
+    
     /* Show dropdown on hover */
     .topbar-login:hover .topbar-dropdown-menu,
     .topbar-login.open .topbar-dropdown-menu {

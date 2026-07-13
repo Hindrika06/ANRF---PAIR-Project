@@ -109,6 +109,42 @@
 .prev{left:20px;}
 .next{right:20px;}
 
+/* Slider Indicators */
+.slider-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.indicator:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.indicator.active {
+    background-color: #bc2121;
+    transform: scale(1.2);
+    border-color: #fff;
+}
+
+/* Background Strip with White Background */
+.navigation-wrapper .background {
+    background-color: #ffffff !important;
+}
+
 /* MOBILE */
 @media(max-width:768px){
 

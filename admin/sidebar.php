@@ -12,7 +12,7 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 <!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
     <a href="publications.php" class="brand-logo">
-        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 50%; object-fit: contain; background: #fff; padding: 2px;">
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">
         <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
     </a>
     <div class="nav-control">
