@@ -214,6 +214,8 @@
             echo '.kpi-widget-card { background: #be185d !important; }';
         } elseif ($currentPage === 'internships.php') {
             echo '.kpi-widget-card { background: #3730a3 !important; }';
+        } elseif ($currentPage === 'event_calendar.php' || $currentPage === 'team_management.php') {
+            echo '.kpi-widget-card { background: #886cc0 !important; }';
         } else {
             echo '.kpi-widget-card { background: #047857 !important; }';
         }
@@ -467,8 +469,12 @@
             // Solid TEAL color identity
             echo 'body.theme-super-admin .kpi-widget-card { background: #0f766e !important; box-shadow: 0 6px 20px rgba(15, 118, 110, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(15, 118, 110, 0.35) !important; }';
+        } elseif ($currentPage === 'event_calendar.php' || $currentPage === 'team_management.php') {
+            // Solid PURPLE color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #886cc0 !important; box-shadow: 0 6px 20px rgba(136, 108, 192, 0.25) !important; }';
+            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(136, 108, 192, 0.35) !important; }';
         } else {
-            // Solid sapphire
+            // Default to sapphire
             echo 'body.theme-super-admin .kpi-widget-card { background: #024283 !important; box-shadow: 0 6px 20px rgba(2, 66, 131, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(2, 66, 131, 0.35) !important; }';
         }

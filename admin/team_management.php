@@ -387,7 +387,7 @@ include 'loader.php';
             <!-- KPI Row -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: #024283 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-users"></i></div>
                             <span class="kpi-title-text">Total Team Members</span>
@@ -399,7 +399,7 @@ include 'loader.php';
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: #059669 !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-check"></i></div>
                             <span class="kpi-title-text">Active Members</span>
@@ -411,7 +411,7 @@ include 'loader.php';
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: #64748b !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-slash"></i></div>
                             <span class="kpi-title-text">Inactive Members</span>
