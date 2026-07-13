@@ -31,50 +31,28 @@
                                     <div class="day">30</div>
                                 </figure>
                                 <aside>
-                                    <header>
-                                        <a href="#">Research Training Program: YVU-UoH-ANRF-PAIR Initiative</a>
+                                    <header style="margin-bottom: 4px;">
+                                        <a href="#"><b>Research Training Program: YVU-UoH-ANRF-PAIR Initiative</b></a>
                                     </header>
-                                    <div class="additional-info">
-                                        <span class="fa fa-calendar"></span> March 30, 2025 – April 13, 2025
-                                    </div>
-                                    <div class="description">
-                                        <p>
-                                            Successfully conducted a comprehensive 15-day research training program for 7 students 
-                                            from Yogi Vemana University (YVU). This program was held under the 
-                                            collaborative YVU-UoH-ANRF-PAIR initiative, focusing on advanced research 
-                                            methodologies and academic development.
-                                        </p>
+                                    <div class="event-details-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: #767676; margin-top: 6px;" title="March 30, 2025 – April 13, 2025 | 10:00 AM - 05:00 PM | University of Hyderabad (UoH) | ANRF-PAIR Team">
+                                        March 30, 2025 – April 13, 2025 | 10:00 AM - 05:00 PM | University of Hyderabad (UoH) | ANRF-PAIR Team
                                     </div>
                                 </aside>
                             </article>
                             <article class="event">
-    <figure class="date">
-        <div class="month">Mar</div>
-        <div class="day">06</div>
-    </figure>
-    <aside>
-        <header>
-            <a href="#">Invited Lecture: Main Group Materials for Health, Energy, Environment</a>
-        </header>
-
-        <div class="additional-info">
-            <span class="fa fa-calendar"></span> 6th to 7th March, 2026
-        </div>
-
-        <div class="description">
-            <p>
-                Delivered an invited lecture on 
-                <strong>“Main Group Materials for Health, Energy, Environment”</strong> 
-                during the Symposium on 
-                <strong>“Advanced Materials”</strong> 
-                held at <strong>IIT Kanpur</strong> on 
-                6th–7th March 2026. The lecture highlighted recent advancements 
-                and emerging applications of main group materials in healthcare, 
-                sustainable energy solutions, and environmental technologies.
-            </p>
-        </div>
-    </aside>
-</article>
+                                <figure class="date">
+                                    <div class="month">Mar</div>
+                                    <div class="day">06</div>
+                                </figure>
+                                <aside>
+                                    <header style="margin-bottom: 4px;">
+                                        <a href="#"><b>Invited Lecture: Main Group Materials for Health, Energy, Environment</b></a>
+                                    </header>
+                                    <div class="event-details-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: #767676; margin-top: 6px;" title="March 6–7, 2026 | 09:30 AM - 05:30 PM | IIT Kanpur | ANRF-PAIR Investigator">
+                                        March 6–7, 2026 | 09:30 AM - 05:30 PM | IIT Kanpur | ANRF-PAIR Investigator
+                                    </div>
+                                </aside>
+                            </article>
                         </div><!-- /.section-content -->
                     </section><!-- /.events -->
 

@@ -159,6 +159,24 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             background-color: #024283;
             padding: 0 !important;
         }
+        /* ---- Scrollbar hidden on all browsers (scroll still works) ---- */
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar { display: none !important; }
+        html, body {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+
+        @media (min-width: 1200px) {
+            .menu-bar-wrapper .primary-navigation-wrapper {
+                padding: 8px 0px !important;
+            }
+        }
+        @media (min-width: 992px) and (max-width: 1199px) {
+            .menu-bar-wrapper .primary-navigation-wrapper {
+                padding: 4px 0px !important;
+            }
+        }
         .menu-bar-wrapper .navbar {
             background-color: #024283 !important;
             margin: 0;
@@ -200,12 +218,13 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         .menu-bar-wrapper .nav.navbar-nav > li > a {
             color: #fff !important;
             font-weight: 600;
-            padding: 3px 20px !important;
+            padding: 2px 20px !important;
             transition: background 0.2s;
             font-size: 14px !important;
             line-height: 1 !important;
             height: auto !important;
-            display: inline-block !important;
+            display: inline-flex !important;
+            align-items: center !important;
             white-space: nowrap;
             border-right: 1px solid rgba(255,255,255,0.2);
         }
@@ -285,7 +304,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             .project-title-tagline { font-size: 11px; }
             .logo-center-link { gap: 10px; }
             .menu-bar-wrapper .nav.navbar-nav > li > a {
-                padding: 5px 13px !important;
+                padding: 3px 13px !important;
                 font-size: 13px !important;
             }
             .menu-bar-wrapper .nav.navbar-nav > li > a i { font-size: 17px; }

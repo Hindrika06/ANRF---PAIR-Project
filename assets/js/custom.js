@@ -262,27 +262,31 @@ $(document).ready(function($) {
                 '2026-07-09': [
                     {
                         title: 'University of Hyderabad Research Symposium',
-                        time: '10:00 AM - 1:00 PM',
-                        venue: 'Conference Hall A'
+                        time: '10:00 AM – 1:00 PM',
+                        venue: 'Conference Hall A',
+                        coordinator: 'Dr. Ravi Kumar'
                     }
                 ],
                 '2026-07-14': [
                     {
                         title: 'ANRF-PAIR Innovation Showcase',
-                        time: '11:00 AM - 2:00 PM',
-                        venue: 'Innovation Hub'
+                        time: '11:00 AM – 2:00 PM',
+                        venue: 'Innovation Hub',
+                        coordinator: 'Dr. Priya Sharma'
                     },
                     {
                         title: 'Research Seminar on Sustainable Health',
-                        time: '3:00 PM - 4:30 PM',
-                        venue: 'Seminar Room 3'
+                        time: '3:00 PM – 4:30 PM',
+                        venue: 'Seminar Room 3',
+                        coordinator: 'Prof. Anil Mehta'
                     }
                 ],
                 '2026-07-21': [
                     {
                         title: 'Strengthening Health Systems Workshop',
-                        time: '10:00 AM - 12:30 PM',
-                        venue: 'Seminar Room 2'
+                        time: '10:00 AM – 12:30 PM',
+                        venue: 'Seminar Room 2',
+                        coordinator: 'Dr. Ravi Kumar'
                     }
                 ]
             };
@@ -308,24 +312,24 @@ $(document).ready(function($) {
         }
 
         function renderEvents(dateKey, events) {
+            const formattedDate = formatDateLabel(dateKey);
             const eventList = events.map(function(event) {
+                const meta = `${event.time} | ${event.venue} | ${event.coordinator}`;
                 return `
                     <li class="notice-summary-item">
                         <div class="notice-event-title">→ ${event.title}</div>
-                        <div class="notice-event-meta">• Time: ${event.time}</div>
-                        <div class="notice-event-meta">• Venue: ${event.venue}</div>
+                        <div class="notice-event-meta notice-event-meta--single" title="${meta}">${meta}</div>
                     </li>
                 `;
             }).join('');
 
             noticeBody.innerHTML = `
                 <div class="notice-summary">
-                    <div class="notice-summary-date">${formatDateLabel(dateKey)}</div>
                     <ul class="notice-summary-list">${eventList}</ul>
                 </div>
             `;
 
-            selectedText.textContent = `${events.length} event${events.length > 1 ? 's' : ''} on ${formatDateLabel(dateKey)}`;
+            selectedText.textContent = `${events.length} event${events.length > 1 ? 's' : ''} on ${formattedDate}`;
             selectedText.classList.remove('no-event');
         }
 
