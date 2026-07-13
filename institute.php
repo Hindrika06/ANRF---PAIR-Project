@@ -38,16 +38,23 @@ $publications = fetchRows($pdo, "SELECT * FROM {$prefix}publications     ORDER B
 $patents      = fetchRows($pdo, "SELECT * FROM {$prefix}patent           ORDER BY created_at DESC");
 $internships  = fetchRows($pdo, "SELECT * FROM {$prefix}internships      ORDER BY created_at DESC");
 $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports ORDER BY created_at DESC");
-$webinars     = fetchRows($pdo, "SELECT * FROM {$prefix}webinars         ORDER BY created_at DESC");
-$conferences  = fetchRows($pdo, "SELECT * FROM {$prefix}conferences      ORDER BY created_at DESC");
-$events_count = count($webinars) + count($conferences);
+
+$webinars = [];
+$conferences = [];
+try {
+    $webinars = fetchRows($pdo, "SELECT * FROM {$prefix}webinars ORDER BY webinar_date DESC");
+} catch (PDOException $e) {}
+try {
+    $conferences = fetchRows($pdo, "SELECT * FROM {$prefix}conferences ORDER BY start_date DESC");
+} catch (PDOException $e) {}
 
 $tabs = [
     'progress'     => ['label' => 'Progress', 'count' => count($progress),      'icon' => '📋'],
     'publications' => ['label' => 'Publications', 'count' => count($publications),   'icon' => '📄'],
     'patents'      => ['label' => 'Patents',     'count' => count($patents),        'icon' => '🔬'],
     'internships'  => ['label' => 'Internships', 'count' => count($internships),   'icon' => '🎓'],
-    'events'       => ['label' => 'Events',      'count' => $events_count,          'icon' => '📅'],
+    'webinars'     => ['label' => 'Webinars',    'count' => count($webinars),       'icon' => '📹'],
+    'conferences'  => ['label' => 'Conferences', 'count' => count($conferences),    'icon' => '🏛️'],
 ];
 
 $tab_labels = [
@@ -55,7 +62,8 @@ $tab_labels = [
     'publications' => ['title' => 'Publications',      'sub' => 'Peer-reviewed journal articles, conference papers, and other scholarly outputs.'],
     'patents'      => ['title' => 'Patents',            'sub' => 'Filed, published, and granted patents arising from the ANRF–PAIR research programme.'],
     'internships'  => ['title' => 'Internships',        'sub' => 'Student training programmes conducted under the supervision of project investigators.'],
-    'events'       => ['title' => 'Events',             'sub' => 'Webinars and conferences organised or attended by the research team.'],
+    'webinars'     => ['title' => 'Webinars & Online Events', 'sub' => 'Webinars and resource person lectures hosted or conducted under the research project.'],
+    'conferences'  => ['title' => 'Conferences & Seminars', 'sub' => 'National and international academic conferences hosted or attended by the research team.'],
 ];
 ?>
 <!DOCTYPE html>
@@ -470,125 +478,200 @@ $tab_labels = [
         </div>
     </div>
 
-    <!-- EVENTS TAB -->
-    <div class="tab-panel <?= $active_tab === 'events' ? 'active' : '' ?>" id="panel-events" role="tabpanel">
+    <!-- WEBINARS TAB -->
+    <div class="tab-panel <?= $active_tab === 'webinars' ? 'active' : '' ?>" id="panel-webinars" role="tabpanel">
         <div class="table-card">
             <div class="table-wrap">
-            <?php if ($webinars || $conferences): ?>
+            <?php if ($webinars): ?>
             <table>
                 <thead><tr>
                     <th style="width:36px;">#</th>
                     <th>Task</th>
-                    <th>Type</th>
-                    <th>Title</th>
+                    <th>Webinar Title</th>
+                    <th>Speaker &amp; Affiliation</th>
                     <th>Date &amp; Time</th>
-                    <th>Organisers</th>
-                    <th>Institute</th>
-                    <th>Investigator</th>
+                    <th>Link / Description</th>
                 </tr></thead>
                 <tbody>
-                <?php $row_i = 1; ?>
-                <?php foreach ($webinars as $r): ?>
+                <?php foreach ($webinars as $i => $r): ?>
                 <tr>
-                    <td><div class="row-num"><?= $row_i++ ?></div></td>
-                    <td><a class="task-link" href="#"><?= htmlspecialchars($r['taskno']) ?></a></td>
-                    <td><span class="badge b-webinar">Webinar</span></td>
-                    <td><div class="col-title"><?= htmlspecialchars($r['title']) ?></div></td>
+                    <td><div class="row-num"><?= $i + 1 ?></div></td>
+                    <td>
+                        <?php if ($r['taskno']): ?>
+                            <a class="task-link" href="#"><?= htmlspecialchars($r['taskno']) ?></a>
+                        <?php else: ?>
+                            <span class="col-muted">—</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <div class="col-title"><?= htmlspecialchars($r['title']) ?></div>
+                        <?php if ($r['description']): ?>
+                            <small class="col-muted d-block mt-1" style="font-size: 11px; line-height: 1.3; max-width: 400px;"><?= htmlspecialchars($r['description']) ?></small>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <strong><?= htmlspecialchars($r['speaker_name']) ?></strong>
+                        <?php if ($r['affiliation']): ?>
+                            <div class="col-muted" style="font-size: 11.5px;"><?= htmlspecialchars($r['affiliation']) ?></div>
+                        <?php endif; ?>
+                    </td>
                     <td class="col-muted" style="white-space:nowrap;"><?= date('d M Y, h:i A', strtotime($r['webinar_date'])) ?></td>
-                    <td><?= htmlspecialchars($r['organisers']) ?></td>
-                    <td class="col-muted"><?= htmlspecialchars($r['institute'] ?? '—') ?></td>
-                    <td class="col-muted"><?= htmlspecialchars($r['investigator'] ?? '—') ?></td>
-                </tr>
-                <?php endforeach; ?>
-                <?php foreach ($conferences as $r): ?>
-                <tr>
-                    <td><div class="row-num"><?= $row_i++ ?></div></td>
-                    <td><a class="task-link" href="#"><?= htmlspecialchars($r['taskno'] ?? '—') ?></a></td>
-                    <td><span class="badge b-conf">Conference</span></td>
-                    <td><div class="col-title"><?= htmlspecialchars($r['title']) ?></div></td>
-                    <td class="col-muted" style="white-space:nowrap;"><?= date('d M Y', strtotime($r['conf_date'])) ?></td>
-                    <td><?= htmlspecialchars($r['organisers'] ?? '—') ?></td>
-                    <td class="col-muted"><?= htmlspecialchars($r['institute'] ?? '—') ?></td>
-                    <td class="col-muted"><?= htmlspecialchars($r['investigator'] ?? '—') ?></td>
+                    <td>
+                        <?php if ($r['link']): ?>
+                            <a class="doi-link" href="<?= htmlspecialchars($r['link']) ?>" target="_blank" style="padding: 3px 10px; border-radius: 4px; border: 1px solid #bc2121; text-decoration:none; font-size:12px;">Link ↗</a>
+                        <?php else: ?>
+                            <span class="col-muted">—</span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
             <?php else: ?>
-            <div class="empty-state">No events found.</div>
+            <div class="empty-state">No webinars found.</div>
             <?php endif; ?>
             </div>
 
-            <!-- MOBILE CARD LAYOUT -->
+            <!-- MOBILE CARD LAYOUT FOR WEBINARS -->
             <div class="card-layout" style="display:none;">
-            <?php if ($webinars || $conferences): ?>
-                <?php $row_i = 1; ?>
-                <?php foreach ($webinars as $r): ?>
-                <div class="card-row <?= $row_i % 2 === 1 ? 'alt' : '' ?>">
+            <?php if ($webinars): ?>
+                <?php foreach ($webinars as $i => $r): ?>
+                <div class="card-row <?= $i % 2 === 1 ? 'alt' : '' ?>">
                     <div class="card-header">
-                        <div class="card-num"><?= $row_i++ ?></div>
+                        <div class="card-num"><?= $i + 1 ?></div>
                         <div class="card-title-main"><?= htmlspecialchars($r['title']) ?></div>
                     </div>
-                    <div class="card-section">
-                        <span class="card-label">Type</span>
-                        <div class="card-inline"><span class="badge b-webinar">Webinar</span></div>
-                    </div>
+                    <?php if ($r['taskno']): ?>
                     <div class="card-section">
                         <span class="card-label">Task</span>
                         <div class="card-inline"><a class="task-link" href="#"><?= htmlspecialchars($r['taskno']) ?></a></div>
+                    </div>
+                    <?php endif; ?>
+                    <div class="card-section">
+                        <span class="card-label">Speaker</span>
+                        <div class="card-value"><strong><?= htmlspecialchars($r['speaker_name']) ?></strong></div>
+                        <?php if ($r['affiliation']): ?>
+                            <div class="card-value muted" style="font-size:11px; margin-top:2px;"><?= htmlspecialchars($r['affiliation']) ?></div>
+                        <?php endif; ?>
                     </div>
                     <div class="card-section">
                         <span class="card-label">Date &amp; Time</span>
                         <div class="card-value muted"><?= date('d M Y, h:i A', strtotime($r['webinar_date'])) ?></div>
                     </div>
+                    <?php if ($r['description']): ?>
                     <div class="card-section">
-                        <span class="card-label">Organisers</span>
-                        <div class="card-value"><?= htmlspecialchars($r['organisers']) ?></div>
+                        <span class="card-label">Description</span>
+                        <div class="card-value muted" style="font-size:12px;"><?= htmlspecialchars($r['description']) ?></div>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($r['link']): ?>
                     <div class="card-section">
-                        <span class="card-label">Institute</span>
-                        <div class="card-value muted"><?= htmlspecialchars($r['institute'] ?? '—') ?></div>
+                        <span class="card-label">Registration / Recording</span>
+                        <div class="card-inline"><a class="doi-link" href="<?= htmlspecialchars($r['link']) ?>" target="_blank">Access Link ↗</a></div>
                     </div>
-                    <div class="card-section">
-                        <span class="card-label">Investigator</span>
-                        <div class="card-value muted"><?= htmlspecialchars($r['investigator'] ?? '—') ?></div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-                <?php foreach ($conferences as $r): ?>
-                <div class="card-row <?= $row_i % 2 === 1 ? 'alt' : '' ?>">
-                    <div class="card-header">
-                        <div class="card-num"><?= $row_i++ ?></div>
-                        <div class="card-title-main"><?= htmlspecialchars($r['title']) ?></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Type</span>
-                        <div class="card-inline"><span class="badge b-conf">Conference</span></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Task</span>
-                        <div class="card-inline"><a class="task-link" href="#"><?= htmlspecialchars($r['taskno'] ?? '—') ?></a></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Date</span>
-                        <div class="card-value muted"><?= date('d M Y', strtotime($r['conf_date'])) ?></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Organisers</span>
-                        <div class="card-value"><?= htmlspecialchars($r['organisers'] ?? '—') ?></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Institute</span>
-                        <div class="card-value muted"><?= htmlspecialchars($r['institute'] ?? '—') ?></div>
-                    </div>
-                    <div class="card-section">
-                        <span class="card-label">Investigator</span>
-                        <div class="card-value muted"><?= htmlspecialchars($r['investigator'] ?? '—') ?></div>
-                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
-            <div class="empty-state">No events found.</div>
+            <div class="empty-state">No webinars found.</div>
+            <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFERENCES TAB -->
+    <div class="tab-panel <?= $active_tab === 'conferences' ? 'active' : '' ?>" id="panel-conferences" role="tabpanel">
+        <div class="table-card">
+            <div class="table-wrap">
+            <?php if ($conferences): ?>
+            <table>
+                <thead><tr>
+                    <th style="width:36px;">#</th>
+                    <th>Task</th>
+                    <th>Conference Title</th>
+                    <th>Hosting/Participating Org</th>
+                    <th>Dates</th>
+                    <th>Venue / Location</th>
+                    <th>Submission Deadline</th>
+                    <th>Action</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($conferences as $i => $r): ?>
+                <tr>
+                    <td><div class="row-num"><?= $i + 1 ?></div></td>
+                    <td>
+                        <?php if ($r['taskno']): ?>
+                            <a class="task-link" href="#"><?= htmlspecialchars($r['taskno']) ?></a>
+                        <?php else: ?>
+                            <span class="col-muted">—</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><div class="col-title"><?= htmlspecialchars($r['title']) ?></div></td>
+                    <td><?= htmlspecialchars($r['organizer']) ?></td>
+                    <td class="col-muted" style="white-space:nowrap;"><?= date('d M Y', strtotime($r['start_date'])) ?> - <?= date('d M Y', strtotime($r['end_date'])) ?></td>
+                    <td><span style="font-size:13px;"><i class="fa fa-map-marker text-danger" style="margin-right:3px;"></i><?= htmlspecialchars($r['location']) ?></span></td>
+                    <td>
+                        <?= $r['submission_deadline'] ? '<span class="text-danger" style="font-weight:600;">'.date('d M Y', strtotime($r['submission_deadline'])).'</span>' : '<span class="col-muted">—</span>' ?>
+                    </td>
+                    <td>
+                        <?php if ($r['website_url']): ?>
+                            <a class="doi-link" href="<?= htmlspecialchars($r['website_url']) ?>" target="_blank">Website ↗</a>
+                        <?php else: ?>
+                            <span class="col-muted">—</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php else: ?>
+            <div class="empty-state">No conferences found.</div>
+            <?php endif; ?>
+            </div>
+
+            <!-- MOBILE CARD LAYOUT FOR CONFERENCES -->
+            <div class="card-layout" style="display:none;">
+            <?php if ($conferences): ?>
+                <?php foreach ($conferences as $i => $r): ?>
+                <div class="card-row <?= $i % 2 === 1 ? 'alt' : '' ?>">
+                    <div class="card-header">
+                        <div class="card-num"><?= $i + 1 ?></div>
+                        <div class="card-title-main"><?= htmlspecialchars($r['title']) ?></div>
+                    </div>
+                    <?php if ($r['taskno']): ?>
+                    <div class="card-section">
+                        <span class="card-label">Task</span>
+                        <div class="card-inline"><a class="task-link" href="#"><?= htmlspecialchars($r['taskno']) ?></a></div>
+                    </div>
+                    <?php endif; ?>
+                    <div class="card-section">
+                        <span class="card-label">Hosting/Participating Org</span>
+                        <div class="card-value"><?= htmlspecialchars($r['organizer']) ?></div>
+                    </div>
+                    <div class="card-section">
+                        <span class="card-label">Dates</span>
+                        <div class="card-value muted"><?= date('d M Y', strtotime($r['start_date'])) ?> - <?= date('d M Y', strtotime($r['end_date'])) ?></div>
+                    </div>
+                    <div class="card-section">
+                        <span class="card-label">Venue / Location</span>
+                        <div class="card-value"><i class="fa fa-map-marker text-danger" style="margin-right:3px;"></i><?= htmlspecialchars($r['location']) ?></div>
+                    </div>
+                    <?php if ($r['submission_deadline']): ?>
+                    <div class="card-section">
+                        <span class="card-label">Submission Deadline</span>
+                        <div class="card-value text-danger font-w600"><?= date('d M Y', strtotime($r['submission_deadline'])) ?></div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($r['website_url']): ?>
+                    <div class="card-section">
+                        <span class="card-label">Official Link</span>
+                        <div class="card-inline"><a class="doi-link" href="<?= htmlspecialchars($r['website_url']) ?>" target="_blank">Website ↗</a></div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+            <div class="empty-state">No conferences found.</div>
             <?php endif; ?>
             </div>
         </div>

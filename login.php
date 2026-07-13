@@ -94,8 +94,8 @@ $activePage = "login";
     /* Custom form styling with Bootstrap Input Groups */
     .input-group-login {
         width: 100%;
-        display: table;
-        border-collapse: separate;
+        display: flex !important;
+        align-items: stretch;
     }
     
     .input-group-login .input-group-addon {
@@ -106,9 +106,10 @@ $activePage = "login";
         color: #64748b;
         font-size: 16px;
         width: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.2s ease;
-        text-align: center;
-        vertical-align: middle;
     }
     
     .input-group-login .form-control {
@@ -121,6 +122,7 @@ $activePage = "login";
         transition: all 0.2s ease;
         padding-left: 12px;
         margin: 0;
+        flex: 1;
     }
     
     /* For username input where there's no button on the right */
@@ -132,6 +134,11 @@ $activePage = "login";
     .input-group-login input#password.form-control {
         border-radius: 0 !important;
         border-right: none;
+    }
+    
+    .input-group-login .input-group-btn {
+        display: flex;
+        margin: 0;
     }
     
     .input-group-login .toggle-password-btn {
@@ -146,6 +153,9 @@ $activePage = "login";
         box-shadow: none;
         outline: none !important;
         transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .input-group-login .toggle-password-btn:hover {

@@ -3,7 +3,7 @@ session_start();
 
 require_once 'role_access.php';
 
-// ── Check for 'username' and 'institute_prefix' ─────
+// Check for 'username' and 'institute_prefix'
 if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
     header("Location: index.php");
     exit();
@@ -18,33 +18,46 @@ if (!isValidPrefix($prefix)) {
 // Table name built only from a whitelisted value above — safe from injection
 $table = "{$prefix}_conferences";
 
-// ── Database & logic ─────────────────────────────────────────────────────────
+// Database & logic
 require_once 'config/db.php';
 
 $success = false;
 $error   = '';
+
+// Self-healing database table creation
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `$table` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `taskno` VARCHAR(50) DEFAULT NULL,
+            `title` VARCHAR(255) NOT NULL,
+            `organizer` VARCHAR(255) NOT NULL,
+            `start_date` DATE NOT NULL,
+            `end_date` DATE NOT NULL,
+            `location` VARCHAR(255) NOT NULL,
+            `submission_deadline` DATE DEFAULT NULL,
+            `website_url` VARCHAR(1000) DEFAULT NULL,
+            `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_conf_dates` (`start_date`, `end_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ");
+} catch (PDOException $e) {
+    // Ignore error
+}
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
-    try {
-        // Fetch image path first to delete the file from the server
-        $stmt = $pdo->prepare("SELECT image FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        $row = $stmt->fetch();
-        if ($row && !empty($row['image']) && file_exists($row['image'])) {
-            @unlink($row['image']);
+        try {
+            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
+            exit;
+        } catch (PDOException $e) {
+            $error = 'Failed to delete record: ' . $e->getMessage();
         }
-
-        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-        exit;
-    } catch (PDOException $e) {
-        $error = 'Failed to delete record: ' . $e->getMessage();
-    }
     }
 }
 
@@ -55,174 +68,95 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $taskno       = trim($_POST['taskno']        ?? '');
-    $title        = trim($_POST['title']         ?? '');
-    $conf_date    = $_POST['conf_date']          ?? '';
-    $organisers   = trim($_POST['organisers']    ?? '');
-    $institute    = trim($_POST['institute']     ?? '');
-    $investigator = trim($_POST['investigator']  ?? '');
-    $content      = trim($_POST['content']       ?? '');
-    $edit_id      = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $taskno              = trim($_POST['taskno']              ?? '');
+    $title               = trim($_POST['title']               ?? '');
+    $organizer           = trim($_POST['organizer']           ?? '');
+    $start_date          = $_POST['start_date']               ?? '';
+    $end_date            = $_POST['end_date']                 ?? '';
+    $location            = trim($_POST['location']            ?? '');
+    $submission_deadline = $_POST['submission_deadline']     ?? '';
+    $website_url         = trim($_POST['website_url']         ?? '');
+    $edit_id             = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
+    } elseif (empty($title) || empty($organizer) || empty($start_date) || empty($end_date) || empty($location)) {
+        $error = 'Title, Organizer, Start/End Dates, and Location/Venue are required fields.';
     } else {
-    try {
-        $uploadDir = 'uploads/banners/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        $imageFile = null;
-
-        if (!empty($_FILES['image']['name'])) {
-            $f = $_FILES['image'];
-
-            if ($f['error'] !== UPLOAD_ERR_OK) {
-                throw new RuntimeException("File upload failed with server error code: " . $f['error']);
-            }
-
-            if ($f['size'] > 10 * 1024 * 1024) {
-                throw new RuntimeException("File exceeds maximum allowed 10 MB limit.");
-            }
-
-            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                throw new RuntimeException("Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.");
-            }
-
-            $destFileName = uniqid('banner_', true) . '.' . $ext;
-            $destFullPath = $uploadDir . $destFileName;
-
-            if (!move_uploaded_file($f['tmp_name'], $destFullPath)) {
-                throw new RuntimeException("Could not save the uploaded banner file. Check folder write configurations.");
-            }
-
-            $imageFile = $destFullPath;
-        }
-
-        if ($edit_id) {
-            if ($imageFile) {
-                $oldStmt = $pdo->prepare("SELECT image FROM `$table` WHERE id = :id");
-                $oldStmt->execute([':id' => $edit_id]);
-                $oldRow = $oldStmt->fetch();
-                if ($oldRow && !empty($oldRow['image']) && file_exists($oldRow['image'])) {
-                    @unlink($oldRow['image']);
-                }
-
+        try {
+            if ($edit_id) {
+                // UPDATE RECORD
                 $stmt = $pdo->prepare("
                     UPDATE `$table` SET
                         taskno = :taskno,
                         title = :title,
-                        conf_date = :conf_date,
-                        organisers = :organisers,
-                        institute = :institute,
-                        investigator = :investigator,
-                        image = :image,
-                        content = :content
+                        organizer = :organizer,
+                        start_date = :start_date,
+                        end_date = :end_date,
+                        location = :location,
+                        submission_deadline = :submission_deadline,
+                        website_url = :website_url
                     WHERE id = :id
                 ");
                 $stmt->execute([
-                    ':taskno'       => $taskno,
-                    ':title'        => $title,
-                    ':conf_date'    => $conf_date ?: null,
-                    ':organisers'   => $organisers,
-                    ':institute'    => $institute,
-                    ':investigator' => $investigator,
-                    ':image'        => $imageFile,
-                    ':content'      => $content,
-                    ':id'           => $edit_id
+                    ':taskno'              => $taskno ?: null,
+                    ':title'               => $title,
+                    ':organizer'           => $organizer,
+                    ':start_date'          => $start_date,
+                    ':end_date'            => $end_date,
+                    ':location'            => $location,
+                    ':submission_deadline' => $submission_deadline ?: null,
+                    ':website_url'         => $website_url ?: null,
+                    ':id'                  => $edit_id
                 ]);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                exit;
             } else {
+                // INSERT NEW RECORD
                 $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        conf_date = :conf_date,
-                        organisers = :organisers,
-                        institute = :institute,
-                        investigator = :investigator,
-                        content = :content
-                    WHERE id = :id
+                    INSERT INTO `$table`
+                        (taskno, title, organizer, start_date, end_date, location, submission_deadline, website_url)
+                    VALUES
+                        (:taskno, :title, :organizer, :start_date, :end_date, :location, :submission_deadline, :website_url)
                 ");
                 $stmt->execute([
-                    ':taskno'       => $taskno,
-                    ':title'        => $title,
-                    ':conf_date'    => $conf_date ?: null,
-                    ':organisers'   => $organisers,
-                    ':institute'    => $institute,
-                    ':investigator' => $investigator,
-                    ':content'      => $content,
-                    ':id'           => $edit_id
+                    ':taskno'              => $taskno ?: null,
+                    ':title'               => $title,
+                    ':organizer'           => $organizer,
+                    ':start_date'          => $start_date,
+                    ':end_date'            => $end_date,
+                    ':location'            => $location,
+                    ':submission_deadline' => $submission_deadline ?: null,
+                    ':website_url'         => $website_url ?: null
                 ]);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                exit;
             }
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
-            exit;
-        } else {
-            $stmt = $pdo->prepare("
-                INSERT INTO `$table`
-                    (taskno, title, conf_date, organisers, institute,
-                     investigator, image, content, created_at)
-                VALUES
-                    (:taskno, :title, :conf_date, :organisers, :institute,
-                     :investigator, :image, :content, NOW())
-            ");
-            $stmt->execute([
-                ':taskno'       => $taskno,
-                ':title'        => $title,
-                ':conf_date'    => $conf_date ?: null,
-                ':organisers'   => $organisers,
-                ':institute'    => $institute,
-                ':investigator' => $investigator,
-                ':image'        => $imageFile,
-                ':content'      => $content,
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
-            exit;
+        } catch (PDOException $e) {
+            $error = 'Database error: ' . $e->getMessage();
         }
-    } catch (RuntimeException $e) {
-        $error = "Upload System Error: " . $e->getMessage();
-    } catch (PDOException $e) {
-        $error = 'Database error: ' . $e->getMessage();
-    }
     }
 }
 
-// 4. FETCH ALL DATA FOR THE TABLE
+// 4. FETCH DATA
 $conferences = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
+    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY start_date DESC");
     $conferences = $stmt->fetchAll();
 } catch (PDOException $e) {
-    $error = 'Could not load data records: ' . $e->getMessage();
+    // Suppress error or handle gracefully
 }
 
 $total_records = count($conferences);
-
-// 5. CALCULATE CONFERENCE STATS
-$total_conferences = $total_records;
-$unique_organisers = [];
-$unique_investigators = [];
 $upcoming_count = 0;
-$current_time = time();
-
+$current_date = date('Y-m-d');
 foreach ($conferences as $c) {
-    if (!empty(trim($c['organisers']))) {
-        $unique_organisers[trim($c['organisers'])] = true;
-    }
-    if (!empty(trim($c['investigator']))) {
-        $unique_investigators[trim($c['investigator'])] = true;
-    }
-    if (!empty($c['conf_date'])) {
-        if (strtotime($c['conf_date']) > $current_time) {
-            $upcoming_count++;
-        }
+    if (!empty($c['start_date']) && $c['start_date'] > $current_date) {
+        $upcoming_count++;
     }
 }
-$total_organisers = count($unique_organisers);
-$total_pis = count($unique_investigators);
+$pageTitle = "Conferences Management | ANRF-PAIR";
 ?>
-
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
 <?php include 'sidebar.php'; ?>
@@ -231,7 +165,6 @@ $total_pis = count($unique_investigators);
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 
 <style>
-    /* ──── COMPACT REGISTRY TABLE STYLING ──── */
     .registry-card {
         border-radius: 12px !important;
         border: 1px solid #e2e8f0 !important;
@@ -239,179 +172,97 @@ $total_pis = count($unique_investigators);
         overflow: hidden;
         background: #ffffff;
     }
-
     .table-theme-sapphire {
         margin-bottom: 0 !important;
         border-collapse: separate;
         border-spacing: 0;
+        width: 100%;
     }
-
     .table-theme-sapphire thead th {
-        background-color: #024283 !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 11px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.8px !important;
-        padding: 12px 16px !important; /* Reduced Header Height */
-        border: none !important;
-    }
-
-    .table-theme-sapphire tbody tr:hover {
         background-color: #f8fafc !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 12px 16px !important;
     }
-
     .table-theme-sapphire tbody td {
-        padding: 10px 16px !important; /* Reduced Cell Padding for Smaller Row Footprint */
-        vertical-align: middle !important; /* Vertically centered */
-        border-bottom: 1px solid #f1f5f9 !important;
-        color: #334155;
+        padding: 14px 16px !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        color: #1e293b;
+        font-size: 13.5px;
+        vertical-align: middle;
     }
-
-    /* Index Circle */
     .index-badge-circle {
-        width: 22px;
-        height: 22px;
-        background-color: #b93c3c;
-        color: #ffffff;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
+        background-color: #f1f5f9;
+        color: #475569;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 10px;
+        font-size: 11px;
     }
-
     .registry-task-link {
-        font-size: 12px;
         font-weight: 700;
-        color: #024283;
-        text-decoration: none;
-        display: inline-block;
-        margin-bottom: 2px;
-    }
-    
-    .registry-task-link:hover {
-        text-decoration: underline;
-    }
-
-    .registry-main-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e293b;
-        line-height: 1.3;
+        color: #bc2121 !important;
         display: block;
-        margin-bottom: 4px;
+        font-size: 11.5px;
+        margin-bottom: 3px;
+        text-transform: uppercase;
     }
-
-    .registry-tag-pill {
-        display: inline-block;
-        font-size: 9px;
-        font-weight: 600;
-        color: #b93c3c;
-        background-color: #fdf2f2;
-        padding: 2px 8px;
-        border-radius: 20px;
-        text-transform: capitalize;
+    .registry-main-title {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 14px;
+        display: block;
+        line-height: 1.4;
     }
-
     .registry-meta-text {
-        font-size: 12px;
+        font-size: 13px;
         color: #334155;
     }
-
     .registry-sub-label {
         font-size: 11px;
         color: #64748b;
         display: block;
+        margin-top: 2px;
     }
-
-    /* Custom Status Pill */
-    .status-pill-custom {
+    .btn-action-compact {
+        width: 28px;
+        height: 28px;
+        padding: 0 !important;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 10px;
+        justify-content: center;
+        border-radius: 6px;
     }
-
-    .status-pill-custom::before {
-        content: '';
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .status-pill-custom.status-granted {
-        background-color: #e6f4ea;
-        color: #137333;
-    }
-    .status-pill-custom.status-granted::before {
-        background-color: #137333;
-    }
-
-    .status-pill-custom.status-pending {
-        background-color: #f1f3f4;
-        color: #5f6368;
-    }
-    .status-pill-custom.status-pending::before {
-        background-color: #5f6368;
-    }
-
-    /* Compact Actions Structure Style Rules */
-    .btn-action-compact {
-        width: 30px !important;
-        height: 30px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 4px !important;
-        font-size: 13px !important;
-        border: none !important;
-        transition: transform 0.15s ease;
-    }
-    .btn-action-compact:hover {
-        transform: scale(1.05);
-    }
-    
-    /* Specific styling requested color hooks */
     .btn-action-edit-yellow {
-        background-color: #ffca28 !important; /* Yellow theme configuration */
-        color: #1a1a1a !important;
+        background-color: #fef08a !important;
+        color: #854d0e !important;
+        border: 1px solid #fef08a !important;
     }
     .btn-action-edit-yellow:hover {
-        background-color: #ffb300 !important;
+        background-color: #fde047 !important;
     }
-
     .btn-action-delete-red {
-        background-color: #ef4444 !important; /* Red theme configuration */
-        color: #ffffff !important;
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+        border: 1px solid #fee2e2 !important;
     }
     .btn-action-delete-red:hover {
-        background-color: #dc2626 !important;
+        background-color: #fca5a5 !important;
     }
-
-    .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
-        color: #ffffff !important;
-    }
-    .pagination-theme-sapphire .page-link {
-        color: #024283;
-    }
-
-    /* ──── UNIFIED GREEN KPI STYLES ──── */
     .kpi-widget-card {
         border-radius: 20px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #22c55e !important;
+        background-color: #bc2121 !important;
     }
     .kpi-card-body {
         display: flex;
@@ -458,7 +309,6 @@ $total_pis = count($unique_investigators);
     }
 </style>
 
-
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
@@ -475,7 +325,7 @@ $total_pis = count($unique_investigators);
             <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fa fa-check-circle me-2"></i>
-                <strong>Success!</strong> Operation logged cleanly.
+                <strong>Success!</strong> Action processed successfully.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
@@ -488,147 +338,151 @@ $total_pis = count($unique_investigators);
             </div>
             <?php endif; ?>
 
+            <!-- WIDGETS ROW -->
             <div class="row mb-4">
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #bc2121 !important;">
                         <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-chalkboard-user"></i></div>
+                            <div class="kpi-icon-circle"><i class="fa-solid fa-hotel"></i></div>
                             <span class="kpi-title-text">Total Conferences</span>
                             <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_conferences ?></span>
+                                <span class="kpi-metric-value"><?= $total_records ?></span>
                                 <span class="kpi-subtext">tracked</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #10b981 !important;">
                         <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
-                            <span class="kpi-title-text">Upcoming Events</span>
+                            <div class="kpi-icon-circle"><i class="fa-solid fa-clock"></i></div>
+                            <span class="kpi-title-text">Upcoming Conferences</span>
                             <div class="kpi-metric-row">
                                 <span class="kpi-metric-value"><?= $upcoming_count ?></span>
-                                <span class="kpi-subtext">Scheduled</span>
+                                <span class="kpi-subtext">scheduled</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #4b5563 !important;">
                         <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-users"></i></div>
-                            <span class="kpi-title-text">Total Organisers</span>
+                            <div class="kpi-icon-circle"><i class="fa-solid fa-earth-americas"></i></div>
+                            <span class="kpi-title-text">Active Institute</span>
                             <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_organisers ?></span>
-                                <span class="kpi-subtext">Co-ordinators</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
-                        <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-award"></i></div>
-                            <span class="kpi-title-text">Investigators</span>
-                            <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_pis ?></span>
-                                <span class="kpi-subtext">Hosts</span>
+                                <span class="kpi-metric-value" style="font-size: 20px;"><?= htmlspecialchars(strtoupper($prefix)) ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- REGISTRY TABLE -->
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
-                            <i class="fa-solid fa-list-check me-2"></i>CONFERENCES RECORDS
+                            <i class="fa-solid fa-hotel me-2"></i>CONFERENCES CMS MANAGEMENT
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#conferenceModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
-                            <i class="fa fa-plus me-1"></i> Add Record
+                            <i class="fa fa-plus me-1"></i> Add Conference
                         </button>
                         <?php endif; ?>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-theme-sapphire">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">Task No</th>
-                                    <th style="width: 46%;">Conference Info</th>
-                                    <th style="width: 22%;">Organisers / Hosts</th>
-                                    <th style="width: 13%;">Date</th>
-                                    <th style="width: 15%; text-align: center;">Status</th>
-                                    <th style="width: 10%; text-align: center;">Action</th> </tr>
+                                    <th style="width: 5%; min-width: 60px; text-align: center;">S.No</th>
+                                    <th style="width: 35%; min-width: 250px;">Conference Details</th>
+                                    <th style="width: 20%; min-width: 180px;">Hosting/Participating Org</th>
+                                    <th style="width: 15%; min-width: 140px;">Venue / Location</th>
+                                    <th style="width: 15%; min-width: 160px; white-space: nowrap;">Dates &amp; Deadlines</th>
+                                    <th style="width: 10%; min-width: 110px; text-align: center; white-space: nowrap;">Action</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($conferences)): ?>
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No active conference records found.</td>
+                                        <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No conference records tracked yet.</td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php 
-                                    $rowCounter = 1; 
-                                    foreach ($conferences as $conference): 
+                                    <?php
+                                    $rowCounter = 1;
+                                    foreach ($conferences as $conf):
+                                        // Dynamic schema fallback mapping to handle old vs new database columns defensively
+                                        $organizerVal = htmlspecialchars($conf['organizer'] ?? $conf['organisers'] ?? '');
+                                        $locationVal  = htmlspecialchars($conf['location'] ?? $conf['institute'] ?? '');
+                                        $startDateVal = $conf['start_date'] ?? $conf['conf_date'] ?? '';
+                                        $endDateVal   = $conf['end_date'] ?? $conf['conf_date'] ?? '';
+                                        $websiteVal   = htmlspecialchars($conf['website_url'] ?? '');
+                                        $deadlineVal  = $conf['submission_deadline'] ?? '';
                                     ?>
                                         <tr>
-                                            <td style="text-align: center;">
+                                            <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="registry-task-link">
-                                                    <?= htmlspecialchars($conference['taskno'] ?: 'TASK-UNASSIGNED') ?>
-                                                </a>
+                                            <td style="vertical-align: middle;">
+                                                <span class="registry-task-link">
+                                                    <?= htmlspecialchars($conf['taskno'] ?: 'TASK-UNASSIGNED') ?>
+                                                </span>
                                                 <span class="registry-main-title">
-                                                    <?= htmlspecialchars($conference['title'] ?: 'Untitled Event Profile Data summary') ?>
+                                                    <?= htmlspecialchars($conf['title']) ?>
                                                 </span>
-                                                <?php if(!empty($conference['institute'])): ?>
-                                                    <span class="registry-tag-pill"><?= htmlspecialchars($conference['institute']) ?></span>
+                                                <?php if (!empty($websiteVal)): ?>
+                                                    <span class="d-block mt-1">
+                                                        <a href="<?= $websiteVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-external-link me-1"></i> Official Website</a>
+                                                    </span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
+                                            <td style="vertical-align: middle;">
                                                 <span class="registry-meta-text font-w600 text-dark">
-                                                    <?= htmlspecialchars($conference['investigator'] ?: '—') ?>
-                                                </span>
-                                                <span class="registry-sub-label">
-                                                    with <?= htmlspecialchars($conference['organisers'] ?: 'Independent') ?>
+                                                    <?= $organizerVal ?>
                                                 </span>
                                             </td>
-                                            <td>
-                                                <span class="text-dark font-w600" style="font-size: 12px;">
-                                                    <?= $conference['conf_date'] ? date('d M Y', strtotime($conference['conf_date'])) : '—' ?>
+                                            <td style="vertical-align: middle;">
+                                                <span class="text-dark" style="font-size: 13px;">
+                                                    <i class="fa fa-map-marker text-danger me-1"></i><?= $locationVal ?>
                                                 </span>
                                             </td>
-                                            <td style="text-align: center;">
-                                                <?php if (!empty($conference['image']) && file_exists($conference['image'])): ?>
-                                                    <a href="<?= $conference['image'] ?>" target="_blank" class="status-pill-custom status-granted text-decoration-none">Granted Banner</a>
-                                                <?php else: ?>
-                                                    <span class="status-pill-custom status-pending">No Banner</span>
-                                                <?php endif; ?>
+                                            <td style="vertical-align: middle;">
+                                                <div style="font-size: 12px;">
+                                                    <strong>Duration:</strong><br>
+                                                    <span class="text-muted">
+                                                        <?= $startDateVal ? date('d M Y', strtotime($startDateVal)) : '—' ?> - <?= $endDateVal ? date('d M Y', strtotime($endDateVal)) : '—' ?>
+                                                    </span>
+                                                    <?php if ($deadlineVal): ?>
+                                                        <br><strong>Sub. Deadline:</strong><br>
+                                                        <span class="text-danger font-w600">
+                                                            <?= date('d M Y', strtotime($deadlineVal)) ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
-                                            <td>
+                                            <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#conferenceModal"
-                                                            data-id="<?= $conference['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conference['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conference['title']) ?>"
-                                                            data-date="<?= $conference['conf_date'] ? date('Y-m-d', strtotime($conference['conf_date'])) : '' ?>"
-                                                            data-organisers="<?= htmlspecialchars($conference['organisers']) ?>"
-                                                            data-institute="<?= htmlspecialchars($conference['institute'] ?? '') ?>"
-                                                            data-investigator="<?= htmlspecialchars($conference['investigator'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($conference['content'] ?? '') ?>"
+                                                            data-id="<?= $conf['id'] ?>"
+                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
+                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
+                                                            data-organizer="<?= $organizerVal ?>"
+                                                            data-start_date="<?= $startDateVal ?>"
+                                                            data-end_date="<?= $endDateVal ?>"
+                                                            data-location="<?= $locationVal ?>"
+                                                            data-submission_deadline="<?= $deadlineVal ?>"
+                                                            data-website_url="<?= $websiteVal ?>"
                                                             title="Edit Record">
                                                         <i class="fa fa-pencil"></i>
                                                     </button>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $conference['id'] ?>"
+                                                            data-id="<?= $conf['id'] ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
@@ -638,14 +492,15 @@ $total_pis = count($unique_investigators);
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#conferenceModal"
                                                             data-view-only="true"
-                                                            data-id="<?= $conference['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conference['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conference['title']) ?>"
-                                                            data-date="<?= $conference['conf_date'] ? date('Y-m-d', strtotime($conference['conf_date'])) : '' ?>"
-                                                            data-organisers="<?= htmlspecialchars($conference['organisers']) ?>"
-                                                            data-institute="<?= htmlspecialchars($conference['institute'] ?? '') ?>"
-                                                            data-investigator="<?= htmlspecialchars($conference['investigator'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($conference['content'] ?? '') ?>"
+                                                            data-id="<?= $conf['id'] ?>"
+                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
+                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
+                                                            data-organizer="<?= $organizerVal ?>"
+                                                            data-start_date="<?= $startDateVal ?>"
+                                                            data-end_date="<?= $endDateVal ?>"
+                                                            data-location="<?= $locationVal ?>"
+                                                            data-submission_deadline="<?= $deadlineVal ?>"
+                                                            data-website_url="<?= $websiteVal ?>"
                                                             title="View Details">
                                                         <i class="fa fa-eye"></i>
                                                     </button>
@@ -658,71 +513,65 @@ $total_pis = count($unique_investigators);
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="d-flex align-items-center justify-content-between flex-wrap p-2 px-3 bg-white border-top">
-                        <p class="mb-0 text-muted small font-w500">Total: <?= $total_records ?> dashboard assets</p>
-                        <nav aria-label="Pagination control block">
-                          <ul class="pagination pagination-sm mb-0 pagination-theme-sapphire">
-                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-left"></i></a></li>
-                            <li class="page-item active"><a class="page-link" href="javascript:void(0);">1</a></li>
-                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-right"></i></a></li>
-                          </ul>
-                        </nav>
-                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
+    <!-- Modal Input Form Overlay -->
     <div class="modal fade" id="conferenceModal" tabindex="-1" aria-labelledby="conferenceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="conferenceModalLabel">Conference Creation Form</h5>
+                    <h5 class="modal-title" id="conferenceModalLabel">Conference Form</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" enctype="multipart/form-data" id="modalForm">
+                <form method="POST" id="modalForm">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
+
                         <div class="row">
                             <div class="col-md-3 mb-3">
-                                <label class="form-label form-label-grey">Task No</label>
-                                <input type="text" name="taskno" id="modal_taskno" class="form-control" required>
+                                <label class="form-label">Task No</label>
+                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. TASK-2">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Conference Title</label>
-                                <input type="text" name="title" id="modal_title" class="form-control">
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label form-label-grey">Date</label>
-                                <input type="text" name="conf_date" id="modal_conf_date" class="form-control" placeholder="Select date" autocomplete="off">
+                            <div class="col-md-9 mb-3">
+                                <label class="form-label">Conference Title *</label>
+                                <input type="text" name="title" id="modal_title" class="form-control" required>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Organisers</label>
-                                <input type="text" name="organisers" id="modal_organisers" class="form-control">
+                                <label class="form-label">Hosting/Participating Organization *</label>
+                                <input type="text" name="organizer" id="modal_organizer" class="form-control" placeholder="e.g. IEEE, Osmania University" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Institute</label>
-                                <input type="text" name="institute" id="modal_institute" class="form-control">
+                                <label class="form-label">Location/Venue *</label>
+                                <input type="text" name="location" id="modal_location" class="form-control" placeholder="e.g. Hyderabad, India (or Online)" required>
                             </div>
                         </div>
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Investigator</label>
-                                <input type="text" name="investigator" id="modal_investigator" class="form-control">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" name="start_date" id="modal_start_date" class="form-control" required>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Image Banner Asset</label>
-                                <input type="file" name="image" class="form-control" accept="image/*">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">End Date *</label>
+                                <input type="date" name="end_date" id="modal_end_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Paper Submission Deadline</label>
+                                <input type="date" name="submission_deadline" id="modal_submission_deadline" class="form-control">
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label class="form-label form-label-grey">Description</label>
-                                <textarea name="content" id="modal_content" rows="3" class="form-control"></textarea>
+                                <label class="form-label">Official Website URL</label>
+                                <input type="url" name="website_url" id="modal_website_url" class="form-control" placeholder="https://conference-website.org">
                             </div>
                         </div>
                     </div>
@@ -735,6 +584,7 @@ $total_pis = count($unique_investigators);
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal Box -->
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
@@ -743,7 +593,7 @@ $total_pis = count($unique_investigators);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-2 text-dark" style="font-size: 13px;">
-                    Are you sure you want to permanently delete this conference entry? This execution cannot be reversed.
+                    Are you sure you want to permanently delete this conference record? This operation cannot be rolled back.
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -764,7 +614,6 @@ $total_pis = count($unique_investigators);
 <script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script src="js/custom.min.js"></script>
 <script src="js/dlabnav-init.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -778,19 +627,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const modalDeleteExecutionLink = document.getElementById('modalDeleteExecutionLink');
     const bootstrapDeleteInstance = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
 
-    const confDatePicker = flatpickr("#modal_conf_date", {
-        enableTime: false,
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M, Y"
-    });
-
     if(addNewBtn) {
         addNewBtn.addEventListener('click', function() {
             modalForm.reset();
-            confDatePicker.clear();
             document.getElementById('modal_edit_id').value = '';
-            modalTitle.innerText = "Conference Creation Form";
+            modalTitle.innerText = "Add Conference";
             modalSubmitBtn.innerText = "Save Records";
             modalSubmitBtn.style.display = "block";
             modalForm.querySelectorAll('input, select, textarea').forEach(el => {
@@ -823,18 +664,12 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
             document.getElementById('modal_taskno').value = this.getAttribute('data-taskno');
             document.getElementById('modal_title').value = this.getAttribute('data-title');
-
-            const dateVal = this.getAttribute('data-date');
-            if (dateVal) {
-                confDatePicker.setDate(dateVal, true);
-            } else {
-                confDatePicker.clear();
-            }
-
-            document.getElementById('modal_organisers').value = this.getAttribute('data-organisers');
-            document.getElementById('modal_institute').value = this.getAttribute('data-institute');
-            document.getElementById('modal_investigator').value = this.getAttribute('data-investigator');
-            document.getElementById('modal_content').value = this.getAttribute('data-content');
+            document.getElementById('modal_organizer').value = this.getAttribute('data-organizer');
+            document.getElementById('modal_start_date').value = this.getAttribute('data-start_date');
+            document.getElementById('modal_end_date').value = this.getAttribute('data-end_date');
+            document.getElementById('modal_location').value = this.getAttribute('data-location');
+            document.getElementById('modal_submission_deadline').value = this.getAttribute('data-submission_deadline');
+            document.getElementById('modal_website_url').value = this.getAttribute('data-website_url');
         });
     });
 

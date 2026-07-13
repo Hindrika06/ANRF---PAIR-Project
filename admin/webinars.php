@@ -3,7 +3,7 @@ session_start();
 
 require_once 'role_access.php';
 
-// ── Check for 'username' and 'institute_prefix' ─────
+// Check for 'username' and 'institute_prefix'
 if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
     header("Location: index.php");
     exit();
@@ -18,33 +18,45 @@ if (!isValidPrefix($prefix)) {
 // Table name built only from a whitelisted value above — safe from injection
 $table = "{$prefix}_webinars";
 
-// ── Database & logic ─────────────────────────────────────────────────────────
+// Database & logic
 require_once 'config/db.php';
 
 $success = false;
 $error   = '';
+
+// Self-healing database table creation
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `$table` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `taskno` VARCHAR(50) DEFAULT NULL,
+            `title` VARCHAR(255) NOT NULL,
+            `speaker_name` VARCHAR(255) NOT NULL,
+            `affiliation` VARCHAR(255) DEFAULT NULL,
+            `webinar_date` DATETIME NOT NULL,
+            `link` VARCHAR(1000) DEFAULT NULL,
+            `description` TEXT DEFAULT NULL,
+            `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_webinar_date` (`webinar_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ");
+} catch (PDOException $e) {
+    // Ignore error
+}
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
-    try {
-        // Fetch image path first to delete the file from the server
-        $stmt = $pdo->prepare("SELECT image FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        $row = $stmt->fetch();
-        if ($row && !empty($row['image']) && file_exists($row['image'])) {
-            @unlink($row['image']);
+        try {
+            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
+            exit;
+        } catch (PDOException $e) {
+            $error = 'Failed to delete record: ' . $e->getMessage();
         }
-
-        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-        exit;
-    } catch (PDOException $e) {
-        $error = 'Failed to delete record: ' . $e->getMessage();
-    }
     }
 }
 
@@ -55,178 +67,90 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $taskno       = trim($_POST['taskno']        ?? '');
+    $taskno       = trim($_POST['taskno']       ?? '');
     $title        = trim($_POST['title']        ?? '');
-    $webinar_date = $_POST['webinar_date']      ?? '';
-    $organisers   = trim($_POST['organisers']   ?? '');
-    $institute    = trim($_POST['institute']    ?? '');
-    $investigator = trim($_POST['investigator'] ?? '');
-    $content      = trim($_POST['content']      ?? ''); // Description
+    $speaker_name = trim($_POST['speaker_name']  ?? '');
+    $affiliation  = trim($_POST['affiliation']   ?? '');
+    $webinar_date = $_POST['webinar_date']       ?? '';
+    $link         = trim($_POST['link']          ?? '');
+    $description  = trim($_POST['description']   ?? '');
     $edit_id      = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
+    } elseif (empty($title) || empty($speaker_name) || empty($webinar_date)) {
+        $error = 'Title, Speaker Name, and Webinar Date & Time are required fields.';
     } else {
-    try {
-        $uploadDir = 'uploads/banners/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        $imageFile = null;
-
-        // Check if a file was selected for upload
-        if (!empty($_FILES['image']['name'])) {
-            $f = $_FILES['image'];
-
-            if ($f['error'] !== UPLOAD_ERR_OK) {
-                throw new RuntimeException("File upload failed with server error code: " . $f['error']);
-            }
-
-            if ($f['size'] > 10 * 1024 * 1024) {
-                throw new RuntimeException("File exceeds maximum allowed 10 MB limit.");
-            }
-
-            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                throw new RuntimeException("Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.");
-            }
-
-            // Generate unique name to prevent collisions/overwrites
-            $destFileName = uniqid('banner_', true) . '.' . $ext;
-            $destFullPath = $uploadDir . $destFileName;
-
-            if (!move_uploaded_file($f['tmp_name'], $destFullPath)) {
-                throw new RuntimeException("Could not save the uploaded banner file. Check folder write configurations.");
-            }
-
-            $imageFile = $destFullPath;
-        }
-
-        if ($edit_id) {
-            // UPDATE EXISTING WEBINAR RECORD
-            if ($imageFile) {
-                // Remove old banner asset file from server if a new one is uploaded
-                $oldStmt = $pdo->prepare("SELECT image FROM `$table` WHERE id = :id");
-                $oldStmt->execute([':id' => $edit_id]);
-                $oldRow = $oldStmt->fetch();
-                if ($oldRow && !empty($oldRow['image']) && file_exists($oldRow['image'])) {
-                    @unlink($oldRow['image']);
-                }
-
+        try {
+            if ($edit_id) {
+                // UPDATE RECORD
                 $stmt = $pdo->prepare("
                     UPDATE `$table` SET
                         taskno = :taskno,
                         title = :title,
+                        speaker_name = :speaker_name,
+                        affiliation = :affiliation,
                         webinar_date = :webinar_date,
-                        organisers = :organisers,
-                        institute = :institute,
-                        investigator = :investigator,
-                        image = :image,
-                        content = :content
+                        link = :link,
+                        description = :description
                     WHERE id = :id
                 ");
                 $stmt->execute([
                     ':taskno'       => $taskno,
                     ':title'        => $title,
+                    ':speaker_name' => $speaker_name,
+                    ':affiliation'  => $affiliation,
                     ':webinar_date' => $webinar_date ?: null,
-                    ':organisers'   => $organisers,
-                    ':institute'    => $institute,
-                    ':investigator' => $investigator,
-                    ':image'        => $imageFile,
-                    ':content'      => $content,
+                    ':link'         => $link ?: null,
+                    ':description'  => $description ?: null,
                     ':id'           => $edit_id
                 ]);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                exit;
             } else {
-                // Keep the old image path if file selection was left blank during update
+                // INSERT NEW RECORD
                 $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        webinar_date = :webinar_date,
-                        organisers = :organisers,
-                        institute = :institute,
-                        investigator = :investigator,
-                        content = :content
-                    WHERE id = :id
+                    INSERT INTO `$table`
+                        (taskno, title, speaker_name, affiliation, webinar_date, link, description)
+                    VALUES
+                        (:taskno, :title, :speaker_name, :affiliation, :webinar_date, :link, :description)
                 ");
                 $stmt->execute([
                     ':taskno'       => $taskno,
                     ':title'        => $title,
+                    ':speaker_name' => $speaker_name,
+                    ':affiliation'  => $affiliation,
                     ':webinar_date' => $webinar_date ?: null,
-                    ':organisers'   => $organisers,
-                    ':institute'    => $institute,
-                    ':investigator' => $investigator,
-                    ':content'      => $content,
-                    ':id'           => $edit_id
+                    ':link'         => $link ?: null,
+                    ':description'  => $description ?: null
                 ]);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                exit;
             }
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
-            exit;
-        } else {
-            // INSERT NEW WEBINAR RECORD
-            $stmt = $pdo->prepare("
-                INSERT INTO `$table`
-                    (taskno, title, webinar_date, organisers, institute,
-                     investigator, image, content, created_at)
-                VALUES
-                    (:taskno, :title, :webinar_date, :organisers, :institute,
-                     :investigator, :image, :content, NOW())
-            ");
-            $stmt->execute([
-                ':taskno'       => $taskno,
-                ':title'        => $title,
-                ':webinar_date' => $webinar_date ?: null,
-                ':organisers'   => $organisers,
-                ':institute'    => $institute,
-                ':investigator' => $investigator,
-                ':image'        => $imageFile,
-                ':content'      => $content,
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
-            exit;
+        } catch (PDOException $e) {
+            $error = 'Database error: ' . $e->getMessage();
         }
-    } catch (RuntimeException $e) {
-        $error = "Upload System Error: " . $e->getMessage();
-    } catch (PDOException $e) {
-        $error = 'Database error: ' . $e->getMessage();
-    }
     }
 }
 
-// 4. FETCH ALL DATA FOR THE TABLE
+// 4. FETCH DATA
 $webinars = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
+    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY webinar_date DESC");
     $webinars = $stmt->fetchAll();
 } catch (PDOException $e) {
-    $error = 'Could not load data records: ' . $e->getMessage();
+    // Suppress error or handle gracefully
 }
 
 $total_records = count($webinars);
-
-// 5. CALCULATE WEBINAR STATS
-$total_webinars = $total_records;
-$unique_organisers = [];
-$unique_investigators = [];
 $upcoming_count = 0;
 $current_time = time();
-
 foreach ($webinars as $w) {
-    if (!empty(trim($w['organisers']))) {
-        $unique_organisers[trim($w['organisers'])] = true;
-    }
-    if (!empty(trim($w['investigator']))) {
-        $unique_investigators[trim($w['investigator'])] = true;
-    }
-    if (!empty($w['webinar_date'])) {
-        if (strtotime($w['webinar_date']) > $current_time) {
-            $upcoming_count++;
-        }
+    if (!empty($w['webinar_date']) && strtotime($w['webinar_date']) > $current_time) {
+        $upcoming_count++;
     }
 }
-$total_organisers = count($unique_organisers);
-$total_pis = count($unique_investigators);
+$pageTitle = "Webinars Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -236,7 +160,6 @@ $total_pis = count($unique_investigators);
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 
 <style>
-    /* ──── COMPACT REGISTRY TABLE STYLING (matches Conferences page) ──── */
     .registry-card {
         border-radius: 12px !important;
         border: 1px solid #e2e8f0 !important;
@@ -244,171 +167,90 @@ $total_pis = count($unique_investigators);
         overflow: hidden;
         background: #ffffff;
     }
-
     .table-theme-sapphire {
         margin-bottom: 0 !important;
         border-collapse: separate;
         border-spacing: 0;
+        width: 100%;
     }
-
     .table-theme-sapphire thead th {
-        background-color: #024283 !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 11px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.8px !important;
-        padding: 12px 16px !important;
-        border: none !important;
-    }
-
-    .table-theme-sapphire tbody tr:hover {
         background-color: #f8fafc !important;
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 12px 16px !important;
     }
-
     .table-theme-sapphire tbody td {
-        padding: 10px 16px !important;
-        vertical-align: middle !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        color: #334155;
+        padding: 14px 16px !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        color: #1e293b;
+        font-size: 13.5px;
+        vertical-align: middle;
     }
-
-    /* Index Circle */
     .index-badge-circle {
-        width: 22px;
-        height: 22px;
-        background-color: #b93c3c;
-        color: #ffffff;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
+        background-color: #f1f5f9;
+        color: #475569;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 10px;
+        font-size: 11px;
     }
-
     .registry-task-link {
-        font-size: 12px;
         font-weight: 700;
-        color: #024283;
-        text-decoration: none;
-        display: inline-block;
-        margin-bottom: 2px;
-    }
-
-    .registry-task-link:hover {
-        text-decoration: underline;
-    }
-
-    .registry-main-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e293b;
-        line-height: 1.3;
+        color: #bc2121 !important;
         display: block;
-        margin-bottom: 4px;
+        font-size: 11.5px;
+        margin-bottom: 3px;
+        text-transform: uppercase;
     }
-
-    .registry-tag-pill {
-        display: inline-block;
-        font-size: 9px;
-        font-weight: 600;
-        color: #b93c3c;
-        background-color: #fdf2f2;
-        padding: 2px 8px;
-        border-radius: 20px;
-        text-transform: capitalize;
+    .registry-main-title {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 14px;
+        display: block;
+        line-height: 1.4;
     }
-
     .registry-meta-text {
-        font-size: 12px;
+        font-size: 13px;
         color: #334155;
     }
-
     .registry-sub-label {
         font-size: 11px;
         color: #64748b;
         display: block;
+        margin-top: 2px;
     }
-
-    /* Custom Status Pill */
-    .status-pill-custom {
+    .btn-action-compact {
+        width: 28px;
+        height: 28px;
+        padding: 0 !important;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 10px;
+        justify-content: center;
+        border-radius: 6px;
     }
-
-    .status-pill-custom::before {
-        content: '';
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .status-pill-custom.status-granted {
-        background-color: #e6f4ea;
-        color: #137333;
-    }
-    .status-pill-custom.status-granted::before {
-        background-color: #137333;
-    }
-
-    .status-pill-custom.status-pending {
-        background-color: #f1f3f4;
-        color: #5f6368;
-    }
-    .status-pill-custom.status-pending::before {
-        background-color: #5f6368;
-    }
-
-    /* Compact Actions */
-    .btn-action-compact {
-        width: 30px !important;
-        height: 30px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 4px !important;
-        font-size: 13px !important;
-        border: none !important;
-        transition: transform 0.15s ease;
-    }
-    .btn-action-compact:hover {
-        transform: scale(1.05);
-    }
-
     .btn-action-edit-yellow {
-        background-color: #ffca28 !important;
-        color: #1a1a1a !important;
+        background-color: #fef08a !important;
+        color: #854d0e !important;
+        border: 1px solid #fef08a !important;
     }
     .btn-action-edit-yellow:hover {
-        background-color: #ffb300 !important;
+        background-color: #fde047 !important;
     }
-
     .btn-action-delete-red {
-        background-color: #ef4444 !important;
-        color: #ffffff !important;
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+        border: 1px solid #fee2e2 !important;
     }
     .btn-action-delete-red:hover {
-        background-color: #dc2626 !important;
+        background-color: #fca5a5 !important;
     }
-
-    .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
-        color: #ffffff !important;
-    }
-    .pagination-theme-sapphire .page-link {
-        color: #024283;
-    }
-
-    /* ──── UNIFIED BLUE KPI WIDGET STYLES (unchanged for webinars) ──── */
     .kpi-widget-card {
         border-radius: 20px !important;
         padding: 20px 24px;
@@ -462,7 +304,6 @@ $total_pis = count($unique_investigators);
     }
 </style>
 
-
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
@@ -492,64 +333,51 @@ $total_pis = count($unique_investigators);
             </div>
             <?php endif; ?>
 
-            <!-- ── BLUE STATS WIDGETS ROW ── -->
+            <!-- WIDGETS ROW -->
             <div class="row mb-4">
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #3b82f6 !important;">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-video"></i></div>
                             <span class="kpi-title-text">Total Webinars</span>
                             <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_webinars ?></span>
-                                <span class="kpi-subtext">tracked</span>
+                                <span class="kpi-metric-value"><?= $total_records ?></span>
+                                <span class="kpi-subtext">recorded</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #10b981 !important;">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
-                            <span class="kpi-title-text">Upcoming Events</span>
+                            <span class="kpi-title-text">Upcoming Webinars</span>
                             <div class="kpi-metric-row">
                                 <span class="kpi-metric-value"><?= $upcoming_count ?></span>
-                                <span class="kpi-subtext">Scheduled</span>
+                                <span class="kpi-subtext">scheduled</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                <div class="col-xl-4 col-sm-6 mb-3">
+                    <div class="card kpi-widget-card" style="background-color: #8b5cf6 !important;">
                         <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-building-columns"></i></div>
-                            <span class="kpi-title-text">Total Organisers</span>
+                            <div class="kpi-icon-circle"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <span class="kpi-title-text">Active Institute</span>
                             <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_organisers ?></span>
-                                <span class="kpi-subtext">Agencies</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
-                        <div class="kpi-card-body">
-                            <div class="kpi-icon-circle"><i class="fa-solid fa-user-tie"></i></div>
-                            <span class="kpi-title-text">Investigators</span>
-                            <div class="kpi-metric-row">
-                                <span class="kpi-metric-value"><?= $total_pis ?></span>
-                                <span class="kpi-subtext">Faculty Hosts</span>
+                                <span class="kpi-metric-value" style="font-size: 20px;"><?= htmlspecialchars(strtoupper($prefix)) ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── REGISTRY-STYLE RECORDS TABLE (matches Conferences page) ── -->
+            <!-- REGISTRY TABLE -->
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
-                            <i class="fa-solid fa-video me-2"></i>WEBINARS &amp; EVENTS RECORDS
+                            <i class="fa-solid fa-video me-2"></i>WEBINARS CMS MANAGEMENT
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#webinarModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
@@ -562,60 +390,61 @@ $total_pis = count($unique_investigators);
                         <table class="table table-theme-sapphire">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">S.No</th>
-                                    <th style="width: 46%;">Webinar Info</th>
-                                    <th style="width: 22%;">Organisers / Hosts</th>
-                                    <th style="width: 13%;">Date</th>
-                                    <th style="width: 15%; text-align: center;">Status</th>
-                                    <th style="width: 10%; text-align: center;">Action</th>
+                                    <th style="width: 5%; min-width: 60px; text-align: center;">S.No</th>
+                                    <th style="width: 40%; min-width: 250px;">Webinar Details</th>
+                                    <th style="width: 25%; min-width: 180px;">Speaker Info</th>
+                                    <th style="width: 18%; min-width: 160px; white-space: nowrap;">Date &amp; Time</th>
+                                    <th style="width: 12%; min-width: 110px; text-align: center; white-space: nowrap;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($webinars)): ?>
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No webinar records tracked yet.</td>
+                                        <td colspan="5" class="text-center text-muted py-4" style="font-size: 13px;">No webinar records tracked yet.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php
                                     $rowCounter = 1;
                                     foreach ($webinars as $webinar):
+                                        // Dynamic schema fallback mapping to handle old vs new database columns defensively
+                                        $speakerNameVal = htmlspecialchars($webinar['speaker_name'] ?? $webinar['investigator'] ?? '');
+                                        $affiliationVal = htmlspecialchars($webinar['affiliation'] ?? $webinar['institute'] ?? '');
+                                        $descriptionVal = htmlspecialchars($webinar['description'] ?? $webinar['content'] ?? '');
+                                        $linkVal        = htmlspecialchars($webinar['link'] ?? '');
                                     ?>
                                         <tr>
-                                            <td style="text-align: center;">
+                                            <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="registry-task-link">
+                                            <td style="vertical-align: middle;">
+                                                <span class="registry-task-link">
                                                     <?= htmlspecialchars($webinar['taskno'] ?: 'TASK-UNASSIGNED') ?>
-                                                </a>
-                                                <span class="registry-main-title">
-                                                    <?= htmlspecialchars($webinar['title'] ?: 'Untitled Webinar') ?>
                                                 </span>
-                                                <?php if (!empty($webinar['institute'])): ?>
-                                                    <span class="registry-tag-pill"><?= htmlspecialchars($webinar['institute']) ?></span>
+                                                <span class="registry-main-title">
+                                                    <?= htmlspecialchars($webinar['title']) ?>
+                                                </span>
+                                                <?php if (!empty($linkVal)): ?>
+                                                    <span class="d-block mt-1">
+                                                        <a href="<?= $linkVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-link me-1"></i> Join / Recording URL</a>
+                                                    </span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
+                                            <td style="vertical-align: middle;">
                                                 <span class="registry-meta-text font-w600 text-dark">
-                                                    <?= htmlspecialchars($webinar['investigator'] ?: '—') ?>
+                                                    <?= $speakerNameVal ?>
                                                 </span>
-                                                <span class="registry-sub-label">
-                                                    with <?= htmlspecialchars($webinar['organisers'] ?: 'Independent') ?>
-                                                </span>
+                                                <?php if ($affiliationVal !== ''): ?>
+                                                    <span class="registry-sub-label">
+                                                        <?= $affiliationVal ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </td>
-                                            <td>
+                                            <td style="white-space: nowrap; vertical-align: middle;">
                                                 <span class="text-dark font-w600" style="font-size: 12px;">
                                                     <?= $webinar['webinar_date'] ? date('d M Y, h:i A', strtotime($webinar['webinar_date'])) : '—' ?>
                                                 </span>
                                             </td>
-                                            <td style="text-align: center;">
-                                                <?php if (!empty($webinar['image']) && file_exists($webinar['image'])): ?>
-                                                    <a href="<?= $webinar['image'] ?>" target="_blank" class="status-pill-custom status-granted text-decoration-none">Granted Banner</a>
-                                                <?php else: ?>
-                                                    <span class="status-pill-custom status-pending">No Banner</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
+                                            <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
@@ -625,11 +454,11 @@ $total_pis = count($unique_investigators);
                                                             data-id="<?= $webinar['id'] ?>"
                                                             data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
                                                             data-title="<?= htmlspecialchars($webinar['title']) ?>"
+                                                            data-speaker_name="<?= $speakerNameVal ?>"
+                                                            data-affiliation="<?= $affiliationVal ?>"
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-organisers="<?= htmlspecialchars($webinar['organisers']) ?>"
-                                                            data-institute="<?= htmlspecialchars($webinar['institute'] ?? '') ?>"
-                                                            data-investigator="<?= htmlspecialchars($webinar['investigator'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($webinar['content'] ?? '') ?>"
+                                                            data-link="<?= $linkVal ?>"
+                                                            data-description="<?= $descriptionVal ?>"
                                                             title="Edit Record">
                                                         <i class="fa fa-pencil"></i>
                                                     </button>
@@ -648,11 +477,11 @@ $total_pis = count($unique_investigators);
                                                             data-id="<?= $webinar['id'] ?>"
                                                             data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
                                                             data-title="<?= htmlspecialchars($webinar['title']) ?>"
+                                                            data-speaker_name="<?= $speakerNameVal ?>"
+                                                            data-affiliation="<?= $affiliationVal ?>"
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-organisers="<?= htmlspecialchars($webinar['organisers']) ?>"
-                                                            data-institute="<?= htmlspecialchars($webinar['institute'] ?? '') ?>"
-                                                            data-investigator="<?= htmlspecialchars($webinar['investigator'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($webinar['content'] ?? '') ?>"
+                                                            data-link="<?= $linkVal ?>"
+                                                            data-description="<?= $descriptionVal ?>"
                                                             title="View Details">
                                                         <i class="fa fa-eye"></i>
                                                     </button>
@@ -665,17 +494,6 @@ $total_pis = count($unique_investigators);
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="d-flex align-items-center justify-content-between flex-wrap p-2 px-3 bg-white border-top">
-                        <p class="mb-0 text-muted small font-w500">Total: <?= $total_records ?> dashboard assets</p>
-                        <nav aria-label="Pagination control block">
-                          <ul class="pagination pagination-sm mb-0 pagination-theme-sapphire">
-                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-left"></i></a></li>
-                            <li class="page-item active"><a class="page-link" href="javascript:void(0);">1</a></li>
-                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-right"></i></a></li>
-                          </ul>
-                        </nav>
-                    </div>
                 </div>
             </div>
 
@@ -687,55 +505,50 @@ $total_pis = count($unique_investigators);
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="webinarModalLabel">Webinar Creation Form</h5>
+                    <h5 class="modal-title" id="webinarModalLabel">Webinar Form</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" enctype="multipart/form-data" id="modalForm">
+                <form method="POST" id="modalForm">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
 
                         <div class="row">
                             <div class="col-md-3 mb-3">
-                                <label class="form-label form-label-grey">Task No</label>
-                                <input type="text" name="taskno" id="modal_taskno" class="form-control" required>
+                                <label class="form-label">Task No</label>
+                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. TASK-1" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Webinar Title</label>
-                                <input type="text" name="title" id="modal_title" class="form-control">
+                                <label class="form-label">Webinar Title *</label>
+                                <input type="text" name="title" id="modal_title" class="form-control" required>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label class="form-label form-label-grey">Date</label>
-                                <input type="text" name="webinar_date" id="modal_webinar_date" class="form-control" placeholder="Select date &amp; time" autocomplete="off">
+                                <label class="form-label">Date &amp; Time *</label>
+                                <input type="text" name="webinar_date" id="modal_webinar_date" class="form-control" placeholder="Select date &amp; time" autocomplete="off" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Organisers</label>
-                                <input type="text" name="organisers" id="modal_organisers" class="form-control">
+                                <label class="form-label">Speaker/Resource Person Name *</label>
+                                <input type="text" name="speaker_name" id="modal_speaker_name" class="form-control" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Institute</label>
-                                <input type="text" name="institute" id="modal_institute" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Investigator</label>
-                                <input type="text" name="investigator" id="modal_investigator" class="form-control">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label form-label-grey">Image</label>
-                                <input type="file" name="image" class="form-control" accept="image/*">
-                                <small class="text-muted">JPG, PNG, or WEBP only · Max 10 MB</small>
+                                <label class="form-label">Affiliation</label>
+                                <input type="text" name="affiliation" id="modal_affiliation" class="form-control" placeholder="e.g. Dept of CS, IIT Bombay">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label class="form-label form-label-grey">Description</label>
-                                <textarea name="content" id="modal_content" rows="5" class="form-control"></textarea>
+                                <label class="form-label">Registration / Recording Link</label>
+                                <input type="url" name="link" id="modal_link" class="form-control" placeholder="https://zoom.us/... or recording link">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Brief Description</label>
+                                <textarea name="description" id="modal_description" rows="4" class="form-control" placeholder="Brief outline of topics covered..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -805,7 +618,7 @@ document.addEventListener("DOMContentLoaded", function() {
             modalForm.reset();
             webinarDatePicker.clear();
             document.getElementById('modal_edit_id').value = '';
-            modalTitle.innerText = "Webinar Creation Form";
+            modalTitle.innerText = "Add Webinar";
             modalSubmitBtn.innerText = "Save Records";
             modalSubmitBtn.style.display = "block";
             modalForm.querySelectorAll('input, select, textarea').forEach(el => {
@@ -846,10 +659,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 webinarDatePicker.clear();
             }
 
-            document.getElementById('modal_organisers').value = this.getAttribute('data-organisers');
-            document.getElementById('modal_institute').value = this.getAttribute('data-institute');
-            document.getElementById('modal_investigator').value = this.getAttribute('data-investigator');
-            document.getElementById('modal_content').value = this.getAttribute('data-content');
+            document.getElementById('modal_speaker_name').value = this.getAttribute('data-speaker_name');
+            document.getElementById('modal_affiliation').value = this.getAttribute('data-affiliation');
+            document.getElementById('modal_link').value = this.getAttribute('data-link');
+            document.getElementById('modal_description').value = this.getAttribute('data-description');
         });
     });
 

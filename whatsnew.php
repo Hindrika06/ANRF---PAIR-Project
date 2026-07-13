@@ -1,20 +1,43 @@
 <!-- WHATS NEW SCROLLING -->
+<?php
+if (!isset($pdo)) {
+    require_once 'config.php';
+}
+
+$activeAnnouncements = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM `announcements` WHERE is_active = 1 ORDER BY id DESC");
+    $activeAnnouncements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Fallback silently if table or query fails
+}
+?>
         <div class="whatsnew-bar">
             <div class="whatsnew-title">What's New</div>
             <div class="whatsnew-scroll">
                 <marquee behavior="scroll" direction="left" scrollamount="6">
-                    <a href="event-detail.html">
-                        📢 Webinar on SMART NANO BIOSENSORS – May 20, 2026
-                    </a>
-                    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-                    <a href="events_activities.php">
-                        🎓 Osmania University Education Week: May 11–17, 2026
-                    </a>
-                    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-                    <a href="gallery.php">
-                        📸 New Event Photos Uploaded in Gallery
-                    </a>
-                    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                    <?php if (!empty($activeAnnouncements)): ?>
+                        <?php foreach ($activeAnnouncements as $ann): ?>
+                            <?php if (!empty($ann['link'])): ?>
+                                <a href="<?= htmlspecialchars($ann['link']) ?>">
+                                    <?= htmlspecialchars($ann['title']) ?>
+                                </a>
+                            <?php else: ?>
+                                <span style="color: #ffffff; font-size: 14px; font-weight: 600;">
+                                    <?= htmlspecialchars($ann['title']) ?>
+                                </span>
+                            <?php endif; ?>
+                            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <!-- Fallback: Static original list -->
+                        <a href="event-detail.html">📢 Webinar on SMART NANO BIOSENSORS – May 20, 2026</a>
+                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                        <a href="events_activities.php">🎓 Osmania University Education Week: May 11–17, 2026</a>
+                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                        <a href="gallery.php">📸 New Event Photos Uploaded in Gallery</a>
+                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                    <?php endif; ?>
                 </marquee>
             </div>
         </div>

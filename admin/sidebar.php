@@ -135,6 +135,12 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
         <!-- Main Navigation Links -->
         <ul class="metismenu" id="menu" style="flex: 1;">
             <li>
+                <a href="dashboard.php">
+                    <i class="fas fa-th-large"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li>
                 <a href="publications.php">
                     <i class="fas fa-book-open"></i>
                     <span class="nav-text">Publications</span>
@@ -171,9 +177,15 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
                 </a>
             </li>
             <li>
-                <a href="gallery.php" aria-expanded="false">
+                <a href="gallery_albums_management.php" aria-expanded="false">
                     <i class="fas fa-images"></i>
-                    <span class="nav-text">Gallery</span>
+                    <span class="nav-text">Gallery Albums</span>
+                </a>
+            </li>
+            <li>
+                <a href="gallery.php" aria-expanded="false">
+                    <i class="fas fa-link"></i>
+                    <span class="nav-text">Drive Event Links</span>
                 </a>
             </li>
             <li>
@@ -182,11 +194,41 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
                     <span class="nav-text">Event Calendar</span>
                 </a>
             </li>
+            <li>
+                <a href="collaborations_management.php" aria-expanded="false">
+                    <i class="fas fa-handshake"></i>
+                    <span class="nav-text">Collaborations</span>
+                </a>
+            </li>
+            <li>
+                <a href="research_infrastructure.php" aria-expanded="false">
+                    <i class="fas fa-flask"></i>
+                    <span class="nav-text">Research & Infrastructure</span>
+                </a>
+            </li>
             <?php if (isSuperAdmin()): ?>
             <li>
+                <a href="banner_management.php" aria-expanded="false">
+                    <i class="fas fa-image"></i>
+                    <span class="nav-text">Homepage Banners</span>
+                </a>
+            </li>
+            <li>
+                <a href="announcements_management.php" aria-expanded="false">
+                    <i class="fas fa-bullhorn"></i>
+                    <span class="nav-text">Scrolling Ticker</span>
+                </a>
+            </li>
+            <li>
                 <a href="team_management.php" aria-expanded="false">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-user-cog"></i>
                     <span class="nav-text">Team Management</span>
+                </a>
+            </li>
+            <li>
+                <a href="manage_admins.php" aria-expanded="false">
+                    <i class="fas fa-users-cog"></i>
+                    <span class="nav-text">Manage Admins</span>
                 </a>
             </li>
             <?php endif; ?>

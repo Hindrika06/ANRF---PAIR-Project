@@ -206,31 +206,48 @@
                 <h2 class="gallery-main-heading">GALLERY</h2>
 
                 <?php
-                $events = [
-                    "Kick off Meeting and Workshop Photos" => "gallery/kickoff meeting",
-                    "PAIR Office Inauguration Photos" => "gallery/pair office Inaguration",
-                    "Osmania University Two Day National Workshop" => "gallery/osmania University two day national workshop",
-                ];
-                foreach ($events as $eventName => $folder):
-                    if (is_dir($folder)) {
-                        $images = glob($folder . "/*.{jpg,JPG,jpeg,JPEG,png,PNG,gif,GIF}", GLOB_BRACE);
-                        if ($images):
-                            $totalImages = count($images);
+                if (!isset($pdo)) {
+                    require_once 'config.php';
+                }
+
+                $dbAlbums = [];
+                try {
+                    $stmt = $pdo->query("SELECT * FROM `gallery_albums` ORDER BY album_date DESC, id DESC");
+                    $dbAlbums = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    // Fallback
+                }
+
+                if (!empty($dbAlbums)):
+                    foreach ($dbAlbums as $alb):
+                        $alb_id = $alb['id'];
+                        $stmt = $pdo->prepare("SELECT * FROM `gallery_photos` WHERE album_id = ? ORDER BY id ASC");
+                        $stmt->execute([$alb_id]);
+                        $photos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        if (!empty($photos)):
+                            $eventName = $alb['album_name'];
+                            $eventMeta = $alb['album_date'] ? date('F d, Y', strtotime($alb['album_date'])) : '';
+                            if ($alb['institute_prefix'] !== 'all') {
+                                $eventMeta = strtoupper($alb['institute_prefix']) . ' • ' . $eventMeta;
+                            }
                             ?>
                             <div class="event-block">
                                 <div class="event-header-box">
                                     <div class="event-title-wrapper">
-                                        <h3 class="event-title"><?php echo $eventName; ?></h3>
+                                        <h3 class="event-title"><?php echo htmlspecialchars($eventName); ?></h3>
+                                        <?php if (!empty($eventMeta)): ?>
+                                            <span class="event-meta" style="font-size:13px; color:#64748b;"><?php echo htmlspecialchars($eventMeta); ?></span>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="gallery-wrapper">
                                     <button class="nav-btn btn-left" onclick="scrollGallery(this, -1)">&#10094;</button>
                                     <ul class="gallery-list-horizontal">
-                                        <?php foreach ($images as $img): ?>
+                                        <?php foreach ($photos as $ph): ?>
                                             <li>
-                                                <a href="<?php echo htmlspecialchars($img); ?>" class="image-popup image-card">
-                                                    <img src="<?php echo htmlspecialchars($img); ?>"
-                                                         alt="<?php echo $eventName; ?> photo"
+                                                <a href="<?php echo htmlspecialchars($ph['photo_path']); ?>" class="image-popup image-card">
+                                                    <img src="<?php echo htmlspecialchars($ph['photo_path']); ?>"
+                                                         alt="<?php echo htmlspecialchars($eventName); ?> photo"
                                                          loading="lazy"
                                                          style="object-fit: cover; width: 100%; height: 100%;">
                                                 </a>
@@ -242,8 +259,48 @@
                             </div>
                             <?php
                         endif;
-                    }
-                endforeach;
+                    endforeach;
+                else:
+                    // Fallback: original glob implementation
+                    $events = [
+                        "Kick off Meeting and Workshop Photos" => "gallery/kickoff meeting",
+                        "PAIR Office Inauguration Photos" => "gallery/pair office Inaguration",
+                        "Osmania University Two Day National Workshop" => "gallery/osmania University two day national workshop",
+                    ];
+                    foreach ($events as $eventName => $folder):
+                        if (is_dir($folder)) {
+                            $images = glob($folder . "/*.{jpg,JPG,jpeg,JPEG,png,PNG,gif,GIF}", GLOB_BRACE);
+                            if ($images):
+                                $totalImages = count($images);
+                                ?>
+                                <div class="event-block">
+                                    <div class="event-header-box">
+                                        <div class="event-title-wrapper">
+                                            <h3 class="event-title"><?php echo $eventName; ?></h3>
+                                        </div>
+                                    </div>
+                                    <div class="gallery-wrapper">
+                                        <button class="nav-btn btn-left" onclick="scrollGallery(this, -1)">&#10094;</button>
+                                        <ul class="gallery-list-horizontal">
+                                            <?php foreach ($images as $img): ?>
+                                                <li>
+                                                    <a href="<?php echo htmlspecialchars($img); ?>" class="image-popup image-card">
+                                                        <img src="<?php echo htmlspecialchars($img); ?>"
+                                                             alt="<?php echo $eventName; ?> photo"
+                                                             loading="lazy"
+                                                             style="object-fit: cover; width: 100%; height: 100%;">
+                                                    </a>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                        <button class="nav-btn btn-right" onclick="scrollGallery(this, 1)">&#10095;</button>
+                                    </div>
+                                </div>
+                                <?php
+                            endif;
+                        }
+                    endforeach;
+                endif;
                 ?>
             </div>
         </section>

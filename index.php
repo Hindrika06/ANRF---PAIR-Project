@@ -1,21 +1,25 @@
 <?php
-// Check for user-uploaded images in the slider uploads folder
+require_once 'config.php';
+
+// Fetch active banners from database
 $sliderImages = [];
-$sliderDir = 'uploads/slider/';
-if (is_dir($sliderDir)) {
-    $files = glob($sliderDir . '*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE);
-    if (!empty($files)) {
-        foreach ($files as $file) {
+try {
+    $stmt = $pdo->query("SELECT * FROM `homepage_banners` WHERE status = 'Active' ORDER BY display_order ASC, id DESC");
+    $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($banners)) {
+        foreach ($banners as $b) {
             $sliderImages[] = [
-                'src' => $file,
-                'alt' => 'ANRF PAIR Slide',
-                'caption' => ''
+                'src' => $b['image_path'],
+                'alt' => htmlspecialchars($b['caption'] ?: 'ANRF PAIR Slide'),
+                'caption' => $b['caption']
             ];
         }
     }
+} catch (PDOException $e) {
+    // If table doesn't exist or query fails, fallback silently
 }
 
-// Fallback: Use ONLY the original group photo if no slider uploads exist
+// Fallback: Use the original group photo if no slider rows exist in DB
 if (empty($sliderImages)) {
     $sliderImages = [
         [
