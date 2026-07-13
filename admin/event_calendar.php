@@ -437,7 +437,7 @@ include 'loader.php';
             <!-- KPI Cards Row -->
             <div class="row mb-4">
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: linear-gradient(135deg, #024283 0%, #1e40af 100%) !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
                             <span class="kpi-title-text">Total Events</span>
@@ -449,7 +449,7 @@ include 'loader.php';
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-hourglass-start"></i></div>
                             <span class="kpi-title-text">Upcoming Events</span>
@@ -461,7 +461,7 @@ include 'loader.php';
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-circle-play"></i></div>
                             <span class="kpi-title-text">Ongoing Events</span>
@@ -473,7 +473,7 @@ include 'loader.php';
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card" style="background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;">
+                    <div class="card kpi-widget-card">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-check"></i></div>
                             <span class="kpi-title-text">Completed Events</span>
