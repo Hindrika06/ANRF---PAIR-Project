@@ -63,7 +63,7 @@ $pagesActive = in_array($currentPage, [
     transition: transform 0.3s ease;
 }
 .logo-img:hover {
-    transform: scale(1.03); /* Subtle pop when hovering over the logo */
+    transform: scale(1.03);
 }
 .brand-institute-name {
     font-size: 12px;
@@ -75,67 +75,183 @@ $pagesActive = in_array($currentPage, [
     word-break: break-word;
 }
 
-/* --- Attractive Sidebar Styling --- */
+/* --- Sidebar Base --- */
 .custom-sidebar {
     background: #7a0e0e;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
 }
-
 .custom-sidebar ul.metismenu {
     padding: 15px 10px;
     list-style: none;
 }
-
 .custom-sidebar ul.metismenu li {
     color: #ffffff;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
-.custom-sidebar ul.metismenu li a {
+/* --- Top-Level Parent Links --- */
+.custom-sidebar ul.metismenu > li > a {
     display: flex;
     align-items: center;
-    padding: 12px 18px;
-    color: #94a3b8 !important; /* Soft, readable gray text */
+    padding: 11px 16px;
+    color: #cbd5e1 !important;
     text-decoration: none;
-    border-radius: 8px; /* Smooth rounded corners */
-    transition: all 0.3s ease;
-    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    font-weight: 600;
+    font-size: 13.5px;
+    letter-spacing: 0.01em;
 }
-
-/* Hover & Active states */
-.custom-sidebar ul.metismenu li a:hover {
-    background: rgba(255, 255, 255, 0.08);
+.custom-sidebar ul.metismenu > li > a:hover {
+    background: rgba(255, 255, 255, 0.09);
     color: #ffffff !important;
-    transform: translateX(4px); /* Modern nudge effect */
+    transform: translateX(3px);
 }
-
-/* Icon customizations */
-.custom-sidebar ul.metismenu li a i {
-    font-size: 1.1rem;
-    margin-right: 12px;
-    width: 25px;
+.custom-sidebar ul.metismenu > li > a i {
+    font-size: 1.05rem;
+    margin-right: 11px;
+    width: 22px;
     text-align: center;
-    transition: color 0.3s ease;
+    flex-shrink: 0;
+    transition: color 0.25s ease;
+}
+.custom-sidebar ul.metismenu > li > a:hover i {
+    color: #886cc0 !important;
 }
 
-.custom-sidebar ul.metismenu li a:hover i {
-    color: #886cc0 !important; /* Electric blue accent color on hover */
+/* --- Parent Active State --- */
+.custom-sidebar ul.metismenu li.mm-active > a {
+    background: linear-gradient(135deg, rgba(136,108,192,0.28) 0%, rgba(170,108,192,0.18) 100%) !important;
+    color: #ffffff !important;
+    border-left: 3px solid #886cc0;
+    padding-left: 13px !important;
+    position: relative;
+    overflow: hidden;
+}
+.custom-sidebar ul.metismenu li.mm-active > a::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 30%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.12) 50%,
+        rgba(255,255,255,0) 100%
+    );
+    transform: rotate(25deg);
+    animation: menuShine 5s infinite ease-in-out;
+}
+@keyframes menuShine {
+    0%   { left: -60%; }
+    15%  { left: 140%; }
+    100% { left: 140%; }
 }
 
-/* --- Logout Button Custom Styling --- */
+/* ═══════════════════════════════════════════════════════
+   DROPDOWN PARENT ROW (nav-group-toggle / has-arrow)
+═══════════════════════════════════════════════════════ */
+.custom-sidebar ul.metismenu li.nav-group > a.nav-group-toggle {
+    cursor: pointer;
+}
+
+/* Hide the template's built-in right-arrow pseudo-element entirely */
+.custom-sidebar .has-arrow::after {
+    display: none !important;
+}
+
+/* Chevron: only the explicit .nav-arrow i tag is visible */
+.custom-sidebar a.nav-group-toggle .nav-arrow {
+    font-size: 0.65rem !important;
+    opacity: 0.7;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    flex-shrink: 0;
+    margin-left: auto !important;
+}
+.custom-sidebar a.nav-group-toggle:hover .nav-arrow {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CHILD SUBMENU LIST  (.nav-group-sub)
+═══════════════════════════════════════════════════════ */
+.nav-group-sub {
+    /* Vertical guide line on the left */
+    border-left: 2px solid rgba(255,255,255,0.12) !important;
+    margin-left: 20px !important;
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+    padding: 2px 0 2px 0 !important;
+    list-style: none !important;
+}
+
+/* --- Child Item Links --- */
+.nav-group-sub li {
+    margin-bottom: 2px !important;
+}
+.nav-group-sub li a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px 8px 16px !important;
+    color: #94a3b8 !important;         /* Lighter than parent */
+    font-weight: 400 !important;       /* Lighter than parent's 600 */
+    font-size: 12.5px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    transition: all 0.22s ease !important;
+    background: transparent !important;
+    border-left: 2px solid transparent !important;
+    transform: none !important;
+}
+/* Child icon: slightly smaller */
+.nav-group-sub li a i {
+    font-size: 0.82rem !important;
+    margin-right: 9px !important;
+    width: 18px !important;
+    flex-shrink: 0 !important;
+    opacity: 0.75;
+    transition: opacity 0.22s ease, color 0.22s ease !important;
+}
+
+/* --- Child Hover State --- */
+.nav-group-sub li a:hover {
+    background: rgba(255,255,255,0.07) !important;
+    color: #e2e8f0 !important;
+    border-left-color: rgba(136,108,192,0.5) !important;
+    transform: translateX(2px) !important;
+}
+.nav-group-sub li a:hover i {
+    opacity: 1;
+    color: #886cc0 !important;
+}
+
+/* --- Active Child Item --- */
+.nav-group-sub li.mm-active > a,
+.nav-group-sub li.mm-active > a:hover {
+    background: rgba(136,108,192,0.18) !important;
+    color: #ffffff !important;
+    border-left-color: #886cc0 !important;
+    font-weight: 600 !important;
+    transform: none !important;
+}
+.nav-group-sub li.mm-active > a i {
+    opacity: 1;
+    color: #886cc0 !important;
+}
+
+/* --- Logout Button --- */
 .custom-sidebar .sidebar-footer {
     background: rgba(0,0,0,0.25);
 }
-
 .custom-sidebar ul.metismenu li a.logout-btn {
-    color: #ffffff !important; /* Clean pastel red */
+    color: #ffffff !important;
 }
-
 .custom-sidebar ul.metismenu li a.logout-btn:hover {
-    background: rgba(239, 68, 68, 0.15); /* Soft red background tint */
+    background: rgba(239,68,68,0.15) !important;
     color: #f5f5f5 !important;
 }
-
 .custom-sidebar ul.metismenu li a.logout-btn i {
     color: #ffffff !important;
 }
@@ -157,7 +273,6 @@ $pagesActive = in_array($currentPage, [
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
-
 .portal-badge::after {
     content: '';
     position: absolute;
@@ -167,49 +282,16 @@ $pagesActive = in_array($currentPage, [
     height: 200%;
     background: linear-gradient(
         to right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.3) 50%,
-        rgba(255, 255, 255, 0) 100%
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0) 100%
     );
     transform: rotate(25deg);
     animation: badgeShine 4s infinite ease-in-out;
 }
-
 @keyframes badgeShine {
-    0% { left: -60%; }
-    20% { left: 140%; }
-    100% { left: 140%; }
-}
-
-/* --- Sidebar Active Link with Gradient Shine --- */
-.custom-sidebar ul.metismenu li.mm-active > a {
-    background: linear-gradient(135deg, rgba(136, 108, 192, 0.25) 0%, rgba(170, 108, 192, 0.15) 100%) !important;
-    color: #ffffff !important;
-    border-left: 4px solid var(--primary);
-    position: relative;
-    overflow: hidden;
-}
-
-.custom-sidebar ul.metismenu li.mm-active > a::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -60%;
-    width: 30%;
-    height: 200%;
-    background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    transform: rotate(25deg);
-    animation: menuShine 5s infinite ease-in-out;
-}
-
-@keyframes menuShine {
-    0% { left: -60%; }
-    15% { left: 140%; }
+    0%   { left: -60%; }
+    20%  { left: 140%; }
     100% { left: 140%; }
 }
 </style>
