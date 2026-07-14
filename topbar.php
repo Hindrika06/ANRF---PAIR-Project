@@ -21,8 +21,8 @@
        ============================================================ */
     .topbar {
         background-color: #BC2121 !important;
-        /* Adjusted padding to keep top bar height exactly the same with 30px badges */
-        padding: calc(var(--logo-h) * 0.15 - 6px) 0 !important;
+        /* Adjusted padding to keep top bar height exactly the same with 26px badges */
+        padding: calc(var(--logo-h) * 0.15 - 4px) 0 !important;
     }
     .topbar-inner {
         display: flex !important;
@@ -82,8 +82,8 @@
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 30px !important;
-        height: 30px !important;
+        width: 26px !important;
+        height: 26px !important;
         background-color: #ffffff !important;
         border-radius: 50% !important;
         transition: transform 0.3s ease, box-shadow 0.3s ease !important;
@@ -91,7 +91,7 @@
     }
     .topbar-icon-badge i {
         color: #BC2121 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         margin: 0 !important;
         padding: 0 !important;
     }
@@ -191,7 +191,7 @@
     /* Tablet & mobile — wrap instead of scroll to prevent dropdown clipping */
     @media (max-width: 767px) {
         .topbar {
-            padding: 2px 0 !important;
+            padding: 4px 0 !important;
         }
         .topbar-inner {
             flex-wrap: wrap !important;
