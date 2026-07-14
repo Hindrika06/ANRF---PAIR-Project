@@ -648,6 +648,90 @@
         .dropdown-item-custom:focus i {
             color: #b91c1c;
         }
+
+        /* ══════════════════════════════════════════════════════
+           FIXED LAYOUT & INDEPENDENT SCROLL SYSTEM
+           ══════════════════════════════════════════════════════ */
+        .header {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            z-index: 998 !important;
+            padding-left: var(--dz-sidebar-width, 16.5rem) !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .nav-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: var(--dz-sidebar-width, 16.5rem) !important;
+            z-index: 1001 !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dlabnav {
+            position: fixed !important;
+            top: var(--dz-header-height, 4.5rem) !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            width: var(--dz-sidebar-width, 16.5rem) !important;
+            height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+            z-index: 999 !important;
+            overflow-y: auto !important;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Enable independent scroll on sidebar if content is tall */
+        .dlabnav-scroll {
+            height: 100% !important;
+            overflow-y: auto !important;
+        }
+
+        /* The main content area should offset the fixed header and sidebar */
+        .content-body {
+            margin-left: var(--dz-sidebar-width, 16.5rem) !important;
+            padding-top: var(--dz-header-height, 4.5rem) !important;
+            min-height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Support for collapsed/hamburger menus in template */
+        .menu-toggle .dlabnav {
+            left: calc(-1 * var(--dz-sidebar-width, 16.5rem)) !important;
+        }
+        .menu-toggle .content-body {
+            margin-left: 0 !important;
+        }
+        .menu-toggle .header {
+            padding-left: 0 !important;
+        }
+
+        /* ── Mobile Viewports (< 768px) ── */
+        @media (max-width: 767px) {
+            .header {
+                padding-left: 0 !important;
+            }
+            .nav-header {
+                width: 100% !important;
+            }
+            .dlabnav {
+                top: var(--dz-header-height, 4.5rem) !important;
+                height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+                width: 240px !important;
+                left: -240px !important;
+                z-index: 1002 !important;
+            }
+            /* Slide sidebar in when hamburger toggles it on mobile */
+            .menu-toggle .dlabnav {
+                left: 0 !important;
+            }
+            .content-body {
+                margin-left: 0 !important;
+                padding-top: var(--dz-header-height, 4.5rem) !important;
+            }
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
