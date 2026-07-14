@@ -1,4 +1,5 @@
-<?php 
+<?php
+$bodyClass = 'page-homepage-courses'; 
 
 // 1. INTEGRATE DATABASE CONNECTION VIA YOUR EXISTING CONFIG FILE
 require_once 'config.php'; 
@@ -16,9 +17,8 @@ try {
 }
 ?>
 
-<body class="page-homepage-courses">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
 <!-- Header -->
 <?php include 'header.php';?>
 <!-- end Header -->

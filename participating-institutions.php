@@ -1,10 +1,11 @@
 
 
-<body class="page-sub-page page-course-detail">
-<div class="wrapper">
+
+
 
 <!-- Header -->
-<?php include 'header.php';?>
+<?php
+$bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
 <!-- end Header -->
 

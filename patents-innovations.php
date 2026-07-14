@@ -1,4 +1,5 @@
 <?php
+$bodyClass = 'page-homepage-courses';
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config.php';
 
@@ -23,9 +24,8 @@ function patentStatusClass($status) {
     }
 }
 ?>
-<body class="page-homepage-courses">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
 <!-- Header -->
 <?php include 'header.php';?>
 <!-- end Header -->

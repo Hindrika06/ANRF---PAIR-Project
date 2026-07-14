@@ -1,4 +1,5 @@
-<?php 
+<?php
+$bodyClass = 'page-homepage-courses'; 
 require_once 'config.php'; 
 
 $internships = [];
@@ -21,8 +22,8 @@ try {
 }
 ?>
 
-<body class="page-homepage-courses">
-<div class="wrapper">
+
+
 <?php include 'header.php';?>
 
 <!-- ── HERO: Split layout ── -->

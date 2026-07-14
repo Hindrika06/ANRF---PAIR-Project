@@ -1,4 +1,5 @@
 <?php
+$bodyClass = 'page-homepage-courses';
 require_once 'config.php';
 
 // Fetch active banners from database
@@ -31,10 +32,9 @@ if (empty($sliderImages)) {
 }
 ?>
 
-<body class="page-homepage-courses">
 
-    <!-- Wrapper -->
-    <div class="wrapper">
+
+    
 
         <?php include 'header.php'; ?>
 

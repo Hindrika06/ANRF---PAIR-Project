@@ -1,10 +1,10 @@
 
 
-<body class="page-sub-page page-about-us">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
 <!-- Header -->
-<?php include 'header.php';?>
+<?php
+$bodyClass = 'page-sub-page page-about-us'; include 'header.php';?>
 <!-- end Header -->
 
 <!-- Breadcrumb -->
