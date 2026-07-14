@@ -659,7 +659,7 @@
             left: 0 !important;
             z-index: 998 !important;
             padding-left: var(--dz-sidebar-width, 16.5rem) !important;
-            transition: all 0.2s ease !important;
+            transition: padding-left 280ms ease, transform 280ms ease !important;
         }
 
         .nav-header {
@@ -668,7 +668,7 @@
             left: 0 !important;
             width: var(--dz-sidebar-width, 16.5rem) !important;
             z-index: 1001 !important;
-            transition: all 0.2s ease !important;
+            transition: transform 280ms ease !important;
         }
 
         .dlabnav {
@@ -680,7 +680,7 @@
             height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
             z-index: 999 !important;
             overflow-y: auto !important;
-            transition: all 0.2s ease !important;
+            transition: transform 280ms ease !important;
         }
 
         /* Enable independent scroll on sidebar if content is tall */
@@ -694,18 +694,21 @@
             margin-left: var(--dz-sidebar-width, 16.5rem) !important;
             padding-top: var(--dz-header-height, 4.5rem) !important;
             min-height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
-            transition: all 0.2s ease !important;
+            transition: margin-left 280ms ease !important;
         }
 
-        /* Support for collapsed/hamburger menus in template */
-        .menu-toggle .dlabnav {
-            left: calc(-1 * var(--dz-sidebar-width, 16.5rem)) !important;
+        /* Support for collapsed/hamburger menu — slide sidebar out smoothly */
+        body.sidebar-collapsed .dlabnav {
+            transform: translateX(calc(-1 * var(--dz-sidebar-width, 16.5rem))) !important;
         }
-        .menu-toggle .content-body {
-            margin-left: 0 !important;
+        body.sidebar-collapsed .nav-header {
+            transform: translateX(calc(-1 * var(--dz-sidebar-width, 16.5rem))) !important;
         }
-        .menu-toggle .header {
+        body.sidebar-collapsed .header {
             padding-left: 0 !important;
+        }
+        body.sidebar-collapsed .content-body {
+            margin-left: 0 !important;
         }
 
         /* ── Mobile Viewports (< 768px) ── */
@@ -720,12 +723,16 @@
                 top: var(--dz-header-height, 4.5rem) !important;
                 height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
                 width: 240px !important;
-                left: -240px !important;
+                left: 0 !important;
+                transform: translateX(-240px) !important;
                 z-index: 1002 !important;
             }
-            /* Slide sidebar in when hamburger toggles it on mobile */
-            .menu-toggle .dlabnav {
-                left: 0 !important;
+            /* Slide sidebar in when toggled on mobile */
+            body.sidebar-collapsed .dlabnav {
+                transform: translateX(0) !important;
+            }
+            body.sidebar-collapsed .nav-header {
+                transform: translateX(0) !important;
             }
             .content-body {
                 margin-left: 0 !important;
@@ -733,6 +740,41 @@
             }
         }
     </style>
+    <!-- ── Hamburger sidebar toggle (pure vanilla JS, no reload) ── -->
+    <script>
+    (function () {
+        'use strict';
+        var STORAGE_KEY = 'anrf_sidebar_collapsed';
+
+        function applyState(body) {
+            /* Restore last-known collapsed state before first paint */
+            if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+                body.classList.add('sidebar-collapsed');
+            }
+        }
+
+        function wireHamburger(body) {
+            /* Target the hamburger div rendered inside .nav-control */
+            document.querySelectorAll('.nav-control .hamburger, .hamburger').forEach(function (btn) {
+                if (btn._sidebarWired) return;
+                btn._sidebarWired = true;
+                btn.style.cursor = 'pointer';
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var collapsed = body.classList.toggle('sidebar-collapsed');
+                    sessionStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
+                    btn.classList.toggle('is-active');
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var body = document.body;
+            applyState(body);
+            wireHamburger(body);
+        });
+    }());
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const trigger = document.getElementById('profileDropdownTrigger');
