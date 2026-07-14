@@ -124,8 +124,42 @@ $pageTitle = "Dashboard | ANRF-PAIR Portal";
             
             <?php include 'institute_banner.php'; ?>
 
+            <?php
+            // Extract or resolve administrator's name dynamically
+            $adminDisplayName = '';
+            if (!empty($_SESSION['full_name'])) {
+                $adminDisplayName = $_SESSION['full_name'];
+            } elseif (!empty($_SESSION['name'])) {
+                $adminDisplayName = $_SESSION['name'];
+            } else {
+                $userId = $_SESSION['user_id'] ?? null;
+                if ($userId && isset($pdo)) {
+                    try {
+                        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                        $stmt->execute([$userId]);
+                        $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($userRow) {
+                            if (!empty($userRow['full_name'])) {
+                                $adminDisplayName = $userRow['full_name'];
+                            } elseif (!empty($userRow['name'])) {
+                                $adminDisplayName = $userRow['name'];
+                            }
+                        }
+                    } catch (PDOException $e) {
+                        // ignore column missing
+                    }
+                }
+            }
+
+            if (empty($adminDisplayName)) {
+                $email = $_SESSION['username'] ?? '';
+                $namePart = explode('@', $email)[0];
+                $namePart = str_replace(['.', '_', '-'], ' ', $namePart);
+                $adminDisplayName = ucwords(strtolower($namePart));
+            }
+            ?>
             <div class="dashboard-title-box">
-                <h2 style="font-weight: 700; color: #1e3a8a; margin: 0;">Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!</h2>
+                <h2 style="font-weight: 700; color: #1e3a8a; margin: 0;">Welcome, <?= htmlspecialchars($adminDisplayName) ?>!</h2>
                 <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Here is a summary of the dynamic records managed under the ANRF-PAIR Project for **<?= htmlspecialchars(getInstituteFullName($prefix)) ?>**.</p>
             </div>
 
