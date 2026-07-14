@@ -740,6 +740,107 @@
                     trigger.focus();
                 }
             });
+
+            // --- Global client-side table search ---
+            const searchInput = document.getElementById('globalSearchInput');
+            const searchBtn = document.getElementById('globalSearchBtn');
+            if (searchInput) {
+                function performSearch() {
+                    const query = searchInput.value.toLowerCase().trim();
+                    const tables = document.querySelectorAll('table.table-theme-sapphire, table.table');
+                    if (tables.length === 0) return;
+
+                    tables.forEach(table => {
+                        const tbody = table.querySelector('tbody');
+                        if (!tbody) return;
+
+                        // Remove existing "No match" rows
+                        const existingNoMatch = tbody.querySelector('.no-search-results-row');
+                        if (existingNoMatch) existingNoMatch.remove();
+
+                        const rows = Array.from(tbody.querySelectorAll('tr'));
+                        if (rows.length === 0) return;
+
+                        // Filter out custom "no-search-results-row"
+                        const dataRows = rows.filter(r => !r.classList.contains('no-search-results-row'));
+
+                        let visibleCount = 0;
+                        let totalCount = dataRows.length;
+
+                        // If the first row is a default "No ... registered yet" placeholder
+                        const isPlaceholder = dataRows.length === 1 && dataRows[0].cells.length === 1 && 
+                                             (dataRows[0].textContent.includes('registered yet') || dataRows[0].textContent.includes('No record'));
+
+                        if (isPlaceholder) {
+                            if (query !== '') {
+                                dataRows[0].style.display = 'none';
+                                totalCount = 0;
+                            } else {
+                                dataRows[0].style.display = '';
+                            }
+                        }
+
+                        if (!isPlaceholder) {
+                            dataRows.forEach(row => {
+                                // Search text is composed of all cell texts except serial number (1st col) and actions (last col)
+                                let rowText = '';
+                                for (let i = 1; i < row.cells.length - 1; i++) {
+                                    rowText += ' ' + row.cells[i].textContent;
+                                }
+
+                                const isMatch = rowText.toLowerCase().includes(query);
+                                if (isMatch) {
+                                    row.style.display = '';
+                                    visibleCount++;
+                                    // Update S.No if index-badge-circle exists
+                                    const snoBadge = row.querySelector('.index-badge-circle');
+                                    if (snoBadge) {
+                                        snoBadge.textContent = visibleCount;
+                                    }
+                                } else {
+                                    row.style.display = 'none';
+                                }
+                            });
+                        }
+
+                        // Add "No matching records found" row if no rows match
+                        if (visibleCount === 0 && query !== '' && totalCount > 0) {
+                            const colSpan = table.querySelectorAll('thead th').length || 7;
+                            const tr = document.createElement('tr');
+                            tr.className = 'no-search-results-row';
+                            tr.innerHTML = `<td colspan="${colSpan}" class="text-center text-muted py-4" style="font-size: 13px;">No matching records found for "${searchInput.value}".</td>`;
+                            tbody.appendChild(tr);
+                        }
+
+                        // Update footer text if exists
+                        const card = table.closest('.card, .registry-card');
+                        if (card) {
+                            const footerText = card.querySelector('p.text-muted, .card-footer p, p.small');
+                            if (footerText && (footerText.textContent.includes('assets') || footerText.textContent.includes('Total') || footerText.textContent.includes('records'))) {
+                                if (query !== '') {
+                                    footerText.innerHTML = `Showing <strong>${visibleCount}</strong> of <strong>${totalCount}</strong> matching records`;
+                                } else {
+                                    footerText.innerHTML = `Total: <strong>${totalCount}</strong> dashboard assets`;
+                                }
+                            }
+
+                            // Show or hide pagination
+                            const paginationBlock = card.querySelector('nav[aria-label="Pagination control block"], .pagination');
+                            if (paginationBlock) {
+                                paginationBlock.style.display = query !== '' ? 'none' : '';
+                            }
+                        }
+                    });
+                }
+
+                searchInput.addEventListener('input', performSearch);
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        performSearch();
+                    });
+                }
+            }
         });
     </script>
 </head>
@@ -760,8 +861,8 @@
 							
 							<li class="nav-item d-flex align-items-center">
 								<div class="input-group search-area">
-									<input type="text" class="form-control" placeholder="Search here...">
-									<span class="input-group-text"><a href="javascript:void(0)"><i class="flaticon-381-search-2"></i></a></span>
+									<input type="text" id="globalSearchInput" class="form-control" placeholder="Search here...">
+									<span class="input-group-text"><a href="javascript:void(0)" id="globalSearchBtn"><i class="flaticon-381-search-2"></i></a></span>
 								</div>
 							</li>
 						
