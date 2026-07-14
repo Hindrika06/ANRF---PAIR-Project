@@ -4,6 +4,27 @@ $__isSuper = isSuperAdmin();
 $__brandPrefix = $__isSuper ? 'uoh' : resolveAdminPrefix();
 $__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPrefix);
 $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
+
+$currentPage = basename($_SERVER['PHP_SELF']);
+$kpiActive = in_array($currentPage, [
+    'publications.php',
+    'patents.php',
+    'conferences.php',
+    'webinars.php',
+    'internships.php',
+    'progress_reports.php',
+    'collaborations_management.php',
+    'research_infrastructure.php'
+]);
+$pagesActive = in_array($currentPage, [
+    'gallery_albums_management.php',
+    'gallery.php',
+    'event_calendar.php',
+    'banner_management.php',
+    'announcements_management.php',
+    'team_management.php',
+    'manage_admins.php'
+]);
 ?>
 
 <!--**********************************
@@ -207,129 +228,127 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
         </div>
         <!-- Main Navigation Links -->
         <ul class="metismenu" id="menu" style="flex: 1;">
-            <li>
+            <li class="<?= ($currentPage === 'dashboard.php') ? 'mm-active' : '' ?>">
                 <a href="dashboard.php">
                     <i class="fas fa-th-large"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
-            <li>
-                <a href="publications.php">
-                    <i class="fas fa-book-open"></i>
-                    <span class="nav-text">Publications</span>
+
+            <!-- KPI Dropdown Group -->
+            <li class="nav-group <?= $kpiActive ? 'mm-active' : '' ?>" id="nav-kpi-group">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('kpi-sub')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="nav-text">KPI</span>
+                    <i class="fas fa-chevron-down nav-arrow" id="kpi-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
-            </li>
-            <li>
-                <a href="patents.php">
-                    <i class="fas fa-certificate"></i>
-                    <span class="nav-text">Patents</span>
-                </a>
-            </li>
-            <li>
-                <a href="conferences.php">
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Conferences</span>
-                </a>
-            </li>
-            <li>
-                <a href="webinars.php">
-                    <i class="fas fa-video"></i>
-                    <span class="nav-text">Webinars</span>
-                </a>
-            </li>
-            <li>
-                <a href="internships.php">
-                    <i class="fas fa-user-graduate"></i>
-                    <span class="nav-text">Internships</span>
-                </a>
-            </li>
-            <li>
-                <a href="progress_reports.php">
-                    <i class="fas fa-chart-line"></i>
-                    <span class="nav-text">Progress Reports</span>
-                </a>
+                <ul class="nav-group-sub" id="kpi-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                    <li class="<?= ($currentPage === 'publications.php') ? 'mm-active' : '' ?>">
+                        <a href="publications.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-book-open" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Publications</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'patents.php') ? 'mm-active' : '' ?>">
+                        <a href="patents.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-certificate" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Patents</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'conferences.php') ? 'mm-active' : '' ?>">
+                        <a href="conferences.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-users" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Conferences</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'webinars.php') ? 'mm-active' : '' ?>">
+                        <a href="webinars.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-video" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Webinars</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'internships.php') ? 'mm-active' : '' ?>">
+                        <a href="internships.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-user-graduate" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Internships</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'progress_reports.php') ? 'mm-active' : '' ?>">
+                        <a href="progress_reports.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-chart-line" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Progress Reports</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
+                        <a href="collaborations_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Collaborations</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
+                        <a href="research_infrastructure.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-flask" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Research &amp; Infrastructure</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
 
-            <!-- Gallery Dropdown Group -->
-            <li class="nav-group" id="nav-gallery-group">
-                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('gallery-sub')">
-                    <i class="fas fa-photo-video"></i>
-                    <span class="nav-text">Gallery</span>
-                    <i class="fas fa-chevron-down nav-arrow" id="gallery-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
+            <!-- Pages Dropdown Group -->
+            <li class="nav-group <?= $pagesActive ? 'mm-active' : '' ?>" id="nav-pages-group">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('pages-sub')">
+                    <i class="fas fa-copy"></i>
+                    <span class="nav-text">Pages</span>
+                    <i class="fas fa-chevron-down nav-arrow" id="pages-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
-                <ul class="nav-group-sub" id="gallery-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
-                    <li>
+                <ul class="nav-group-sub" id="pages-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                    <li class="<?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
                         <a href="gallery_albums_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-images" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Gallery Albums</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="<?= ($currentPage === 'gallery.php') ? 'mm-active' : '' ?>">
                         <a href="gallery.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-link" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Drive Event Links</span>
                         </a>
                     </li>
-                </ul>
-            </li>
+                    <li class="<?= ($currentPage === 'event_calendar.php') ? 'mm-active' : '' ?>">
+                        <a href="event_calendar.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-calendar-alt" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Event Calendar</span>
+                        </a>
+                    </li>
 
-            <li>
-                <a href="event_calendar.php">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="nav-text">Event Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="collaborations_management.php">
-                    <i class="fas fa-handshake"></i>
-                    <span class="nav-text">Collaborations</span>
-                </a>
-            </li>
-            <li>
-                <a href="research_infrastructure.php">
-                    <i class="fas fa-flask"></i>
-                    <span class="nav-text">Research &amp; Infrastructure</span>
-                </a>
-            </li>
-
-            <?php if (isSuperAdmin()): ?>
-            <!-- Site Management Dropdown Group (Super Admin only) -->
-            <li class="nav-group" id="nav-sitemgmt-group">
-                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('sitemgmt-sub')">
-                    <i class="fas fa-cogs"></i>
-                    <span class="nav-text">Site Management</span>
-                    <i class="fas fa-chevron-down nav-arrow" id="sitemgmt-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
-                </a>
-                <ul class="nav-group-sub" id="sitemgmt-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
-                    <li>
+                    <?php if (isSuperAdmin()): ?>
+                    <li class="<?= ($currentPage === 'banner_management.php') ? 'mm-active' : '' ?>">
                         <a href="banner_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-image" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Homepage Banners</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="<?= ($currentPage === 'announcements_management.php') ? 'mm-active' : '' ?>">
                         <a href="announcements_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-bullhorn" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Scrolling Ticker</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="<?= ($currentPage === 'team_management.php') ? 'mm-active' : '' ?>">
                         <a href="team_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-user-cog" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Team Management</span>
                         </a>
                     </li>
-                    <li>
+                    <li class="<?= ($currentPage === 'manage_admins.php') ? 'mm-active' : '' ?>">
                         <a href="manage_admins.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-users-cog" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Manage Admins</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                 </ul>
             </li>
-            <?php endif; ?>
-
-
         </ul>
 
         <script>
@@ -355,12 +374,32 @@ $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
         // Auto-open the group that contains the active page on load
         document.addEventListener('DOMContentLoaded', function() {
             var currentPage = window.location.pathname.split('/').pop();
-            var galleryPages = ['gallery_albums_management.php', 'gallery.php'];
-            var sitemgmtPages = ['banner_management.php', 'announcements_management.php', 'team_management.php', 'manage_admins.php'];
-            if (galleryPages.indexOf(currentPage) !== -1) {
-                toggleNavGroup('gallery-sub');
-            } else if (sitemgmtPages.indexOf(currentPage) !== -1) {
-                toggleNavGroup('sitemgmt-sub');
+            
+            var kpiPages = [
+                'publications.php',
+                'patents.php',
+                'conferences.php',
+                'webinars.php',
+                'internships.php',
+                'progress_reports.php',
+                'collaborations_management.php',
+                'research_infrastructure.php'
+            ];
+            
+            var pagesPages = [
+                'gallery_albums_management.php',
+                'gallery.php',
+                'event_calendar.php',
+                'banner_management.php',
+                'announcements_management.php',
+                'team_management.php',
+                'manage_admins.php'
+            ];
+            
+            if (kpiPages.indexOf(currentPage) !== -1) {
+                toggleNavGroup('kpi-sub');
+            } else if (pagesPages.indexOf(currentPage) !== -1) {
+                toggleNavGroup('pages-sub');
             }
         });
         </script>
