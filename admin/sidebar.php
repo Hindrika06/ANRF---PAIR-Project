@@ -294,6 +294,70 @@ $pagesActive = in_array($currentPage, [
     20%  { left: 140%; }
     100% { left: 140%; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   HAMBURGER  →  Clean ☰ three-bar icon
+   Override the template's arrow/chevron default shape.
+═══════════════════════════════════════════════════════ */
+
+/* Container: flex-center the button */
+.nav-header .nav-control {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* The clickable wrapper */
+.nav-header .nav-control .hamburger {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 5px !important;           /* even spacing between bars */
+    width: 26px !important;
+    height: 26px !important;
+    cursor: pointer !important;
+    padding: 2px 0 !important;
+    border-radius: 4px !important;
+    transition: background 0.2s ease !important;
+}
+.nav-header .nav-control .hamburger:hover {
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* All three bars: uniform width, same height */
+.nav-header .nav-control .hamburger .line {
+    display: block !important;
+    width: 22px !important;         /* equal width for all three */
+    height: 2px !important;
+    border-radius: 2px !important;
+    background: #6B7280 !important; /* neutral gray matching header tone */
+    margin: 0 !important;
+    transition: transform 0.28s ease, opacity 0.28s ease, width 0.28s ease !important;
+    transform-origin: center !important;
+}
+
+/* Remove the template's short-3rd-bar arrow shape */
+.nav-header .nav-control .hamburger .line:nth-child(1),
+.nav-header .nav-control .hamburger .line:nth-child(2),
+.nav-header .nav-control .hamburger .line:nth-child(3) {
+    width: 22px !important;
+    transform: none !important;
+}
+
+/* ── is-active state: morph into ✕ ── */
+.nav-header .nav-control .hamburger.is-active .line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg) !important;
+    width: 22px !important;
+}
+.nav-header .nav-control .hamburger.is-active .line:nth-child(2) {
+    opacity: 0 !important;
+    width: 0 !important;
+}
+.nav-header .nav-control .hamburger.is-active .line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg) !important;
+    width: 22px !important;
+}
 </style>
 
 <!--**********************************
