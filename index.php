@@ -172,6 +172,4 @@ if (empty($sliderImages)) {
                 }
             });
         </script>
-
-    </div><!-- end .wrapper -->
 </body>

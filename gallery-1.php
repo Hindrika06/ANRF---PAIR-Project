@@ -305,7 +305,7 @@
             </div>
         </section>
     </div>
-</div>
+
 
 <script>
     function scrollGallery(btn, direction) {
