@@ -16,7 +16,7 @@ $kpiActive = in_array($currentPage, [
     'collaborations_management.php',
     'research_infrastructure.php'
 ]);
-$pagesActive = in_array($currentPage, [
+$pagesActive = isSuperAdmin() && in_array($currentPage, [
     'gallery_albums_management.php',
     'gallery.php',
     'event_calendar.php',
@@ -440,6 +440,8 @@ $pagesActive = in_array($currentPage, [
                 </ul>
             </li>
 
+            <?php /* ── Pages: Super Admin ONLY — rendered server-side, not CSS-hidden ── */ ?>
+            <?php if (isSuperAdmin()): ?>
             <!-- Pages Dropdown Group -->
             <li class="nav-group <?= $pagesActive ? 'mm-active' : '' ?>" id="nav-pages-group">
                 <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('pages-sub')">
@@ -466,8 +468,6 @@ $pagesActive = in_array($currentPage, [
                             <span class="nav-text">Event Calendar</span>
                         </a>
                     </li>
-
-                    <?php if (isSuperAdmin()): ?>
                     <li class="<?= ($currentPage === 'banner_management.php') ? 'mm-active' : '' ?>">
                         <a href="banner_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-image" style="font-size:0.95rem;"></i>
@@ -492,9 +492,9 @@ $pagesActive = in_array($currentPage, [
                             <span class="nav-text">Manage Admins</span>
                         </a>
                     </li>
-                    <?php endif; ?>
                 </ul>
             </li>
+            <?php endif; /* isSuperAdmin() — Pages group */ ?>
         </ul>
 
         <script>
