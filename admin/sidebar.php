@@ -12,11 +12,11 @@ $kpiActive = in_array($currentPage, [
     'conferences.php',
     'webinars.php',
     'internships.php',
-    'progress_reports.php',
-    'collaborations_management.php',
-    'research_infrastructure.php'
+    'progress_reports.php'
 ]);
 $pagesActive = isSuperAdmin() && in_array($currentPage, [
+    'collaborations_management.php',
+    'research_infrastructure.php',
     'gallery_albums_management.php',
     'gallery.php',
     'event_calendar.php',
@@ -425,18 +425,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                             <span class="nav-text">Progress Reports</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
-                        <a href="collaborations_management.php" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
-                            <span class="nav-text">Collaborations</span>
-                        </a>
-                    </li>
-                    <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
-                        <a href="research_infrastructure.php" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-flask" style="font-size:0.95rem;"></i>
-                            <span class="nav-text">Research &amp; Infrastructure</span>
-                        </a>
-                    </li>
+
                 </ul>
             </li>
 
@@ -450,6 +439,18 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <i class="fas fa-chevron-down nav-arrow" id="pages-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
                 <ul class="nav-group-sub" id="pages-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                    <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
+                        <a href="collaborations_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Collaborations</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
+                        <a href="research_infrastructure.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-flask" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Research &amp; Infrastructure</span>
+                        </a>
+                    </li>
                     <li class="<?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
                         <a href="gallery_albums_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-images" style="font-size:0.95rem;"></i>
@@ -527,12 +528,12 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                 'conferences.php',
                 'webinars.php',
                 'internships.php',
-                'progress_reports.php',
-                'collaborations_management.php',
-                'research_infrastructure.php'
+                'progress_reports.php'
             ];
             
             var pagesPages = [
+                'collaborations_management.php',
+                'research_infrastructure.php',
                 'gallery_albums_management.php',
                 'gallery.php',
                 'event_calendar.php',
