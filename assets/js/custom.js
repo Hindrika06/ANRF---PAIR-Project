@@ -411,17 +411,7 @@ $(document).ready(function($) {
         });
 
         buildCalendar();
-<<<<<<< HEAD
-        const initialDateKey = getActiveDateKey();
-        selectedLabel.textContent = formatDateLabel(initialDateKey);
-        if (calendarEvents[initialDateKey] && calendarEvents[initialDateKey].length > 0) {
-            renderEvents(initialDateKey, calendarEvents[initialDateKey]);
-        } else {
-            renderNoEvents(initialDateKey);
-        }
-=======
         updateNoticeForDate(getActiveDateKey());
->>>>>>> 39ab13535c9b1e2a5b7253a9ab1accaa00edaae3
     }
 
     initializeEventBoard();

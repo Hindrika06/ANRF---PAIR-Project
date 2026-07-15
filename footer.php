@@ -35,7 +35,7 @@
                 <div class="col-md-3 col-sm-12">
                     <aside class="logo">
                         <a href="index.php">
-                            <img src="footer_logo2.svg" class="vertical-center" alt="ANRF–PAIR Logo">
+                            <img src="footer_logo2.svg" alt="ANRF–PAIR Logo">
                         </a>
                     </aside>
                 </div><!-- /.col-md-3 -->
