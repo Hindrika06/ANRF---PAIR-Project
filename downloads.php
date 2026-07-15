@@ -1,9 +1,9 @@
 
-<body class="page-homepage-courses">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
 <!-- Header -->
-<?php include 'header.php';?>
+<?php
+$bodyClass = 'page-homepage-courses'; include 'header.php';?>
 <!-- end Header -->
 
 

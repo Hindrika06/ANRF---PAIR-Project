@@ -7,7 +7,7 @@ include 'header.php';
 ?>
 
 <body class="page-homepage-courses" style="font-size: 16px; line-height: 1.6;">
-<div class="wrapper">
+
 
 <div id="page-content">
     <div class="container">

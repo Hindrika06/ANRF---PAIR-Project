@@ -21,8 +21,8 @@
        ============================================================ */
     .topbar {
         background-color: #BC2121 !important;
-        /* padding derived from logo height instead of a fixed px value */
-        padding: calc(var(--logo-h) * 0.15) 0 !important;
+        /* Adjusted padding to keep top bar height exactly the same with 26px badges */
+        padding: calc(var(--logo-h) * 0.15 - 4px) 0 !important;
     }
     .topbar-inner {
         display: flex !important;
@@ -67,11 +67,37 @@
     }
     .topbar-left li a:hover, .topbar-right li a:hover {
         opacity: 1 !important;
+        text-decoration: none !important;
+    }
+    .topbar-left li a:hover span:not(.topbar-icon-badge) {
         text-decoration: underline !important;
     }
     .topbar-left li a i, .topbar-right li a i {
         font-size: 13px !important;
         flex-shrink: 0 !important;
+    }
+
+    /* Circular badges for icons */
+    .topbar-icon-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 26px !important;
+        height: 26px !important;
+        background-color: #ffffff !important;
+        border-radius: 50% !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+        flex-shrink: 0 !important;
+    }
+    .topbar-icon-badge i {
+        color: #BC2121 !important;
+        font-size: 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .topbar-left li a:hover .topbar-icon-badge {
+        transform: scale(1.08) !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
     }
 
     /* Dropdown menu positioning and styling */
@@ -165,7 +191,7 @@
     /* Tablet & mobile — wrap instead of scroll to prevent dropdown clipping */
     @media (max-width: 767px) {
         .topbar {
-            padding: 8px 0 !important;
+            padding: 4px 0 !important;
         }
         .topbar-inner {
             flex-wrap: wrap !important;
@@ -201,7 +227,7 @@
 
     @media (max-width: 480px) {
         .topbar {
-            padding: calc(var(--logo-h-mobile) * 0.16) 0 !important;
+            padding: 2px 0 !important;
         }
         .topbar-inner {
             gap: 6px !important;
@@ -241,13 +267,17 @@
             <ul class="topbar-left">
                 <li>
                     <a href="mailto:pairdirecorate@uohyd.ac.in">
-                        <i class="fa fa-envelope" aria-hidden="true"></i>
+                        <span class="topbar-icon-badge">
+                            <i class="fa fa-envelope" aria-hidden="true"></i>
+                        </span>
                         <span>pairdirecorate@uohyd.ac.in</span>
                     </a>
                 </li>
                 <li>
                     <a href="tel:914023134546">
-                        <i class="fa fa-phone" aria-hidden="true"></i>
+                        <span class="topbar-icon-badge">
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                        </span>
                         <span>040 2313 2309</span>
                     </a>
                 </li>

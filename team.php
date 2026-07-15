@@ -1,4 +1,5 @@
 <?php
+$bodyClass = 'page-sub-page page-members';
 require_once 'config.php';
 include 'header.php';
 
@@ -121,9 +122,8 @@ function renderTeamCard($m) {
 }
 ?>
 
-<body class="page-sub-page page-members">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
 <!-- Header -->
 
 <!-- Breadcrumb -->

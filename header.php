@@ -169,12 +169,12 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
 
         @media (min-width: 1200px) {
             .menu-bar-wrapper .primary-navigation-wrapper {
-                padding: 8px 0px !important;
+                padding: 14px 0px !important;
             }
         }
         @media (min-width: 992px) and (max-width: 1199px) {
             .menu-bar-wrapper .primary-navigation-wrapper {
-                padding: 4px 0px !important;
+                padding: 10px 0px !important;
             }
         }
         .menu-bar-wrapper .navbar {
@@ -774,7 +774,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
     </script>
 </head>
 
-<body class="page-homepage-courses">
+<body class="<?php echo htmlspecialchars($bodyClass ?? 'page-homepage-courses'); ?>">
 <?php if ($isHomePage): ?>
 <!--
   ╔══════════════════════════════════════════════════════════════╗

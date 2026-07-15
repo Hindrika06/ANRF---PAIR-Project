@@ -648,7 +648,133 @@
         .dropdown-item-custom:focus i {
             color: #b91c1c;
         }
+
+        /* ══════════════════════════════════════════════════════
+           FIXED LAYOUT & INDEPENDENT SCROLL SYSTEM
+           ══════════════════════════════════════════════════════ */
+        .header {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            z-index: 998 !important;
+            padding-left: var(--dz-sidebar-width, 16.5rem) !important;
+            transition: padding-left 280ms ease, transform 280ms ease !important;
+        }
+
+        .nav-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: var(--dz-sidebar-width, 16.5rem) !important;
+            z-index: 1001 !important;
+            transition: transform 280ms ease !important;
+        }
+
+        .dlabnav {
+            position: fixed !important;
+            top: var(--dz-header-height, 4.5rem) !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            width: var(--dz-sidebar-width, 16.5rem) !important;
+            height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+            z-index: 999 !important;
+            overflow-y: auto !important;
+            transition: transform 280ms ease !important;
+        }
+
+        /* Enable independent scroll on sidebar if content is tall */
+        .dlabnav-scroll {
+            height: 100% !important;
+            overflow-y: auto !important;
+        }
+
+        /* The main content area should offset the fixed header and sidebar */
+        .content-body {
+            margin-left: var(--dz-sidebar-width, 16.5rem) !important;
+            padding-top: var(--dz-header-height, 4.5rem) !important;
+            min-height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+            transition: margin-left 280ms ease !important;
+        }
+
+        /* Support for collapsed/hamburger menu — slide sidebar out smoothly */
+        body.sidebar-collapsed .dlabnav {
+            transform: translateX(calc(-1 * var(--dz-sidebar-width, 16.5rem))) !important;
+        }
+        body.sidebar-collapsed .nav-header {
+            transform: translateX(calc(-1 * var(--dz-sidebar-width, 16.5rem))) !important;
+        }
+        body.sidebar-collapsed .header {
+            padding-left: 0 !important;
+        }
+        body.sidebar-collapsed .content-body {
+            margin-left: 0 !important;
+        }
+
+        /* ── Mobile Viewports (< 768px) ── */
+        @media (max-width: 767px) {
+            .header {
+                padding-left: 0 !important;
+            }
+            .nav-header {
+                width: 100% !important;
+            }
+            .dlabnav {
+                top: var(--dz-header-height, 4.5rem) !important;
+                height: calc(100vh - var(--dz-header-height, 4.5rem)) !important;
+                width: 240px !important;
+                left: 0 !important;
+                transform: translateX(-240px) !important;
+                z-index: 1002 !important;
+            }
+            /* Slide sidebar in when toggled on mobile */
+            body.sidebar-collapsed .dlabnav {
+                transform: translateX(0) !important;
+            }
+            body.sidebar-collapsed .nav-header {
+                transform: translateX(0) !important;
+            }
+            .content-body {
+                margin-left: 0 !important;
+                padding-top: var(--dz-header-height, 4.5rem) !important;
+            }
+        }
     </style>
+    <!-- ── Hamburger sidebar toggle (pure vanilla JS, no reload) ── -->
+    <script>
+    (function () {
+        'use strict';
+        var STORAGE_KEY = 'anrf_sidebar_collapsed';
+
+        function applyState(body) {
+            /* Restore last-known collapsed state before first paint */
+            if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+                body.classList.add('sidebar-collapsed');
+            }
+        }
+
+        function wireHamburger(body) {
+            /* Target the hamburger div rendered inside .nav-control */
+            document.querySelectorAll('.nav-control .hamburger, .hamburger').forEach(function (btn) {
+                if (btn._sidebarWired) return;
+                btn._sidebarWired = true;
+                btn.style.cursor = 'pointer';
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var collapsed = body.classList.toggle('sidebar-collapsed');
+                    sessionStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
+                    btn.classList.toggle('is-active');
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var body = document.body;
+            applyState(body);
+            wireHamburger(body);
+        });
+    }());
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const trigger = document.getElementById('profileDropdownTrigger');
@@ -740,6 +866,107 @@
                     trigger.focus();
                 }
             });
+
+            // --- Global client-side table search ---
+            const searchInput = document.getElementById('globalSearchInput');
+            const searchBtn = document.getElementById('globalSearchBtn');
+            if (searchInput) {
+                function performSearch() {
+                    const query = searchInput.value.toLowerCase().trim();
+                    const tables = document.querySelectorAll('table.table-theme-sapphire, table.table');
+                    if (tables.length === 0) return;
+
+                    tables.forEach(table => {
+                        const tbody = table.querySelector('tbody');
+                        if (!tbody) return;
+
+                        // Remove existing "No match" rows
+                        const existingNoMatch = tbody.querySelector('.no-search-results-row');
+                        if (existingNoMatch) existingNoMatch.remove();
+
+                        const rows = Array.from(tbody.querySelectorAll('tr'));
+                        if (rows.length === 0) return;
+
+                        // Filter out custom "no-search-results-row"
+                        const dataRows = rows.filter(r => !r.classList.contains('no-search-results-row'));
+
+                        let visibleCount = 0;
+                        let totalCount = dataRows.length;
+
+                        // If the first row is a default "No ... registered yet" placeholder
+                        const isPlaceholder = dataRows.length === 1 && dataRows[0].cells.length === 1 && 
+                                             (dataRows[0].textContent.includes('registered yet') || dataRows[0].textContent.includes('No record'));
+
+                        if (isPlaceholder) {
+                            if (query !== '') {
+                                dataRows[0].style.display = 'none';
+                                totalCount = 0;
+                            } else {
+                                dataRows[0].style.display = '';
+                            }
+                        }
+
+                        if (!isPlaceholder) {
+                            dataRows.forEach(row => {
+                                // Search text is composed of all cell texts except serial number (1st col) and actions (last col)
+                                let rowText = '';
+                                for (let i = 1; i < row.cells.length - 1; i++) {
+                                    rowText += ' ' + row.cells[i].textContent;
+                                }
+
+                                const isMatch = rowText.toLowerCase().includes(query);
+                                if (isMatch) {
+                                    row.style.display = '';
+                                    visibleCount++;
+                                    // Update S.No if index-badge-circle exists
+                                    const snoBadge = row.querySelector('.index-badge-circle');
+                                    if (snoBadge) {
+                                        snoBadge.textContent = visibleCount;
+                                    }
+                                } else {
+                                    row.style.display = 'none';
+                                }
+                            });
+                        }
+
+                        // Add "No matching records found" row if no rows match
+                        if (visibleCount === 0 && query !== '' && totalCount > 0) {
+                            const colSpan = table.querySelectorAll('thead th').length || 7;
+                            const tr = document.createElement('tr');
+                            tr.className = 'no-search-results-row';
+                            tr.innerHTML = `<td colspan="${colSpan}" class="text-center text-muted py-4" style="font-size: 13px;">No matching records found for "${searchInput.value}".</td>`;
+                            tbody.appendChild(tr);
+                        }
+
+                        // Update footer text if exists
+                        const card = table.closest('.card, .registry-card');
+                        if (card) {
+                            const footerText = card.querySelector('p.text-muted, .card-footer p, p.small');
+                            if (footerText && (footerText.textContent.includes('assets') || footerText.textContent.includes('Total') || footerText.textContent.includes('records'))) {
+                                if (query !== '') {
+                                    footerText.innerHTML = `Showing <strong>${visibleCount}</strong> of <strong>${totalCount}</strong> matching records`;
+                                } else {
+                                    footerText.innerHTML = `Total: <strong>${totalCount}</strong> dashboard assets`;
+                                }
+                            }
+
+                            // Show or hide pagination
+                            const paginationBlock = card.querySelector('nav[aria-label="Pagination control block"], .pagination');
+                            if (paginationBlock) {
+                                paginationBlock.style.display = query !== '' ? 'none' : '';
+                            }
+                        }
+                    });
+                }
+
+                searchInput.addEventListener('input', performSearch);
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        performSearch();
+                    });
+                }
+            }
         });
     </script>
 </head>
@@ -760,8 +987,8 @@
 							
 							<li class="nav-item d-flex align-items-center">
 								<div class="input-group search-area">
-									<input type="text" class="form-control" placeholder="Search here...">
-									<span class="input-group-text"><a href="javascript:void(0)"><i class="flaticon-381-search-2"></i></a></span>
+									<input type="text" id="globalSearchInput" class="form-control" placeholder="Search here...">
+									<span class="input-group-text"><a href="javascript:void(0)" id="globalSearchBtn"><i class="flaticon-381-search-2"></i></a></span>
 								</div>
 							</li>
 						

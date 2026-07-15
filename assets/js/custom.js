@@ -375,17 +375,21 @@ $(document).ready(function($) {
             bindCalendarEvents();
         }
 
+        function updateNoticeForDate(dateKey) {
+            selectedLabel.textContent = formatDateLabel(dateKey);
+            if (calendarEvents[dateKey] && calendarEvents[dateKey].length > 0) {
+                renderEvents(dateKey, calendarEvents[dateKey]);
+            } else {
+                renderNoEvents(dateKey);
+            }
+        }
+
         function bindCalendarEvents() {
             const allDates = calBody.querySelectorAll('td[data-date]');
             allDates.forEach(function (cell) {
                 cell.addEventListener('click', function () {
                     const dateKey = this.getAttribute('data-date');
-                    selectedLabel.textContent = formatDateLabel(dateKey);
-                    if (calendarEvents[dateKey] && calendarEvents[dateKey].length > 0) {
-                        renderEvents(dateKey, calendarEvents[dateKey]);
-                    } else {
-                        renderNoEvents(dateKey);
-                    }
+                    updateNoticeForDate(dateKey);
                 });
             });
         }
@@ -397,22 +401,17 @@ $(document).ready(function($) {
         document.getElementById('prevMonth').addEventListener('click', function () {
             currentDate.setMonth(currentDate.getMonth() - 1);
             buildCalendar();
-            selectedLabel.textContent = 'Selected Date';
-            selectedText.textContent = 'Click a date to see events';
-            selectedText.classList.add('no-event');
-            renderNoEvents(getActiveDateKey());
+            updateNoticeForDate(getActiveDateKey());
         });
 
         document.getElementById('nextMonth').addEventListener('click', function () {
             currentDate.setMonth(currentDate.getMonth() + 1);
             buildCalendar();
-            selectedLabel.textContent = 'Selected Date';
-            selectedText.textContent = 'Click a date to see events';
-            selectedText.classList.add('no-event');
-            renderNoEvents(getActiveDateKey());
+            updateNoticeForDate(getActiveDateKey());
         });
 
         buildCalendar();
+<<<<<<< HEAD
         const initialDateKey = getActiveDateKey();
         selectedLabel.textContent = formatDateLabel(initialDateKey);
         if (calendarEvents[initialDateKey] && calendarEvents[initialDateKey].length > 0) {
@@ -420,6 +419,9 @@ $(document).ready(function($) {
         } else {
             renderNoEvents(initialDateKey);
         }
+=======
+        updateNoticeForDate(getActiveDateKey());
+>>>>>>> 39ab13535c9b1e2a5b7253a9ab1accaa00edaae3
     }
 
     initializeEventBoard();

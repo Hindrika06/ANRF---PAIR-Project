@@ -1,11 +1,11 @@
 
 
-<body class="page-sub-page page-contact">
-<!-- Wrapper -->
-<div class="wrapper">
+
+
     
 <!-- Header -->
-<?php include 'header.php';?>
+<?php
+$bodyClass = 'page-sub-page page-contact'; include 'header.php';?>
 <!-- end Header -->
 
 <!-- Breadcrumb -->

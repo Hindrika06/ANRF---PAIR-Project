@@ -1,4 +1,5 @@
 <?php
+$bodyClass = 'page-institute';
 require_once 'config.php';
 
 $logo_map = [
@@ -78,8 +79,8 @@ $tab_labels = [
     <link rel="stylesheet" href="assets/css/institute.css"                type="text/css">
 
 </head>
-<body class="page-institute">
-<div class="wrapper">
+
+
 
 <?php include 'header.php'; ?>
 

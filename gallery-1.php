@@ -199,7 +199,7 @@
         }
 </style>
 
-<div class="wrapper">
+
     <div class="container">
         <section id="gallery">
             <div class="section-content">

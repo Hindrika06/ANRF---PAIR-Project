@@ -1,6 +1,6 @@
 
 
-<div class="wrapper">
+
 
 <?php include 'header.php';?>
 
