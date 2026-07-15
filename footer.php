@@ -125,7 +125,7 @@
 <script src="assets/js/layerslider.kreaturamedia.jquery.js"></script>
 <script src="assets/js/jquery.flexslider-min.js"></script>
 <script src="assets/js/retina-1.1.0.min.js"></script>
-<script src="assets/js/custom.js"></script>
+<script src="assets/js/custom.js?v=<?= filemtime('assets/js/custom.js') ?>"></script>
 
 </body>
 </html>
