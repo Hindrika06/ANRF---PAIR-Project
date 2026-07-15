@@ -80,13 +80,29 @@
         color: #333;
     }
 
-    /* ======= CALENDAR + NOTICE + QUICK LINKS SIDEBAR ======= */
     .cal-notice-sidebar {
         flex: 0 0 300px;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 12px !important;
+    }
+
+    .custom-calendar-widget,
+    .custom-notice-board,
+    .sidebar-ql-section {
+        margin-bottom: 0 !important;
+    }
+
+    .custom-calendar-header,
+    .custom-notice-header,
+    .sidebar-ql-header {
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
+        margin-top: -1px !important;
+        margin-left: -1px !important;
+        margin-right: -1px !important;
+        width: calc(100% + 2px) !important;
     }
 
     /* ======= CALENDAR STYLES ======= */
