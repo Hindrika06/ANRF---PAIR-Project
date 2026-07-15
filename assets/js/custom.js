@@ -413,7 +413,13 @@ $(document).ready(function($) {
         });
 
         buildCalendar();
-        renderNoEvents(getActiveDateKey());
+        const initialDateKey = getActiveDateKey();
+        selectedLabel.textContent = formatDateLabel(initialDateKey);
+        if (calendarEvents[initialDateKey] && calendarEvents[initialDateKey].length > 0) {
+            renderEvents(initialDateKey, calendarEvents[initialDateKey]);
+        } else {
+            renderNoEvents(initialDateKey);
+        }
     }
 
     initializeEventBoard();
