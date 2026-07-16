@@ -675,3 +675,143 @@
         margin: 0 auto;
     }
 }
+
+/* ============================================================
+   FOOTER LAYOUT FIX — "Arrange the footer to fit"
+   ============================================================
+   Problems addressed:
+     1. #footer-top had margin-top:30px + padding:30px → huge gap
+     2. Footer columns (4 × col-md-3) weren't balanced
+     3. Excessive vertical space inside footer-content
+     4. Footer not always spanning full viewport width
+   ============================================================ */
+
+/* ---- Full-width guarantee ---- */
+#page-footer {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ---- "Follow us" top bar — compact ---- */
+#page-footer #footer-top {
+    margin-top: 0 !important;        /* was 30px — kills the gap above footer */
+    padding: 12px 0 !important;      /* was 30px 0 — much tighter */
+}
+
+/* ---- Main footer content area ---- */
+#page-footer #footer-content {
+    padding: 35px 0 30px; /* was 40px 0 — slightly tighter */
+}
+
+/* Ensure no gap between page content and footer */
+#page-content {
+    padding-bottom: 0 !important;
+}
+
+/* Strip bottom margin from the last elements inside page content */
+#page-content > :last-child,
+#page-content > section:last-of-type,
+#page-content > div:last-of-type,
+#page-content .container:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#gallery, 
+.event-block:last-child, 
+#uohyd-stats {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* ---- Footer column row: equal-height flex ---- */
+#page-footer #footer-content > .container > .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+/* Give the logo column a bit less room, redistribute to content cols */
+#page-footer #footer-content > .container > .row > .col-md-3:first-child {
+    flex: 0 0 20%;
+    max-width: 20%;
+}
+#page-footer #footer-content > .container > .row > .col-md-3:nth-child(2) {
+    flex: 0 0 27%;
+    max-width: 27%;
+}
+#page-footer #footer-content > .container > .row > .col-md-3:nth-child(3) {
+    flex: 0 0 25%;
+    max-width: 25%;
+}
+#page-footer #footer-content > .container > .row > .col-md-3:last-child {
+    flex: 0 0 28%;
+    max-width: 28%;
+}
+
+/* Tighter heading spacing */
+#page-footer h4 {
+    font-size: 20px;       /* was 24px */
+    margin-bottom: 25px;   /* was 35px */
+    margin-top: 5px;       /* was 10px */
+}
+
+/* Address / contact block — tighter line-height */
+#page-footer #footer-content address {
+    line-height: 1.8;
+    font-size: 12px;
+}
+
+/* Quick-links list — tighter spacing */
+#page-footer #footer-content .list-links li {
+    margin-bottom: 4px;
+}
+
+/* About blurb paragraph */
+#page-footer #footer-content aside > p {
+    line-height: 1.7;
+    font-size: 12px;
+}
+
+/* ---- Copyright bottom bar ---- */
+#page-footer #footer-bottom {
+    padding: 14px 0;      /* was 20px — slightly tighter */
+}
+
+/* ---- Responsive: tablet ---- */
+@media (max-width: 991px) {
+    #page-footer #footer-content > .container > .row {
+        /* Stack into 2-column layout */
+        display: flex;
+        flex-wrap: wrap;
+    }
+    #page-footer #footer-content > .container > .row > .col-md-3:first-child,
+    #page-footer #footer-content > .container > .row > .col-md-3:nth-child(2),
+    #page-footer #footer-content > .container > .row > .col-md-3:nth-child(3),
+    #page-footer #footer-content > .container > .row > .col-md-3:last-child {
+        flex: 0 0 50%;
+        max-width: 50%;
+        margin-bottom: 25px;
+    }
+}
+
+/* ---- Responsive: mobile ---- */
+@media (max-width: 767px) {
+    #page-footer #footer-content > .container > .row > .col-md-3:first-child,
+    #page-footer #footer-content > .container > .row > .col-md-3:nth-child(2),
+    #page-footer #footer-content > .container > .row > .col-md-3:nth-child(3),
+    #page-footer #footer-content > .container > .row > .col-md-3:last-child {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+
+    #page-footer h4 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    #page-footer #footer-top {
+        padding: 10px 0;
+    }
+}
