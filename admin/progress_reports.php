@@ -468,12 +468,12 @@ $total_unique_tasks   = count($unique_tasks);
                         <table class="table table-theme-sapphire">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">S.No</th>
-                                    <th style="width: 35%;">Project / Task Info</th>
-                                    <th style="width: 20%;">Investigators</th>
-                                    <th style="width: 15%;">Work Package</th>
-                                    <th style="width: 12%;">Modified</th>
-                                    <th style="width: 10%; text-align: center;">Action</th>
+                                    <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 35%; background-color: #bc2121 !important; color: #ffffff !important;">Project / Task Info</th>
+                                    <th style="width: 20%; background-color: #bc2121 !important; color: #ffffff !important;">Investigators</th>
+                                    <th style="width: 15%; background-color: #bc2121 !important; color: #ffffff !important;">Work Package</th>
+                                    <th style="width: 12%; background-color: #bc2121 !important; color: #ffffff !important;">Modified</th>
+                                    <th style="width: 10%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

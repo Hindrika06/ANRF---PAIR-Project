@@ -237,13 +237,13 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 80px;">Logo</th>
-                                    <th>Partner Name</th>
-                                    <th>Type</th>
-                                    <th>Description</th>
-                                    <th>Order</th>
-                                    <th style="width: 100px;">Status</th>
-                                    <th style="width: 100px; text-align: center;">Actions</th>
+                                    <th style="width: 80px; background-color: #bc2121 !important; color: #ffffff !important;">Logo</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Partner Name</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Type</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Description</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Order</th>
+                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
+                                    <th style="width: 100px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>

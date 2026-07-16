@@ -58,12 +58,12 @@
         align-items: center !important;
         gap: 8px !important;
         color: #fff !important;
-        opacity: 0.95 !important;
-        font-size: 14px !important; /* Set exactly to 14px */
+        opacity: 0.8 !important; /* Reduced opacity/capacity */
+        font-size: 12.5px !important; /* Minimized font-size */
         line-height: 1.3 !important;
         text-decoration: none !important;
         white-space: nowrap !important;
-        font-weight: bold !important; /* Bold as requested */
+        font-weight: 500 !important; /* Reduced boldness */
     }
     .topbar-left li a:hover, .topbar-right li a:hover {
         opacity: 1 !important;

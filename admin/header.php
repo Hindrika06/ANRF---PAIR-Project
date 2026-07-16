@@ -118,7 +118,8 @@
 
         /* ── Sidebar brand name color override ── */
         .brand-institute-name {
-            color: #bc2121 !important;
+            color: #1e3a8a !important;
+            font-weight: 700 !important;
         }
 
         /* ── 2. Top Header bar: red accent ── */
@@ -225,6 +226,19 @@
             echo '.kpi-widget-card { background: #bc2121 !important; }';
         }
         ?>
+        .content-body {
+            padding-top: 5.6rem !important;
+        }
+
+        /* ── Global Table Header Font Style (Crimson Red Headers) ── */
+        thead th {
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            padding: 12px 16px !important;
+            border: none !important;
+        }
     </style>
     <?php else: ?>
     <style>
@@ -340,6 +354,7 @@
         /* ── Sidebar brand name color override ── */
         .brand-institute-name {
             color: #024283 !important;
+            font-weight: 700 !important;
         }
 
         /* ── 2. Top Header bar: sapphire accent ── */
@@ -489,6 +504,19 @@
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(2, 66, 131, 0.35) !important; }';
         }
         ?>
+        .content-body {
+            padding-top: 5.6rem !important;
+        }
+
+        /* ── Global Table Header Font Style (Crimson Red Headers) ── */
+        thead th {
+            font-weight: 700 !important;
+            font-size: 11px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            padding: 12px 16px !important;
+            border: none !important;
+        }
     </style>
     <?php endif; ?>
     <!-- User Profile Dropdown Styles & Scripts -->
