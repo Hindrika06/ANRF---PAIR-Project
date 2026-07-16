@@ -515,7 +515,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-theme-sapphire">
+                        <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
                                     <th style="width: 4%; text-align: center;">S.No</th>
@@ -765,6 +765,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 <script src="js/custom.min.js"></script>
 <script src="js/dlabnav-init.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script src="js/table-pagination.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
