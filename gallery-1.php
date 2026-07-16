@@ -20,7 +20,11 @@
             margin-bottom: 60px;
         }
         .event-block:last-child {
-            margin-bottom: 40px;
+            margin-bottom: 0px;
+        }
+        #gallery {
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         /* --- Tighter, Stylized Event Header --- */
@@ -305,7 +309,6 @@
             </div>
         </section>
     </div>
-</div>
 
 <script>
     function scrollGallery(btn, direction) {

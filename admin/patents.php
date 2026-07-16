@@ -590,7 +590,7 @@ $total_inventors = count($unique_inventors);
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-theme-sapphire">
+                        <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
                                     <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
@@ -871,7 +871,7 @@ $total_inventors = count($unique_inventors);
 
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://dexignlab.com/" target="_blank">DexignLab</a> 2023</p>
+            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
         </div>
     </div>
 </div>
@@ -880,6 +880,7 @@ $total_inventors = count($unique_inventors);
 <script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script src="js/custom.min.js"></script>
 <script src="js/dlabnav-init.js"></script>
+<script src="js/table-pagination.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {

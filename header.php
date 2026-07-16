@@ -23,7 +23,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
     <link rel="stylesheet" href="assets/css/layerslider.css"          type="text/css">
     <link rel="stylesheet" href="assets/css/flexslider.css"           type="text/css">
     <link rel="stylesheet" href="assets/css/style.css"                type="text/css">
-    <link rel="stylesheet" href="assets/css/custom.css"                type="text/css">
+    <link rel="stylesheet" href="assets/css/custom.css?v=<?= filemtime('assets/css/custom.css') ?>"                type="text/css">
 
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
