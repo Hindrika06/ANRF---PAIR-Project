@@ -483,7 +483,7 @@ $total_pis = count($unique_investigators);
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-theme-sapphire">
+                        <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
                                     <th style="width: 4%; text-align: center;">S.No</th>
@@ -693,6 +693,7 @@ $total_pis = count($unique_investigators);
 <script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script src="js/custom.min.js"></script>
 <script src="js/dlabnav-init.js"></script>
+<script src="js/table-pagination.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {

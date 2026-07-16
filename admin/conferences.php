@@ -392,7 +392,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-theme-sapphire">
+                        <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
                                     <th style="width: 5%; min-width: 60px; text-align: center;">S.No</th>
@@ -513,6 +513,17 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="d-flex align-items-center justify-content-between flex-wrap p-2 px-3 bg-white border-top">
+                        <p class="mb-0 text-muted small font-w500">Total: <?= $total_records ?> conferences</p>
+                        <nav aria-label="Pagination control block">
+                          <ul class="pagination pagination-sm mb-0 pagination-theme-sapphire">
+                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-left"></i></a></li>
+                            <li class="page-item active"><a class="page-link" href="javascript:void(0);">1</a></li>
+                            <li class="page-item"><a class="page-link" href="javascript:void(0);"><i class="fa-solid fa-angle-right"></i></a></li>
+                          </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
 
@@ -614,6 +625,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
 <script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script src="js/custom.min.js"></script>
 <script src="js/dlabnav-init.js"></script>
+<script src="js/table-pagination.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
