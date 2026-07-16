@@ -34,7 +34,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 <div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
     <a href="publications.php" class="brand-logo">
         <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">
-        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
+        <span class="brand-institute-name" style="font-weight: 700 !important; font-family: 'Poppins', sans-serif !important;"><?= htmlspecialchars($__brandName) ?></span>
     </a>
     <div class="nav-control">
         <div class="hamburger">
@@ -69,7 +69,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     font-size: 12px;
     font-weight: 700;
     line-height: 1.35;
-    color: #bc2121;
+    color: #000000;
     white-space: normal;
     overflow: visible;
     word-break: break-word;
@@ -367,10 +367,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 <div class="dlabnav custom-sidebar">
     <div class="dlabnav-scroll" style="display: flex; flex-direction: column; height: 100%;">
         <div style="padding: 12px 18px 10px; color: #fff; font-size: 12px; opacity: 0.95;">
-            <div class="portal-badge">
-                <i class="fas <?= isSuperAdmin() ? 'fa-shield-alt' : 'fa-user-shield' ?>" style="color:#ffffff;"></i>
-                <span><?= isSuperAdmin() ? '🛡️ SUPER ADMIN PORTAL' : '👤 ADMIN PORTAL' ?></span>
-            </div>
+            
         </div>
         <!-- Main Navigation Links -->
         <ul class="metismenu" id="menu" style="flex: 1;">

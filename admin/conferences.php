@@ -395,12 +395,12 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 5%; min-width: 60px; text-align: center;">S.No</th>
-                                    <th style="width: 35%; min-width: 250px;">Conference Details</th>
-                                    <th style="width: 20%; min-width: 180px;">Hosting/Participating Org</th>
-                                    <th style="width: 15%; min-width: 140px;">Venue / Location</th>
-                                    <th style="width: 15%; min-width: 160px; white-space: nowrap;">Dates &amp; Deadlines</th>
-                                    <th style="width: 10%; min-width: 110px; text-align: center; white-space: nowrap;">Action</th>
+                                    <th style="width: 5%; min-width: 60px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 35%; min-width: 250px; background-color: #bc2121 !important; color: #ffffff !important;">Conference Details</th>
+                                    <th style="width: 20%; min-width: 180px; background-color: #bc2121 !important; color: #ffffff !important;">Hosting/Participating Org</th>
+                                    <th style="width: 15%; min-width: 140px; background-color: #bc2121 !important; color: #ffffff !important;">Venue / Location</th>
+                                    <th style="width: 15%; min-width: 160px; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Dates &amp; Deadlines</th>
+                                    <th style="width: 10%; min-width: 110px; text-align: center; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

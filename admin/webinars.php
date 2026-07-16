@@ -203,7 +203,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
     }
     .registry-task-link {
         font-weight: 700;
-        color: #bc2121 !important;
+        color: #024283 !important;
         display: block;
         font-size: 11.5px;
         margin-bottom: 3px;
@@ -390,11 +390,11 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 5%; min-width: 60px; text-align: center;">S.No</th>
-                                    <th style="width: 40%; min-width: 250px;">Webinar Details</th>
-                                    <th style="width: 25%; min-width: 180px;">Speaker Info</th>
-                                    <th style="width: 18%; min-width: 160px; white-space: nowrap;">Date &amp; Time</th>
-                                    <th style="width: 12%; min-width: 110px; text-align: center; white-space: nowrap;">Action</th>
+                                    <th style="width: 5%; min-width: 60px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 40%; min-width: 250px; background-color: #bc2121 !important; color: #ffffff !important;">Webinar Details</th>
+                                    <th style="width: 25%; min-width: 180px; background-color: #bc2121 !important; color: #ffffff !important;">Speaker Info</th>
+                                    <th style="width: 18%; min-width: 160px; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Date &amp; Time</th>
+                                    <th style="width: 12%; min-width: 110px; text-align: center; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

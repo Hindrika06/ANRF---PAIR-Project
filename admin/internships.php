@@ -486,11 +486,11 @@ $total_pis = count($unique_investigators);
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">S.No</th>
-                                    <th style="width: 36%;">Program Info</th>
-                                    <th style="width: 32%;">Tracked Students</th>
-                                    <th style="width: 13%;">Duration</th>
-                                    <th style="width: 15%; text-align: center;">Action</th>
+                                    <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 36%; background-color: #bc2121 !important; color: #ffffff !important;">Program Info</th>
+                                    <th style="width: 32%; background-color: #bc2121 !important; color: #ffffff !important;">Tracked Students</th>
+                                    <th style="width: 13%; background-color: #bc2121 !important; color: #ffffff !important;">Duration</th>
+                                    <th style="width: 15%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
