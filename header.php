@@ -543,6 +543,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             position: fixed;
             inset: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background: rgba(255, 255, 255, 0);
@@ -561,6 +562,52 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
             opacity: 0;
             pointer-events: none;
         }
+
+        /* ── LOADING Text Animation ──────────────────────── */
+        .preloader-loading-text {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Montserrat', 'Arial Black', Arial, sans-serif;
+            font-weight: 900;
+            font-size: 26px;
+            letter-spacing: 2px;
+            color: #BC2121; /* Website theme color */
+            text-transform: uppercase;
+        }
+
+        .preloader-loading-text span {
+            display: inline-block;
+            opacity: 0.3;
+            transform: translateY(0) scale(1);
+            animation: loading-wave 1.4s infinite ease-in-out;
+        }
+
+        @keyframes loading-wave {
+            0%, 100% {
+                opacity: 0.3;
+                transform: translateY(0) scale(1);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-8px) scale(1.15);
+            }
+            60% {
+                opacity: 0.3;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Sequential delays for L O A D I N G */
+        .preloader-loading-text span:nth-child(1) { animation-delay: 0.0s; }
+        .preloader-loading-text span:nth-child(2) { animation-delay: 0.15s; }
+        .preloader-loading-text span:nth-child(3) { animation-delay: 0.3s; }
+        .preloader-loading-text span:nth-child(4) { animation-delay: 0.45s; }
+        .preloader-loading-text span:nth-child(5) { animation-delay: 0.6s; }
+        .preloader-loading-text span:nth-child(6) { animation-delay: 0.75s; }
+        .preloader-loading-text span:nth-child(7) { animation-delay: 0.9s; }
 
         /* ── SVG canvas ───────────────────────────────────── */
         #preloader .preloader-logo-container {
@@ -864,6 +911,15 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                   letter-spacing="-1.5">ANRF-PAIR</text>
 
         </svg>
+    </div>
+    <div class="preloader-loading-text">
+        <span>L</span>
+        <span>O</span>
+        <span>A</span>
+        <span>D</span>
+        <span>I</span>
+        <span>N</span>
+        <span>G</span>
     </div>
 </div>
 <?php endif; ?>
