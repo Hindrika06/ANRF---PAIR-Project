@@ -593,12 +593,12 @@ $total_inventors = count($unique_inventors);
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">S.No</th>
-                                    <th style="width: 38%;">Patent Details &amp; Inventors</th>
-                                    <th style="width: 25%;">Identifiers</th>
-                                    <th style="width: 12%; text-align: center;">Status</th>
-                                    <th style="width: 11%; text-align: center;">Files</th>
-                                    <th style="width: 10%; text-align: center;">Action</th>
+                                    <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 38%; background-color: #bc2121 !important; color: #ffffff !important;">Patent Details &amp; Inventors</th>
+                                    <th style="width: 25%; background-color: #bc2121 !important; color: #ffffff !important;">Identifiers</th>
+                                    <th style="width: 12%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
+                                    <th style="width: 11%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Files</th>
+                                    <th style="width: 10%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

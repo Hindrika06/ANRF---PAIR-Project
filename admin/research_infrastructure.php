@@ -312,12 +312,12 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 100px;">Cover</th>
-                                    <th>Title</th>
-                                    <th>Description</th>
-                                    <th style="width: 80px;">Order</th>
-                                    <th style="width: 100px;">Status</th>
-                                    <th style="width: 100px; text-align: center;">Actions</th>
+                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Cover</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Title</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Description</th>
+                                    <th style="width: 80px; background-color: #bc2121 !important; color: #ffffff !important;">Order</th>
+                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
+                                    <th style="width: 100px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -379,13 +379,13 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 100px;">Photo</th>
-                                    <th>Facility Name</th>
-                                    <th>Description & Equipment Details</th>
-                                    <th>Owner</th>
-                                    <th style="width: 80px;">Order</th>
-                                    <th style="width: 100px;">Status</th>
-                                    <th style="width: 100px; text-align: center;">Actions</th>
+                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Photo</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Facility Name</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Description &amp; Equipment Details</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Owner</th>
+                                    <th style="width: 80px; background-color: #bc2121 !important; color: #ffffff !important;">Order</th>
+                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
+                                    <th style="width: 100px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>

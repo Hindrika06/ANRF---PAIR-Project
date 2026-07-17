@@ -508,7 +508,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                         <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-sm text-white px-3"
                                 data-bs-toggle="modal" data-bs-target="#publicationModal" id="addNewBtn"
-                                style="border-radius: 6px; font-weight: 600; background: #bc2121; border: none;">
+                                style="border-radius: 6px; font-weight: 600; background: #09BD3C; border: none;">
                             <i class="fa fa-plus me-1"></i> Add Publication
                         </button>
                         <?php endif; ?>
@@ -518,13 +518,13 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center;">S.No</th>
-                                    <th style="width: 38%;">Publication Info</th>
-                                    <th style="width: 18%;">Author / DOI</th>
-                                    <th style="width: 13%;">Journal</th>
-                                    <th style="width: 10%;">Date</th>
-                                    <th style="width: 7%; text-align: center;">Impact</th>
-                                    <th style="width: 10%; text-align: center;">Action</th>
+                                    <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 38%; background-color: #bc2121 !important; color: #ffffff !important;">Publication Info</th>
+                                    <th style="width: 18%; background-color: #bc2121 !important; color: #ffffff !important;">Author / DOI</th>
+                                    <th style="width: 13%; background-color: #bc2121 !important; color: #ffffff !important;">Journal</th>
+                                    <th style="width: 10%; background-color: #bc2121 !important; color: #ffffff !important;">Date</th>
+                                    <th style="width: 7%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Impact</th>
+                                    <th style="width: 10%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
