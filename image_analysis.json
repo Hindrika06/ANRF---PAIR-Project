@@ -1,0 +1,1281 @@
+{
+    "referenced": [
+        {
+            "path": "1.png",
+            "ref_files": [
+                "about-1.php",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "2.png",
+            "ref_files": [
+                "header.php",
+                "login.php"
+            ]
+        },
+        {
+            "path": "3.png",
+            "ref_files": [
+                "header.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "5.png",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "footer_logo2.svg",
+            "ref_files": [
+                "footer.php"
+            ]
+        },
+        {
+            "path": "admin\\icons\\feather\\check.svg",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\feather\\github.svg",
+            "ref_files": [
+                "admin\\vendor\\ckeditor\\sample\\css\\sample.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\flaticon\\Flaticon.svg",
+            "ref_files": [
+                "admin\\icons\\flaticon\\flaticon.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\flaticon_1\\Flaticon_1.svg",
+            "ref_files": [
+                "admin\\icons\\flaticon_1\\flaticon_1.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\line-awesome\\fonts\\la-brands-400.svg",
+            "ref_files": [
+                "admin\\icons\\line-awesome\\css\\line-awesome.css",
+                "admin\\icons\\line-awesome\\css\\line-awesome.min.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\line-awesome\\fonts\\la-regular-400.svg",
+            "ref_files": [
+                "admin\\icons\\line-awesome\\css\\line-awesome.css",
+                "admin\\icons\\line-awesome\\css\\line-awesome.min.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\line-awesome\\fonts\\la-solid-900.svg",
+            "ref_files": [
+                "admin\\icons\\line-awesome\\css\\line-awesome.css",
+                "admin\\icons\\line-awesome\\css\\line-awesome.min.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\logos\\logo.png",
+            "ref_files": [
+                "admin\\header.php",
+                "admin\\register.php",
+                "admin\\sidebar.php"
+            ]
+        },
+        {
+            "path": "admin\\icons\\material-design-iconic-font\\fonts\\materialdesignicons-webfont.svg",
+            "ref_files": [
+                "admin\\icons\\material-design-iconic-font\\css\\materialdesignicons.min.css"
+            ]
+        },
+        {
+            "path": "admin\\icons\\themify-icons\\fonts\\themify9f24.svg",
+            "ref_files": [
+                "admin\\icons\\themify-icons\\css\\themify-icons.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\favicon.png",
+            "ref_files": [
+                "admin\\header.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\hand.png",
+            "ref_files": [
+                "admin\\js\\plugins-init\\sweetalert.init.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\like.png",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\logo.png",
+            "ref_files": [
+                "admin\\header.php",
+                "admin\\register.php",
+                "admin\\sidebar.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\1.png",
+            "ref_files": [
+                "about-1.php",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\2.png",
+            "ref_files": [
+                "header.php",
+                "login.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\3.png",
+            "ref_files": [
+                "header.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\5.png",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\avatar\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\card\\1.png",
+            "ref_files": [
+                "about-1.php",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\card\\2.png",
+            "ref_files": [
+                "header.php",
+                "login.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\card\\3.png",
+            "ref_files": [
+                "header.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\contacts\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\contacts\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\contacts\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\customers\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\customers\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\demo\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\group\\g1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\pattern\\pattern5.png",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\product\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\product\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\1.png",
+            "ref_files": [
+                "about-1.php",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\cover.jpg",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\profile\\small\\pic1.jpg",
+            "ref_files": [
+                "admin\\team_management.php"
+            ]
+        },
+        {
+            "path": "admin\\images\\svg\\check.svg",
+            "ref_files": [
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\tab\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\tab\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\images\\table\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "admin\\images\\table\\2.jpg",
+            "ref_files": [
+                "admin\\scss\\main.css",
+                "admin\\vendor\\deznav\\deznav.css"
+            ]
+        },
+        {
+            "path": "admin\\logo\\3.png",
+            "ref_files": [
+                "header.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "admin\\logo\\logo.png",
+            "ref_files": [
+                "admin\\header.php",
+                "admin\\register.php",
+                "admin\\sidebar.php"
+            ]
+        },
+        {
+            "path": "assets\\bootstrap\\fonts\\glyphicons-halflings-regular.svg",
+            "ref_files": [
+                "assets\\bootstrap\\css\\bootstrap.css",
+                "assets\\bootstrap\\css\\bootstrap.min.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\close0.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\close0@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\close1.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\close1@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\error.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\error@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\loading.gif",
+            "ref_files": [
+                "admin\\vendor\\lightgallery\\css\\lightgallery.css",
+                "admin\\vendor\\lightgallery\\css\\lightgallery.min.css",
+                "admin\\vendor\\lightgallery\\dist\\css\\lg-comments.css",
+                "admin\\vendor\\lightgallery\\dist\\css\\lightgallery-bundle.css",
+                "admin\\vendor\\lightgallery\\dist\\css\\lightgallery-bundle.min.css",
+                "admin\\vendor\\lightgallery\\dist\\css\\lightgallery-core.css",
+                "admin\\vendor\\lightgallery\\dist\\css\\lightgallery.css",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\loading@2x.gif",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\next0.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\next0@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\next1.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\next1@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\prev0.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\prev0@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\prev1.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\css\\vanillabox\\img\\prev1@2x.png",
+            "ref_files": [
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "assets\\fonts\\fontawesome-webfont.svg",
+            "ref_files": [
+                "assets\\css\\font-awesome.css"
+            ]
+        },
+        {
+            "path": "assets\\img\\1.jpg",
+            "ref_files": [
+                "index.php",
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\banner_management.php",
+                "admin\\role_access.php",
+                "admin\\team_management.php",
+                "admin\\css\\style.css",
+                "admin\\scss\\main.css",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js"
+            ]
+        },
+        {
+            "path": "assets\\img\\background-city.png",
+            "ref_files": [
+                "footer.php",
+                "header.php",
+                "assets\\css\\style.css"
+            ]
+        },
+        {
+            "path": "assets\\img\\big-star-off.png",
+            "ref_files": [
+                "assets\\js\\custom.js"
+            ]
+        },
+        {
+            "path": "assets\\img\\big-star-on.png",
+            "ref_files": [
+                "assets\\js\\custom.js"
+            ]
+        },
+        {
+            "path": "assets\\img\\grabbing.png",
+            "ref_files": [
+                "assets\\css\\owl.carousel.css"
+            ]
+        },
+        {
+            "path": "assets\\img\\logo.png",
+            "ref_files": [
+                "admin\\header.php",
+                "admin\\register.php",
+                "admin\\sidebar.php"
+            ]
+        },
+        {
+            "path": "assets\\img\\main1.png",
+            "ref_files": [
+                "about-1.php"
+            ]
+        },
+        {
+            "path": "assets\\img\\star-off.png",
+            "ref_files": [
+                "assets\\js\\custom.js",
+                "assets\\js\\jquery.raty.min.js"
+            ]
+        },
+        {
+            "path": "assets\\img\\star-on.png",
+            "ref_files": [
+                "assets\\js\\custom.js",
+                "assets\\js\\jquery.raty.min.js"
+            ]
+        },
+        {
+            "path": "gallery\\1.png",
+            "ref_files": [
+                "about-1.php",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.es5.js",
+                "admin\\vendor\\lightgallery\\dist\\lightgallery.umd.js",
+                "assets\\css\\vanillabox\\vanillabox.css"
+            ]
+        },
+        {
+            "path": "gallery\\2.png",
+            "ref_files": [
+                "header.php",
+                "login.php"
+            ]
+        },
+        {
+            "path": "gallery\\3.png",
+            "ref_files": [
+                "header.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "gallery\\n.svg",
+            "ref_files": [
+                "admin\\icons\\flaticon\\flaticon.css",
+                "admin\\vendor\\apexchart\\apexchart.js",
+                "assets\\css\\flexslider.css"
+            ]
+        },
+        {
+            "path": "logos\\ANRF Image.png",
+            "ref_files": [
+                "header.php"
+            ]
+        },
+        {
+            "path": "logos\\cuk1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "logos\\gan1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "logos\\ku1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "logos\\mg1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "logos\\ou1.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        },
+        {
+            "path": "logos\\yu.jpg",
+            "ref_files": [
+                "institute.php",
+                "logoscroll.php",
+                "participating-institutions.php",
+                "admin\\role_access.php"
+            ]
+        }
+    ],
+    "unreferenced": [
+        "ANRF.png",
+        "main4.png",
+        "preloader-logo.png",
+        "admin\\icons\\feather\\activity.svg",
+        "admin\\icons\\feather\\airplay.svg",
+        "admin\\icons\\feather\\alert-circle.svg",
+        "admin\\icons\\feather\\alert-octagon.svg",
+        "admin\\icons\\feather\\alert-triangle.svg",
+        "admin\\icons\\feather\\align-center.svg",
+        "admin\\icons\\feather\\align-justify.svg",
+        "admin\\icons\\feather\\align-left.svg",
+        "admin\\icons\\feather\\align-right.svg",
+        "admin\\icons\\feather\\anchor.svg",
+        "admin\\icons\\feather\\aperture.svg",
+        "admin\\icons\\feather\\archive.svg",
+        "admin\\icons\\feather\\arrow-down-circle.svg",
+        "admin\\icons\\feather\\arrow-down-left.svg",
+        "admin\\icons\\feather\\arrow-down-right.svg",
+        "admin\\icons\\feather\\arrow-down.svg",
+        "admin\\icons\\feather\\arrow-left-circle.svg",
+        "admin\\icons\\feather\\arrow-left.svg",
+        "admin\\icons\\feather\\arrow-right-circle.svg",
+        "admin\\icons\\feather\\arrow-right.svg",
+        "admin\\icons\\feather\\arrow-up-circle.svg",
+        "admin\\icons\\feather\\arrow-up-left.svg",
+        "admin\\icons\\feather\\arrow-up-right.svg",
+        "admin\\icons\\feather\\arrow-up.svg",
+        "admin\\icons\\feather\\at-sign.svg",
+        "admin\\icons\\feather\\award.svg",
+        "admin\\icons\\feather\\bar-chart-2.svg",
+        "admin\\icons\\feather\\bar-chart.svg",
+        "admin\\icons\\feather\\battery-charging.svg",
+        "admin\\icons\\feather\\battery.svg",
+        "admin\\icons\\feather\\bell-off.svg",
+        "admin\\icons\\feather\\bell.svg",
+        "admin\\icons\\feather\\bluetooth.svg",
+        "admin\\icons\\feather\\bold.svg",
+        "admin\\icons\\feather\\book-open.svg",
+        "admin\\icons\\feather\\book.svg",
+        "admin\\icons\\feather\\bookmark.svg",
+        "admin\\icons\\feather\\box.svg",
+        "admin\\icons\\feather\\briefcase.svg",
+        "admin\\icons\\feather\\calendar.svg",
+        "admin\\icons\\feather\\camera-off.svg",
+        "admin\\icons\\feather\\camera.svg",
+        "admin\\icons\\feather\\cast.svg",
+        "admin\\icons\\feather\\check-circle.svg",
+        "admin\\icons\\feather\\check-square.svg",
+        "admin\\icons\\feather\\chevron-down.svg",
+        "admin\\icons\\feather\\chevron-left.svg",
+        "admin\\icons\\feather\\chevron-right.svg",
+        "admin\\icons\\feather\\chevron-up.svg",
+        "admin\\icons\\feather\\chevrons-down.svg",
+        "admin\\icons\\feather\\chevrons-left.svg",
+        "admin\\icons\\feather\\chevrons-right.svg",
+        "admin\\icons\\feather\\chevrons-up.svg",
+        "admin\\icons\\feather\\chrome.svg",
+        "admin\\icons\\feather\\circle.svg",
+        "admin\\icons\\feather\\clipboard.svg",
+        "admin\\icons\\feather\\clock.svg",
+        "admin\\icons\\feather\\cloud-drizzle.svg",
+        "admin\\icons\\feather\\cloud-lightning.svg",
+        "admin\\icons\\feather\\cloud-off.svg",
+        "admin\\icons\\feather\\cloud-rain.svg",
+        "admin\\icons\\feather\\cloud-snow.svg",
+        "admin\\icons\\feather\\cloud.svg",
+        "admin\\icons\\feather\\code.svg",
+        "admin\\icons\\feather\\codepen.svg",
+        "admin\\icons\\feather\\codesandbox.svg",
+        "admin\\icons\\feather\\coffee.svg",
+        "admin\\icons\\feather\\columns.svg",
+        "admin\\icons\\feather\\command.svg",
+        "admin\\icons\\feather\\compass.svg",
+        "admin\\icons\\feather\\copy.svg",
+        "admin\\icons\\feather\\corner-down-left.svg",
+        "admin\\icons\\feather\\corner-down-right.svg",
+        "admin\\icons\\feather\\corner-left-down.svg",
+        "admin\\icons\\feather\\corner-left-up.svg",
+        "admin\\icons\\feather\\corner-right-down.svg",
+        "admin\\icons\\feather\\corner-right-up.svg",
+        "admin\\icons\\feather\\corner-up-left.svg",
+        "admin\\icons\\feather\\corner-up-right.svg",
+        "admin\\icons\\feather\\cpu.svg",
+        "admin\\icons\\feather\\credit-card.svg",
+        "admin\\icons\\feather\\crop.svg",
+        "admin\\icons\\feather\\crosshair.svg",
+        "admin\\icons\\feather\\database.svg",
+        "admin\\icons\\feather\\delete.svg",
+        "admin\\icons\\feather\\disc.svg",
+        "admin\\icons\\feather\\dollar-sign.svg",
+        "admin\\icons\\feather\\download-cloud.svg",
+        "admin\\icons\\feather\\download.svg",
+        "admin\\icons\\feather\\droplet.svg",
+        "admin\\icons\\feather\\edit-2.svg",
+        "admin\\icons\\feather\\edit-3.svg",
+        "admin\\icons\\feather\\edit.svg",
+        "admin\\icons\\feather\\external-link.svg",
+        "admin\\icons\\feather\\eye-off.svg",
+        "admin\\icons\\feather\\eye.svg",
+        "admin\\icons\\feather\\facebook.svg",
+        "admin\\icons\\feather\\fast-forward.svg",
+        "admin\\icons\\feather\\feather.svg",
+        "admin\\icons\\feather\\figma.svg",
+        "admin\\icons\\feather\\file-minus.svg",
+        "admin\\icons\\feather\\file-plus.svg",
+        "admin\\icons\\feather\\file-text.svg",
+        "admin\\icons\\feather\\file.svg",
+        "admin\\icons\\feather\\film.svg",
+        "admin\\icons\\feather\\filter.svg",
+        "admin\\icons\\feather\\flag.svg",
+        "admin\\icons\\feather\\folder-minus.svg",
+        "admin\\icons\\feather\\folder-plus.svg",
+        "admin\\icons\\feather\\folder.svg",
+        "admin\\icons\\feather\\framer.svg",
+        "admin\\icons\\feather\\frown.svg",
+        "admin\\icons\\feather\\gift.svg",
+        "admin\\icons\\feather\\git-branch.svg",
+        "admin\\icons\\feather\\git-commit.svg",
+        "admin\\icons\\feather\\git-merge.svg",
+        "admin\\icons\\feather\\git-pull-request.svg",
+        "admin\\icons\\feather\\gitlab.svg",
+        "admin\\icons\\feather\\globe.svg",
+        "admin\\icons\\feather\\grid.svg",
+        "admin\\icons\\feather\\hard-drive.svg",
+        "admin\\icons\\feather\\hash.svg",
+        "admin\\icons\\feather\\headphones.svg",
+        "admin\\icons\\feather\\heart.svg",
+        "admin\\icons\\feather\\help-circle.svg",
+        "admin\\icons\\feather\\hexagon.svg",
+        "admin\\icons\\feather\\home.svg",
+        "admin\\icons\\feather\\image.svg",
+        "admin\\icons\\feather\\inbox.svg",
+        "admin\\icons\\feather\\info.svg",
+        "admin\\icons\\feather\\instagram.svg",
+        "admin\\icons\\feather\\italic.svg",
+        "admin\\icons\\feather\\key.svg",
+        "admin\\icons\\feather\\layers.svg",
+        "admin\\icons\\feather\\layout.svg",
+        "admin\\icons\\feather\\life-buoy.svg",
+        "admin\\icons\\feather\\link-2.svg",
+        "admin\\icons\\feather\\link.svg",
+        "admin\\icons\\feather\\linkedin.svg",
+        "admin\\icons\\feather\\list.svg",
+        "admin\\icons\\feather\\loader.svg",
+        "admin\\icons\\feather\\lock.svg",
+        "admin\\icons\\feather\\log-in.svg",
+        "admin\\icons\\feather\\log-out.svg",
+        "admin\\icons\\feather\\mail.svg",
+        "admin\\icons\\feather\\map-pin.svg",
+        "admin\\icons\\feather\\map.svg",
+        "admin\\icons\\feather\\maximize-2.svg",
+        "admin\\icons\\feather\\maximize.svg",
+        "admin\\icons\\feather\\meh.svg",
+        "admin\\icons\\feather\\menu.svg",
+        "admin\\icons\\feather\\message-circle.svg",
+        "admin\\icons\\feather\\message-square.svg",
+        "admin\\icons\\feather\\mic-off.svg",
+        "admin\\icons\\feather\\mic.svg",
+        "admin\\icons\\feather\\minimize-2.svg",
+        "admin\\icons\\feather\\minimize.svg",
+        "admin\\icons\\feather\\minus-circle.svg",
+        "admin\\icons\\feather\\minus-square.svg",
+        "admin\\icons\\feather\\minus.svg",
+        "admin\\icons\\feather\\monitor.svg",
+        "admin\\icons\\feather\\moon.svg",
+        "admin\\icons\\feather\\more-horizontal.svg",
+        "admin\\icons\\feather\\more-vertical.svg",
+        "admin\\icons\\feather\\mouse-pointer.svg",
+        "admin\\icons\\feather\\move.svg",
+        "admin\\icons\\feather\\music.svg",
+        "admin\\icons\\feather\\navigation-2.svg",
+        "admin\\icons\\feather\\navigation.svg",
+        "admin\\icons\\feather\\octagon.svg",
+        "admin\\icons\\feather\\package.svg",
+        "admin\\icons\\feather\\paperclip.svg",
+        "admin\\icons\\feather\\pause-circle.svg",
+        "admin\\icons\\feather\\pause.svg",
+        "admin\\icons\\feather\\pen-tool.svg",
+        "admin\\icons\\feather\\percent.svg",
+        "admin\\icons\\feather\\phone-call.svg",
+        "admin\\icons\\feather\\phone-forwarded.svg",
+        "admin\\icons\\feather\\phone-incoming.svg",
+        "admin\\icons\\feather\\phone-missed.svg",
+        "admin\\icons\\feather\\phone-off.svg",
+        "admin\\icons\\feather\\phone-outgoing.svg",
+        "admin\\icons\\feather\\phone.svg",
+        "admin\\icons\\feather\\pie-chart.svg",
+        "admin\\icons\\feather\\play-circle.svg",
+        "admin\\icons\\feather\\play.svg",
+        "admin\\icons\\feather\\plus-circle.svg",
+        "admin\\icons\\feather\\plus-square.svg",
+        "admin\\icons\\feather\\plus.svg",
+        "admin\\icons\\feather\\pocket.svg",
+        "admin\\icons\\feather\\power.svg",
+        "admin\\icons\\feather\\printer.svg",
+        "admin\\icons\\feather\\radio.svg",
+        "admin\\icons\\feather\\refresh-ccw.svg",
+        "admin\\icons\\feather\\refresh-cw.svg",
+        "admin\\icons\\feather\\repeat.svg",
+        "admin\\icons\\feather\\rewind.svg",
+        "admin\\icons\\feather\\rotate-ccw.svg",
+        "admin\\icons\\feather\\rotate-cw.svg",
+        "admin\\icons\\feather\\rss.svg",
+        "admin\\icons\\feather\\save.svg",
+        "admin\\icons\\feather\\scissors.svg",
+        "admin\\icons\\feather\\search.svg",
+        "admin\\icons\\feather\\send.svg",
+        "admin\\icons\\feather\\server.svg",
+        "admin\\icons\\feather\\settings.svg",
+        "admin\\icons\\feather\\share-2.svg",
+        "admin\\icons\\feather\\share.svg",
+        "admin\\icons\\feather\\shield-off.svg",
+        "admin\\icons\\feather\\shield.svg",
+        "admin\\icons\\feather\\shopping-bag.svg",
+        "admin\\icons\\feather\\shopping-cart.svg",
+        "admin\\icons\\feather\\shuffle.svg",
+        "admin\\icons\\feather\\sidebar.svg",
+        "admin\\icons\\feather\\skip-back.svg",
+        "admin\\icons\\feather\\skip-forward.svg",
+        "admin\\icons\\feather\\slack.svg",
+        "admin\\icons\\feather\\slash.svg",
+        "admin\\icons\\feather\\sliders.svg",
+        "admin\\icons\\feather\\smartphone.svg",
+        "admin\\icons\\feather\\smile.svg",
+        "admin\\icons\\feather\\speaker.svg",
+        "admin\\icons\\feather\\square.svg",
+        "admin\\icons\\feather\\star.svg",
+        "admin\\icons\\feather\\stop-circle.svg",
+        "admin\\icons\\feather\\sun.svg",
+        "admin\\icons\\feather\\sunrise.svg",
+        "admin\\icons\\feather\\sunset.svg",
+        "admin\\icons\\feather\\tablet.svg",
+        "admin\\icons\\feather\\tag.svg",
+        "admin\\icons\\feather\\target.svg",
+        "admin\\icons\\feather\\terminal.svg",
+        "admin\\icons\\feather\\thermometer.svg",
+        "admin\\icons\\feather\\toggle-left.svg",
+        "admin\\icons\\feather\\toggle-right.svg",
+        "admin\\icons\\feather\\tool.svg",
+        "admin\\icons\\feather\\trash-2.svg",
+        "admin\\icons\\feather\\trash.svg",
+        "admin\\icons\\feather\\trello.svg",
+        "admin\\icons\\feather\\trending-down.svg",
+        "admin\\icons\\feather\\trending-up.svg",
+        "admin\\icons\\feather\\triangle.svg",
+        "admin\\icons\\feather\\truck.svg",
+        "admin\\icons\\feather\\tv.svg",
+        "admin\\icons\\feather\\twitch.svg",
+        "admin\\icons\\feather\\twitter.svg",
+        "admin\\icons\\feather\\type.svg",
+        "admin\\icons\\feather\\umbrella.svg",
+        "admin\\icons\\feather\\underline.svg",
+        "admin\\icons\\feather\\unlock.svg",
+        "admin\\icons\\feather\\upload-cloud.svg",
+        "admin\\icons\\feather\\upload.svg",
+        "admin\\icons\\feather\\user-check.svg",
+        "admin\\icons\\feather\\user-minus.svg",
+        "admin\\icons\\feather\\user-plus.svg",
+        "admin\\icons\\feather\\user-x.svg",
+        "admin\\icons\\feather\\user.svg",
+        "admin\\icons\\feather\\users.svg",
+        "admin\\icons\\feather\\video-off.svg",
+        "admin\\icons\\feather\\video.svg",
+        "admin\\icons\\feather\\voicemail.svg",
+        "admin\\icons\\feather\\volume-1.svg",
+        "admin\\icons\\feather\\volume-2.svg",
+        "admin\\icons\\feather\\volume-x.svg",
+        "admin\\icons\\feather\\volume.svg",
+        "admin\\icons\\feather\\watch.svg",
+        "admin\\icons\\feather\\wifi-off.svg",
+        "admin\\icons\\feather\\wifi.svg",
+        "admin\\icons\\feather\\wind.svg",
+        "admin\\icons\\feather\\x-circle.svg",
+        "admin\\icons\\feather\\x-octagon.svg",
+        "admin\\icons\\feather\\x-square.svg",
+        "admin\\icons\\feather\\x.svg",
+        "admin\\icons\\feather\\youtube.svg",
+        "admin\\icons\\feather\\zap-off.svg",
+        "admin\\icons\\feather\\zap.svg",
+        "admin\\icons\\feather\\zoom-in.svg",
+        "admin\\icons\\feather\\zoom-out.svg",
+        "admin\\icons\\line-awesome\\fonts\\line-awesome.svg",
+        "admin\\images\\big-wind.png",
+        "admin\\images\\chart.png",
+        "admin\\images\\circle-hunt.png",
+        "admin\\images\\dots1.png",
+        "admin\\images\\favicon.ico",
+        "admin\\images\\Group 13.png",
+        "admin\\images\\logo-full-light.png",
+        "admin\\images\\logo-full.png",
+        "admin\\images\\logo-full1.png",
+        "admin\\images\\logo-text.png",
+        "admin\\images\\no-img-avatar.png",
+        "admin\\images\\pic2.jpg",
+        "admin\\images\\pic3.jpg",
+        "admin\\images\\pic4.jpg",
+        "admin\\images\\pic5.jpg",
+        "admin\\images\\pic6.jpg",
+        "admin\\images\\pin.png",
+        "admin\\images\\qr.png",
+        "admin\\images\\react-2.svg",
+        "admin\\images\\user.jpg",
+        "admin\\images\\avatar\\3.jpg",
+        "admin\\images\\avatar\\4.jpg",
+        "admin\\images\\avatar\\4.png",
+        "admin\\images\\avatar\\5.jpg",
+        "admin\\images\\avatar\\6.jpg",
+        "admin\\images\\avatar\\7.jpg",
+        "admin\\images\\avatar\\8.jpg",
+        "admin\\images\\big\\img1.jpg",
+        "admin\\images\\big\\img2.jpg",
+        "admin\\images\\big\\img3.jpg",
+        "admin\\images\\big\\img4.jpg",
+        "admin\\images\\big\\img5.jpg",
+        "admin\\images\\big\\img6.jpg",
+        "admin\\images\\big\\img7.jpg",
+        "admin\\images\\big\\img8.jpg",
+        "admin\\images\\browser\\icon1.png",
+        "admin\\images\\browser\\icon2.png",
+        "admin\\images\\browser\\icon3.png",
+        "admin\\images\\contacts\\3.jpg",
+        "admin\\images\\contacts\\4.jpg",
+        "admin\\images\\contacts\\5.jpg",
+        "admin\\images\\contacts\\pic-111.jpg",
+        "admin\\images\\contacts\\pic-2.jpg",
+        "admin\\images\\contacts\\pic-3.jpg",
+        "admin\\images\\contacts\\pic-333.jpg",
+        "admin\\images\\contacts\\pic-4.jpg",
+        "admin\\images\\contacts\\pic-5.jpg",
+        "admin\\images\\contacts\\pic-7.jpg",
+        "admin\\images\\contacts\\pic11.jpg",
+        "admin\\images\\contacts\\pic2.jpg",
+        "admin\\images\\contacts\\pic22.jpg",
+        "admin\\images\\contacts\\pic222.jpg",
+        "admin\\images\\contacts\\pic3.jpg",
+        "admin\\images\\contacts\\pic33.jpg",
+        "admin\\images\\contacts\\pic444.jpg",
+        "admin\\images\\contacts\\pic555.jpg",
+        "admin\\images\\contacts\\pic666.jpg",
+        "admin\\images\\customers\\11.jpg",
+        "admin\\images\\customers\\22.jpg",
+        "admin\\images\\customers\\3.jpg",
+        "admin\\images\\customers\\33.jpg",
+        "admin\\images\\customers\\44.jpg",
+        "admin\\images\\customers\\55.jpg",
+        "admin\\images\\customers\\Frame1.jpg",
+        "admin\\images\\customers\\Frame2.jpg",
+        "admin\\images\\customers\\Frame3.jpg",
+        "admin\\images\\customers\\Frame4.jpg",
+        "admin\\images\\demo\\pic2.jpg",
+        "admin\\images\\demo\\pic3.jpg",
+        "admin\\images\\demo\\pic4.jpg",
+        "admin\\images\\demo\\pic5.jpg",
+        "admin\\images\\demo\\pic6.jpg",
+        "admin\\images\\group\\g2.jpg",
+        "admin\\images\\group\\g3.jpg",
+        "admin\\images\\group\\g4.jpg",
+        "admin\\images\\pattern\\02.png",
+        "admin\\images\\pattern\\circle.png",
+        "admin\\images\\pattern\\circles1.png",
+        "admin\\images\\pattern\\pattern.png",
+        "admin\\images\\pattern\\pattern1.png",
+        "admin\\images\\pattern\\pattern10.png",
+        "admin\\images\\pattern\\pattern11.png",
+        "admin\\images\\pattern\\pattern2.png",
+        "admin\\images\\pattern\\pattern3.png",
+        "admin\\images\\pattern\\pattern4.png",
+        "admin\\images\\pattern\\pattern7.png",
+        "admin\\images\\pattern\\pattern8.png",
+        "admin\\images\\pattern\\pattern9.png",
+        "admin\\images\\pattern\\wave-dec.png",
+        "admin\\images\\pattern\\wave1.png",
+        "admin\\images\\pattern\\wave2.png",
+        "admin\\images\\pattern\\wave3.png",
+        "admin\\images\\pattern\\wave4.png",
+        "admin\\images\\product\\3.jpg",
+        "admin\\images\\product\\4.jpg",
+        "admin\\images\\product\\5.jpg",
+        "admin\\images\\product\\6.jpg",
+        "admin\\images\\product\\7.jpg",
+        "admin\\images\\profile\\11.jpg",
+        "admin\\images\\profile\\3.jpg",
+        "admin\\images\\profile\\4.jpg",
+        "admin\\images\\profile\\5.jpg",
+        "admin\\images\\profile\\6.jpg",
+        "admin\\images\\profile\\7.jpg",
+        "admin\\images\\profile\\8.jpg",
+        "admin\\images\\profile\\9.jpg",
+        "admin\\images\\profile\\pic2.jpg",
+        "admin\\images\\profile\\profile.png",
+        "admin\\images\\profile\\small\\pic10.jpg",
+        "admin\\images\\profile\\small\\pic2.jpg",
+        "admin\\images\\profile\\small\\pic3.jpg",
+        "admin\\images\\profile\\small\\pic4.jpg",
+        "admin\\images\\profile\\small\\pic5.jpg",
+        "admin\\images\\profile\\small\\pic6.jpg",
+        "admin\\images\\profile\\small\\pic7.jpg",
+        "admin\\images\\profile\\small\\pic8.jpg",
+        "admin\\images\\profile\\small\\pic9.jpg",
+        "admin\\images\\svg\\angular.svg",
+        "admin\\images\\svg\\btc.svg",
+        "admin\\images\\svg\\btc1.svg",
+        "admin\\images\\svg\\codeigniter.svg",
+        "admin\\images\\svg\\dash.svg",
+        "admin\\images\\svg\\dribbble.svg",
+        "admin\\images\\svg\\eth.svg",
+        "admin\\images\\svg\\figma.svg",
+        "admin\\images\\svg\\instagram.svg",
+        "admin\\images\\svg\\laravel-2.svg",
+        "admin\\images\\svg\\library.svg",
+        "admin\\images\\svg\\lit3.svg",
+        "admin\\images\\svg\\ltc.svg",
+        "admin\\images\\svg\\monero.svg",
+        "admin\\images\\svg\\react-2.svg",
+        "admin\\images\\tab\\3.jpg",
+        "admin\\images\\tab\\4.jpg",
+        "admin\\images\\table\\3.jpg",
+        "admin\\images\\table\\pic-1.jpg",
+        "admin\\images\\table\\pic-10.jpg",
+        "admin\\images\\table\\pic-2.jpg",
+        "admin\\images\\table\\pic-3.jpg",
+        "admin\\images\\table\\pic-4.jpg",
+        "admin\\images\\table\\pic-5.jpg",
+        "admin\\images\\table\\pic-6.jpg",
+        "admin\\images\\table\\pic-7.jpg",
+        "admin\\images\\table\\pic-8.jpg",
+        "admin\\images\\table\\pic-9.jpg",
+        "admin\\logo\\uohyd.jpg",
+        "admin\\uploads\\banners\\banner_6a30f6d88ea5f4.08023990.jpeg",
+        "admin\\uploads\\banners\\banner_6a36c55246b844.02922469.png",
+        "admin\\uploads\\banners\\banner_6a36c55813b507.52463876.png",
+        "admin\\uploads\\banners\\banner_6a36c55db6db79.45120817.png",
+        "assets\\img\\7.png",
+        "assets\\img\\8.png",
+        "assets\\img\\about-us-head-img.jpg",
+        "assets\\img\\ANRF.jpg",
+        "assets\\img\\blog-01.jpg",
+        "assets\\img\\blog-02.jpg",
+        "assets\\img\\blog-03.jpg",
+        "assets\\img\\blog-04.jpg",
+        "assets\\img\\blog-05.jpg",
+        "assets\\img\\blog-06.jpg",
+        "assets\\img\\blog-detail-img.jpg",
+        "assets\\img\\book-01.jpg",
+        "assets\\img\\book-02.jpg",
+        "assets\\img\\course-01.jpg",
+        "assets\\img\\course-02.jpg",
+        "assets\\img\\course-03.jpg",
+        "assets\\img\\course-04.jpg",
+        "assets\\img\\course-detail-img.jpg",
+        "assets\\img\\default-img-event.png",
+        "assets\\img\\discussion-author-02.jpg",
+        "assets\\img\\discussion-author-03.jpg",
+        "assets\\img\\event-img-01.jpg",
+        "assets\\img\\event-img-02.jpg",
+        "assets\\img\\event-img-03.jpg",
+        "assets\\img\\event-img-04.jpg",
+        "assets\\img\\event-img-05.jpg",
+        "assets\\img\\event-slide-01.jpg",
+        "assets\\img\\f.jpg",
+        "assets\\img\\footer.png",
+        "assets\\img\\footer1.png",
+        "assets\\img\\footer_logo.jpg",
+        "assets\\img\\footer_logo1.png",
+        "assets\\img\\gallery-big-image.jpg",
+        "assets\\img\\image-01.jpg",
+        "assets\\img\\image-02.jpg",
+        "assets\\img\\image-03.jpg",
+        "assets\\img\\image-04.jpg",
+        "assets\\img\\image-05.jpg",
+        "assets\\img\\image-06.jpg",
+        "assets\\img\\image-07.jpg",
+        "assets\\img\\image-08.jpg",
+        "assets\\img\\image-09.jpg",
+        "assets\\img\\image-10.jpg",
+        "assets\\img\\image-11.jpg",
+        "assets\\img\\image-12.jpg",
+        "assets\\img\\image-13.jpg",
+        "assets\\img\\image-14.jpg",
+        "assets\\img\\k.jpg",
+        "assets\\img\\l.jpg",
+        "assets\\img\\landing-page-background.jpg",
+        "assets\\img\\logo-partner-01.png",
+        "assets\\img\\logo-partner-02.png",
+        "assets\\img\\logo-partner-03.png",
+        "assets\\img\\logo-partner-04.png",
+        "assets\\img\\logo-partner-05.png",
+        "assets\\img\\logo-white.png",
+        "assets\\img\\m.jpg",
+        "assets\\img\\member-detail.jpg",
+        "assets\\img\\navigation-background.jpg",
+        "assets\\img\\professor-02.jpg",
+        "assets\\img\\professor.jpg",
+        "assets\\img\\profile-avatar.jpg",
+        "assets\\img\\slide-1.jpg",
+        "assets\\img\\slide-2.jpg",
+        "assets\\img\\slide-3.jpg",
+        "assets\\img\\slider-slide-02.jpg",
+        "assets\\img\\student-testimonial.jpg",
+        "assets\\img\\students.jpg",
+        "assets\\img\\tech.webp",
+        "gallery\\kickoff meeting\\IMG_0133.JPG",
+        "gallery\\kickoff meeting\\IMG_0135.JPG",
+        "gallery\\kickoff meeting\\IMG_0138.JPG",
+        "gallery\\kickoff meeting\\IMG_0139.JPG",
+        "gallery\\kickoff meeting\\IMG_9568.JPG",
+        "gallery\\kickoff meeting\\IMG_9570.JPG",
+        "gallery\\kickoff meeting\\IMG_9577.JPG",
+        "gallery\\kickoff meeting\\IMG_9580.JPG",
+        "gallery\\kickoff meeting\\IMG_9590.JPG",
+        "gallery\\kickoff meeting\\IMG_9591.JPG",
+        "gallery\\kickoff meeting\\IMG_9600.JPG",
+        "gallery\\kickoff meeting\\IMG_9646.JPG",
+        "gallery\\kickoff meeting\\IMG_9667.JPG",
+        "gallery\\kickoff meeting\\IMG_9695.JPG",
+        "gallery\\kickoff meeting\\IMG_9708.JPG",
+        "gallery\\kickoff meeting\\IMG_9715.JPG",
+        "gallery\\kickoff meeting\\IMG_9718.JPG",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-05-22 at 11.23.07.jpeg",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-05-22 at 11.23.08 (1).jpeg",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-05-22 at 11.23.08 (2).jpeg",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-05-22 at 11.23.08.jpeg",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-05-22 at 11.25.08.jpeg",
+        "gallery\\osmania University two day national workshop\\WhatsApp Image 2026-06-02 at 12.38.08.jpeg",
+        "gallery\\pair office Inaguration\\IMG_0030.JPG",
+        "gallery\\pair office Inaguration\\IMG_0079.JPG",
+        "gallery\\pair office Inaguration\\IMG_9552.png",
+        "gallery\\pair office Inaguration\\IMG_9884.JPG",
+        "gallery\\pair office Inaguration\\IMG_9899.JPG",
+        "gallery\\pair office Inaguration\\IMG_9917.JPG",
+        "gallery\\pair office Inaguration\\IMG_9933.JPG",
+        "gallery\\pair office Inaguration\\IMG_9938.JPG",
+        "gallery\\pair office Inaguration\\IMG_9942.JPG",
+        "gallery\\pair office Inaguration\\IMG_9997.JPG",
+        "gallery\\pair office Inaguration\\WhatsApp Image 2026-06-02 at 12.38.18.jpeg",
+        "logos\\6.svg",
+        "logos\\7.png",
+        "logos\\8.png",
+        "logos\\8.svg",
+        "logos\\cuk.jpg",
+        "logos\\gan.jpg",
+        "logos\\ie.jpg",
+        "logos\\ie1.jpg",
+        "logos\\ku.jpg",
+        "logos\\mg.jpg",
+        "logos\\ou.jpg",
+        "logos\\u.png",
+        "logos\\uohyd.jpg",
+        "uploads\\events\\event_6a5465e8c86d82.63793097.jpg"
+    ]
+}

@@ -59,7 +59,7 @@ function renderTeamCard($m) {
         <div class="row" style="display:flex; align-items:center; flex-wrap:wrap; gap:20px;">
             <?php if ($photo): ?>
             <div class="col-sm-3 col-xs-12 text-center" style="flex:0 0 auto; width:130px; padding:0 15px;">
-                <img src="<?= htmlspecialchars($photo) ?>" alt="<?= htmlspecialchars($m['full_name']) ?>" style="width:110px; height:110px; object-fit:cover; border-radius:50%; border:3px solid #eee; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <img src="<?= htmlspecialchars($photo) ?>" alt="<?= htmlspecialchars($m['full_name']) ?>" loading="lazy" style="width:110px; height:110px; object-fit:cover; border-radius:50%; border:3px solid #eee; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
             </div>
             <?php endif; ?>
             

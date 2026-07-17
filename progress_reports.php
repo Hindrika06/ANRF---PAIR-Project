@@ -22,7 +22,6 @@ try {
 <!-- Header -->
 <?php include 'header.php';?>
 <!-- end Header -->
-<?php include 'top.php';?>
 
 <!-- Breadcrumb -->
 <div class="container">

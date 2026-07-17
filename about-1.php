@@ -479,7 +479,7 @@
             </div>
 
             <div class="anrf-intro-image">
-                <img src="assets/img/main1.png" alt="Innovations in Health and Medical Technologies" onerror="this.style.display='none'">
+                <img src="assets/img/main1.png" alt="Innovations in Health and Medical Technologies" loading="lazy" onerror="this.style.display='none'">
             </div>
 
             <h3>About ANRF&ndash;PAIR</h3>
