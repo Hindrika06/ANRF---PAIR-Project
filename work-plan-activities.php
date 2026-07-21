@@ -1,23 +1,19 @@
-
-
-
-
-<!-- Header -->
 <?php
-$bodyClass = 'page-homepage-courses'; include 'header.php';?>
+require_once 'events_helper.php';
+$featuredWorkshop = getFeaturedWorkshop();
+$bodyClass = 'page-homepage-courses';
+include 'header.php';
+?>
 <!-- end Header -->
-
-
 
 <!-- Breadcrumb -->
 <div class="container">
     <ol class="breadcrumb">
-        <li><a href="index.html">Home</a></li>
-        <li class="active">About ANRF–PAIR</li>
+        <li><a href="index.php">Home</a></li>
+        <li class="active">Work Plan & Activities</li>
     </ol>
 </div>
 <!-- end Breadcrumb -->
-
 
 <!-- Page Content -->
 <div id="page-content">
@@ -46,31 +42,43 @@ $bodyClass = 'page-homepage-courses'; include 'header.php';?>
                                 <li>Data analysis and collaborative publications</li>
                             </ul>
 
-                   
-                             <div style="margin-top: 20px; padding: 20px; background: #f8f8f8; border-left: 4px solid #bc2121;">
+                            <?php if ($featuredWorkshop): ?>
+                                <?php
+                                    $convenerName = !empty($featuredWorkshop['convener']) ? $featuredWorkshop['convener'] : ($featuredWorkshop['coordinator'] ?: 'Convener');
+                                    $startDateFmt = date("j", strtotime($featuredWorkshop['event_date']));
+                                    $endDateFmt = !empty($featuredWorkshop['end_date']) && $featuredWorkshop['end_date'] !== $featuredWorkshop['event_date']
+                                        ? '–' . date("j F, Y", strtotime($featuredWorkshop['end_date']))
+                                        : date(" F, Y", strtotime($featuredWorkshop['event_date']));
+                                    $datesStr = "{$startDateFmt}{$endDateFmt}";
+                                ?>
+                                <div style="margin-top: 20px; padding: 20px; background: #f8f8f8; border-left: 4px solid #bc2121;">
 
-                                 <h3 style="margin-top: 0; color:#000;">
-                                     Prof. L. Dakshayani (Convener)
-                                 </h3>
+                                    <h3 style="margin-top: 0; color:#000;">
+                                        <?= htmlspecialchars($convenerName) ?>
+                                    </h3>
 
-                                 <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
-                                     Department of Genetics & Genomics <br>
-                                     Yogi Vemana University (YVU) <br>
-                                     Kadapa, Andhra Pradesh, India
-                                 </p>
+                                    <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
+                                        ANRF–PAIR Initiative <br>
+                                        Department of Genetics & Genomics <br>
+                                        Yogi Vemana University (YVU), Kadapa
+                                    </p>
 
-                                 <h4 style="margin-top: 25px; color:#000;">
-                                     Workshop Organized
-                                 </h4>
+                                    <h4 style="margin-top: 25px; color:#000;">
+                                        Workshop Organized
+                                    </h4>
 
-                                 <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
-                                     Organizing <strong>WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research</strong>, 
-                                     organized by ANRF-PAIR Project in association with BD Bioscience, India (Resource Person: Mr. Karuna Kumar Kondaveeti, Sr. Application Specialist) 
-                                     at Tallapaka Annamacharya Senate Hall, YVU 
-                                     on 22–23 July, 2026.
-                                 </p>
+                                    <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
+                                        Organizing <strong><a href="event-detail.php?id=<?= $featuredWorkshop['id'] ?>" style="color: inherit; text-decoration: underline;"><?= htmlspecialchars($featuredWorkshop['title']) ?></a></strong>, 
+                                        <?= htmlspecialchars($featuredWorkshop['description']) ?> 
+                                        <?php if (!empty($featuredWorkshop['resource_person'])): ?>
+                                            (Resource Person: <?= htmlspecialchars($featuredWorkshop['resource_person']) ?>)
+                                        <?php endif; ?>
+                                        at <?= htmlspecialchars($featuredWorkshop['venue']) ?> 
+                                        on <?= htmlspecialchars($datesStr) ?>.
+                                    </p>
 
-                             </div>
+                                </div>
+                            <?php endif; ?>
 
                         </div>
 
@@ -93,25 +101,6 @@ $bodyClass = 'page-homepage-courses'; include 'header.php';?>
 
 </div>
 <!-- end Wrapper -->
-
-<script type="text/javascript" src="assets/js/jquery-2.1.0.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery-migrate-1.2.1.min.js"></script>
-<script type="text/javascript" src="assets/bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="assets/js/selectize.min.js"></script>
-<script type="text/javascript" src="assets/js/owl.carousel.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery.validate.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery.placeholder.js"></script>
-<script type="text/javascript" src="assets/js/jQuery.equalHeights.js"></script>
-<script type="text/javascript" src="assets/js/icheck.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery.vanillabox-0.1.5.min.js"></script>
-<script type="text/javascript" src="assets/js/jquery.tablesorter.min.js"></script>
-<script type="text/javascript" src="assets/js/greensock.js"></script>
-<script type="text/javascript" src="assets/js/layerslider.transitions.js"></script>
-<script type="text/javascript" src="assets/js/layerslider.kreaturamedia.jquery.js"></script>
-<script type="text/javascript" src="assets/js/jquery.flexslider-min.js"></script>
-<script type="text/javascript" src="assets/js/retina-1.1.0.min.js"></script>
-
-<script type="text/javascript" src="assets/js/custom.js"></script>
 
 </body>
 </html>

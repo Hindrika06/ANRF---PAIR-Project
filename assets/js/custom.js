@@ -248,46 +248,7 @@ $(document).ready(function($) {
             return;
         }
 
-        let calendarEvents = {
-            '2026-07-09': [
-                {
-                    title: 'University of Hyderabad Research Symposium',
-                    time: '10:00 AM – 1:00 PM',
-                    venue: 'Conference Hall A',
-                    coordinator: 'Dr. Ravi Kumar'
-                }
-            ],
-            '2026-07-14': [
-                {
-                    title: 'ANRF-PAIR Innovation Showcase',
-                    time: '11:00 AM – 2:00 PM',
-                    venue: 'Innovation Hub',
-                    coordinator: 'Dr. Priya Sharma'
-                },
-                {
-                    title: 'Research Seminar on Sustainable Health',
-                    time: '3:00 PM – 4:30 PM',
-                    venue: 'Seminar Room 3',
-                    coordinator: 'Prof. Anil Mehta'
-                }
-            ],
-            '2026-07-21': [
-                {
-                    title: 'Strengthening Health Systems Workshop',
-                    time: '10:00 AM – 12:30 PM',
-                    venue: 'Seminar Room 2',
-                    coordinator: 'Dr. Ravi Kumar'
-                }
-            ],
-            '2026-07-22': [
-                {
-                    title: 'WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research',
-                    time: '10:30 AM – 5:00 PM',
-                    venue: 'Tallapaka Annamacharya Senate Hall, YVU',
-                    coordinator: 'Prof. L. Dakshayani'
-                }
-            ]
-        };
+        let calendarEvents = {};
 
         const monthNames = [
             'January','February','March','April','May','June',
@@ -319,10 +280,11 @@ $(document).ready(function($) {
             const formattedDate = formatDateLabel(dateKey);
             const eventList = events.map(function(event) {
                 const venueCoord = `${event.venue} | ${event.coordinator}`;
+                const eventLink = event.id ? `event-detail.php?id=${event.id}` : 'events_activities.php';
                 return `
                     <li class="notice-summary-item">
                         <div class="notice-event-date">${formattedDate}</div>
-                        <div class="notice-event-title">${event.title}</div>
+                        <div class="notice-event-title"><a href="${eventLink}" style="color: inherit; text-decoration: none;">${event.title}</a></div>
                         <div class="notice-event-meta notice-event-meta--single" title="${venueCoord}">${venueCoord}</div>
                     </li>
                 `;
@@ -363,7 +325,7 @@ $(document).ready(function($) {
                     } else {
                         const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
                         const isToday = dayNumber === today.getDate() && monthIndex === today.getMonth() && year === today.getFullYear();
-                        const hasEventClass = calendarEvents[dateKey] ? 'has-event' : '';
+                        const hasEventClass = (calendarEvents[dateKey] && calendarEvents[dateKey].length > 0) ? 'has-event' : '';
 
                         html += `<td class="${isToday ? 'today' : ''} ${hasEventClass}" data-date="${dateKey}">${dayNumber}</td>`;
                         dayNumber++;
@@ -422,7 +384,7 @@ $(document).ready(function($) {
             .then(function(res) { return res.json(); })
             .then(function(data) {
                 if (data && typeof data === 'object' && !data.error) {
-                    calendarEvents = Object.assign({}, calendarEvents, data);
+                    calendarEvents = data;
                     buildCalendar();
                     updateNoticeForDate(getActiveDateKey());
                 }

@@ -4,44 +4,47 @@ if (!isset($pdo)) {
     require_once 'config.php';
 }
 
-$activeAnnouncements = [];
+$tickerItems = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `announcements` WHERE is_active = 1 ORDER BY id DESC");
-    $activeAnnouncements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // 1. Fetch active announcements
+    $stmtAnn = $pdo->query("SELECT title, link FROM `announcements` WHERE is_active = 1 ORDER BY id DESC");
+    while ($ann = $stmtAnn->fetch(PDO::FETCH_ASSOC)) {
+        $tickerItems[] = [
+            'title' => $ann['title'],
+            'link'  => $ann['link'] ?: 'events_activities.php'
+        ];
+    }
+
+    // 2. Fetch published events
+    $stmtEvt = $pdo->query("SELECT id, title, event_date, end_date, venue FROM `events` WHERE publish_status = 1 ORDER BY event_date ASC");
+    while ($evt = $stmtEvt->fetch(PDO::FETCH_ASSOC)) {
+        $dateStr = date("M d, Y", strtotime($evt['event_date']));
+        $tickerItems[] = [
+            'title' => "📢 " . $evt['title'] . " – " . $dateStr . " at " . $evt['venue'],
+            'link'  => "event-detail.php?id=" . $evt['id']
+        ];
+    }
 } catch (PDOException $e) {
-    // Fallback silently if table or query fails
+    // Silently handle if database error
 }
 ?>
         <div class="whatsnew-bar">
             <div class="whatsnew-title">What's New</div>
             <div class="whatsnew-scroll">
                 <marquee behavior="scroll" direction="left" scrollamount="6">
-                    <?php if (!empty($activeAnnouncements)): ?>
-                        <?php foreach ($activeAnnouncements as $ann): ?>
-                            <?php if (!empty($ann['link'])): ?>
-                                <a href="<?= htmlspecialchars($ann['link']) ?>">
-                                    <?= htmlspecialchars($ann['title']) ?>
-                                </a>
-                            <?php else: ?>
-                                <span style="color: #ffffff; font-size: 14px; font-weight: 600;">
-                                    <?= htmlspecialchars($ann['title']) ?>
-                                </span>
-                            <?php endif; ?>
+                    <?php if (!empty($tickerItems)): ?>
+                        <?php foreach ($tickerItems as $item): ?>
+                            <a href="<?= htmlspecialchars($item['link']) ?>">
+                                <?= htmlspecialchars($item['title']) ?>
+                            </a>
                             &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- Fallback: Static original list -->
-                        <a href="events_activities.php">📢 WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research – July 22–23, 2026 at YVU</a>
-                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-                        <a href="events_activities.php">🎓 Osmania University Education Week: May 11–17, 2026</a>
-                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-                        <a href="gallery.php">📸 New Event Photos Uploaded in Gallery</a>
-                        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                        <span style="color: #ffffff; font-size: 14px; font-weight: 600;">Welcome to ANRF-PAIR Project Portal</span>
                     <?php endif; ?>
                 </marquee>
             </div>
         </div>
-
 
         <style>
 /* WHATS NEW BAR */

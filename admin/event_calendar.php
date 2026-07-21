@@ -52,19 +52,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$is_super) {
         $error = 'Only Super Admins are allowed to edit or add events.';
     } else {
-        $title          = trim($_POST['title'] ?? '');
-        $description    = trim($_POST['description'] ?? '');
-        $university_id  = trim($_POST['university_id'] ?? 'all');
-        $event_date     = $_POST['event_date'] ?? '';
-        $start_time     = $_POST['start_time'] ?? '';
-        $end_time       = $_POST['end_time'] ?? '';
-        $venue          = trim($_POST['venue'] ?? '');
-        $event_type     = trim($_POST['event_type'] ?? '');
-        $visibility     = $_POST['visibility'] ?? 'public';
-        $status         = $_POST['status'] ?? 'upcoming';
-        $publish_status = isset($_POST['publish_status']) ? 1 : 0;
-        $coordinator    = trim($_POST['coordinator'] ?? '');
-        $edit_id        = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+        $title                   = trim($_POST['title'] ?? '');
+        $description             = trim($_POST['description'] ?? '');
+        $university_id           = trim($_POST['university_id'] ?? 'all');
+        $event_date              = $_POST['event_date'] ?? '';
+        $end_date                = !empty($_POST['end_date']) ? $_POST['end_date'] : $event_date;
+        $start_time              = $_POST['start_time'] ?? '';
+        $end_time                = $_POST['end_time'] ?? '';
+        $venue                   = trim($_POST['venue'] ?? '');
+        $event_type              = trim($_POST['event_type'] ?? '');
+        $visibility              = $_POST['visibility'] ?? 'public';
+        $status                  = $_POST['status'] ?? 'upcoming';
+        $publish_status          = isset($_POST['publish_status']) ? 1 : 0;
+        $coordinator             = trim($_POST['coordinator'] ?? '');
+        $resource_person          = trim($_POST['resource_person'] ?? '');
+        $organizer                = trim($_POST['organizer'] ?? '');
+        $chief_patron             = trim($_POST['chief_patron'] ?? '');
+        $patrons                  = trim($_POST['patrons'] ?? '');
+        $convener                 = trim($_POST['convener'] ?? '');
+        $organising_committee     = trim($_POST['organising_committee'] ?? '');
+        $registration_guidelines  = trim($_POST['registration_guidelines'] ?? '');
+        $training_schedule        = trim($_POST['training_schedule'] ?? '');
+        $edit_id                 = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
         if (empty($title) || empty($event_date) || empty($start_time) || empty($end_time) || empty($venue)) {
             $error = 'Please fill in all required fields (Title, Date, Start Time, End Time, Venue).';
@@ -75,33 +84,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mkdir($uploadDir, 0755, true);
                 }
                 $imageFile = null;
+                $qrCodeFile = null;
 
                 // Handle banner/image upload
                 if (!empty($_FILES['image']['name'])) {
                     $f = $_FILES['image'];
-
                     if ($f['error'] !== UPLOAD_ERR_OK) {
                         throw new RuntimeException("File upload failed with server error code: " . $f['error']);
                     }
-
                     if ($f['size'] > 10 * 1024 * 1024) {
                         throw new RuntimeException("File exceeds maximum allowed 10 MB limit.");
                     }
-
                     $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
                     if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
                         throw new RuntimeException("Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.");
                     }
-
                     $destFileName = uniqid('event_', true) . '.' . $ext;
                     $destFullPath = $uploadDir . $destFileName;
-
                     if (!move_uploaded_file($f['tmp_name'], $destFullPath)) {
                         throw new RuntimeException("Could not save the uploaded file.");
                     }
                     $imageFile = 'uploads/events/' . $destFileName;
 
-                    // Delete old image if editing
                     if ($edit_id) {
                         $stmt = $pdo->prepare("SELECT image FROM `events` WHERE id = :id");
                         $stmt->execute([':id' => $edit_id]);
@@ -112,63 +116,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                if ($edit_id) {
-                    // Update query
-                    if ($imageFile) {
-                        $stmt = $pdo->prepare("UPDATE `events` SET title = :title, description = :description, university_id = :university_id, event_date = :event_date, start_time = :start_time, end_time = :end_time, venue = :venue, event_type = :event_type, image = :image, visibility = :visibility, status = :status, publish_status = :publish_status, coordinator = :coordinator WHERE id = :id");
-                        $stmt->execute([
-                            ':title'          => $title,
-                            ':description'    => $description,
-                            ':university_id'  => $university_id,
-                            ':event_date'     => $event_date,
-                            ':start_time'     => $start_time,
-                            ':end_time'       => $end_time,
-                            ':venue'          => $venue,
-                            ':event_type'     => $event_type,
-                            ':image'          => $imageFile,
-                            ':visibility'     => $visibility,
-                            ':status'         => $status,
-                            ':publish_status' => $publish_status,
-                            ':coordinator'    => $coordinator,
-                            ':id'             => $edit_id
-                        ]);
-                    } else {
-                        $stmt = $pdo->prepare("UPDATE `events` SET title = :title, description = :description, university_id = :university_id, event_date = :event_date, start_time = :start_time, end_time = :end_time, venue = :venue, event_type = :event_type, visibility = :visibility, status = :status, publish_status = :publish_status, coordinator = :coordinator WHERE id = :id");
-                        $stmt->execute([
-                            ':title'          => $title,
-                            ':description'    => $description,
-                            ':university_id'  => $university_id,
-                            ':event_date'     => $event_date,
-                            ':start_time'     => $start_time,
-                            ':end_time'       => $end_time,
-                            ':venue'          => $venue,
-                            ':event_type'     => $event_type,
-                            ':visibility'     => $visibility,
-                            ':status'         => $status,
-                            ':publish_status' => $publish_status,
-                            ':coordinator'    => $coordinator,
-                            ':id'             => $edit_id
-                        ]);
+                // Handle QR code upload
+                if (!empty($_FILES['qr_code_image']['name'])) {
+                    $f = $_FILES['qr_code_image'];
+                    if ($f['error'] === UPLOAD_ERR_OK) {
+                        $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            $destFileName = uniqid('qr_', true) . '.' . $ext;
+                            $destFullPath = $uploadDir . $destFileName;
+                            if (move_uploaded_file($f['tmp_name'], $destFullPath)) {
+                                $qrCodeFile = 'uploads/events/' . $destFileName;
+                            }
+                        }
                     }
+                }
+
+                if ($edit_id) {
+                    $sql = "UPDATE `events` SET 
+                        title = :title, description = :description, university_id = :university_id, 
+                        event_date = :event_date, end_date = :end_date, start_time = :start_time, end_time = :end_time, 
+                        venue = :venue, event_type = :event_type, visibility = :visibility, status = :status, 
+                        publish_status = :publish_status, coordinator = :coordinator, resource_person = :resource_person, 
+                        organizer = :organizer, chief_patron = :chief_patron, patrons = :patrons, convener = :convener, 
+                        organising_committee = :organising_committee, registration_guidelines = :registration_guidelines, 
+                        training_schedule = :training_schedule";
+                    
+                    $binds = [
+                        ':title'                   => $title,
+                        ':description'             => $description,
+                        ':university_id'           => $university_id,
+                        ':event_date'              => $event_date,
+                        ':end_date'                => $end_date,
+                        ':start_time'              => $start_time,
+                        ':end_time'                => $end_time,
+                        ':venue'                   => $venue,
+                        ':event_type'              => $event_type,
+                        ':visibility'              => $visibility,
+                        ':status'                  => $status,
+                        ':publish_status'          => $publish_status,
+                        ':coordinator'             => $coordinator,
+                        ':resource_person'         => $resource_person,
+                        ':organizer'               => $organizer,
+                        ':chief_patron'            => $chief_patron,
+                        ':patrons'                 => $patrons,
+                        ':convener'                => $convener,
+                        ':organising_committee'    => $organising_committee,
+                        ':registration_guidelines' => $registration_guidelines,
+                        ':training_schedule'       => $training_schedule,
+                        ':id'                      => $edit_id
+                    ];
+
+                    if ($imageFile) {
+                        $sql .= ", image = :image";
+                        $binds[':image'] = $imageFile;
+                    }
+                    if ($qrCodeFile) {
+                        $sql .= ", qr_code_image = :qr_code_image";
+                        $binds[':qr_code_image'] = $qrCodeFile;
+                    }
+
+                    $sql .= " WHERE id = :id";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($binds);
+
                     header("Location: event_calendar.php?success_msg=updated");
                 } else {
-                    // Insert query
-                    $stmt = $pdo->prepare("INSERT INTO `events` (title, description, university_id, event_date, start_time, end_time, venue, event_type, image, visibility, status, publish_status, coordinator, created_by) VALUES (:title, :description, :university_id, :event_date, :start_time, :end_time, :venue, :event_type, :image, :visibility, :status, :publish_status, :coordinator, :created_by)");
+                    $stmt = $pdo->prepare("INSERT INTO `events` (
+                        title, description, university_id, event_date, end_date, start_time, end_time, venue, 
+                        event_type, image, qr_code_image, visibility, status, publish_status, coordinator, 
+                        resource_person, organizer, chief_patron, patrons, convener, organising_committee, 
+                        registration_guidelines, training_schedule, created_by
+                    ) VALUES (
+                        :title, :description, :university_id, :event_date, :end_date, :start_time, :end_time, :venue, 
+                        :event_type, :image, :qr_code_image, :visibility, :status, :publish_status, :coordinator, 
+                        :resource_person, :organizer, :chief_patron, :patrons, :convener, :organising_committee, 
+                        :registration_guidelines, :training_schedule, :created_by
+                    )");
                     $stmt->execute([
-                        ':title'          => $title,
-                        ':description'    => $description,
-                        ':university_id'  => $university_id,
-                        ':event_date'     => $event_date,
-                        ':start_time'     => $start_time,
-                        ':end_time'       => $end_time,
-                        ':venue'          => $venue,
-                        ':event_type'     => $event_type,
-                        ':image'          => $imageFile,
-                        ':visibility'     => $visibility,
-                        ':status'         => $status,
-                        ':publish_status' => $publish_status,
-                        ':coordinator'    => $coordinator,
-                        ':created_by'     => $_SESSION['username']
+                        ':title'                   => $title,
+                        ':description'             => $description,
+                        ':university_id'           => $university_id,
+                        ':event_date'              => $event_date,
+                        ':end_date'                => $end_date,
+                        ':start_time'              => $start_time,
+                        ':end_time'                => $end_time,
+                        ':venue'                   => $venue,
+                        ':event_type'              => $event_type,
+                        ':image'                   => $imageFile,
+                        ':qr_code_image'           => $qrCodeFile,
+                        ':visibility'              => $visibility,
+                        ':status'                  => $status,
+                        ':publish_status'          => $publish_status,
+                        ':coordinator'             => $coordinator,
+                        ':resource_person'         => $resource_person,
+                        ':organizer'               => $organizer,
+                        ':chief_patron'            => $chief_patron,
+                        ':patrons'                 => $patrons,
+                        ':convener'                => $convener,
+                        ':organising_committee'    => $organising_committee,
+                        ':registration_guidelines' => $registration_guidelines,
+                        ':training_schedule'       => $training_schedule,
+                        ':created_by'              => $_SESSION['username']
                     ]);
                     header("Location: event_calendar.php?success_msg=added");
                 }
@@ -702,8 +750,13 @@ include 'loader.php';
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label text-dark font-w600">Event Date <span class="text-danger">*</span></label>
-                            <input type="text" name="event_date" id="modal_event_date" class="form-control" required placeholder="Select Date">
+                            <label class="form-label text-dark font-w600">Start Date <span class="text-danger">*</span></label>
+                            <input type="text" name="event_date" id="modal_event_date" class="form-control" required placeholder="Select Start Date">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">End Date</label>
+                            <input type="text" name="end_date" id="modal_end_date" class="form-control" placeholder="Select End Date (Optional for multi-day)">
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -732,6 +785,46 @@ include 'loader.php';
                         </div>
 
                         <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Resource Person</label>
+                            <input type="text" name="resource_person" id="modal_resource_person" class="form-control" placeholder="Resource Person details">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Organizer</label>
+                            <input type="text" name="organizer" id="modal_organizer" class="form-control" placeholder="Organizer details">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Chief Patron</label>
+                            <input type="text" name="chief_patron" id="modal_chief_patron" class="form-control" placeholder="Chief Patron details">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Patrons</label>
+                            <input type="text" name="patrons" id="modal_patrons" class="form-control" placeholder="Patrons details">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Convener</label>
+                            <input type="text" name="convener" id="modal_convener" class="form-control" placeholder="Convener details">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Organising Committee</label>
+                            <input type="text" name="organising_committee" id="modal_organising_committee" class="form-control" placeholder="Organising Committee details">
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-dark font-w600">Training Schedule</label>
+                            <textarea name="training_schedule" id="modal_training_schedule" class="form-control" rows="3" placeholder="Day 1 / Day 2 schedule details"></textarea>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-dark font-w600">Registration Guidelines</label>
+                            <textarea name="registration_guidelines" id="modal_registration_guidelines" class="form-control" rows="2" placeholder="Registration rules / guidelines"></textarea>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
                             <label class="form-label text-dark font-w600">Visibility</label>
                             <select name="visibility" id="modal_visibility" class="form-select">
                                 <option value="public">Public</option>
@@ -751,6 +844,12 @@ include 'loader.php';
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-dark font-w600">Banner / Image File</label>
                             <input type="file" name="image" id="modal_image" class="form-control" accept="image/*">
+                            <div class="form-text">Optional. Max 10MB (JPG, PNG, WEBP)</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-dark font-w600">Registration QR Code Image</label>
+                            <input type="file" name="qr_code_image" id="modal_qr_code_image" class="form-control" accept="image/*">
                             <div class="form-text">Optional. Max 10MB (JPG, PNG, WEBP)</div>
                         </div>
 
@@ -817,6 +916,10 @@ include 'loader.php';
             dateFormat: "Y-m-d",
             allowInput: true
         });
+        flatpickr("#modal_end_date", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
         <?php endif; ?>
     });
 
@@ -842,17 +945,26 @@ include 'loader.php';
         modalSubmitBtn.innerText = 'Update Event';
 
         document.getElementById('modal_edit_id').value = row.id;
-        document.getElementById('modal_title').value = row.title;
-        document.getElementById('modal_description').value = row.description;
-        document.getElementById('modal_university_id').value = row.university_id;
-        document.getElementById('modal_event_date').value = row.event_date;
-        document.getElementById('modal_start_time').value = row.start_time;
-        document.getElementById('modal_end_time').value = row.end_time;
-        document.getElementById('modal_event_type').value = row.event_type;
-        document.getElementById('modal_venue').value = row.venue;
-        document.getElementById('modal_coordinator').value = row.coordinator;
-        document.getElementById('modal_visibility').value = row.visibility;
-        document.getElementById('modal_status').value = row.status;
+        document.getElementById('modal_title').value = row.title || '';
+        document.getElementById('modal_description').value = row.description || '';
+        document.getElementById('modal_university_id').value = row.university_id || 'all';
+        document.getElementById('modal_event_date').value = row.event_date || '';
+        document.getElementById('modal_end_date').value = row.end_date || row.event_date || '';
+        document.getElementById('modal_start_time').value = row.start_time || '';
+        document.getElementById('modal_end_time').value = row.end_time || '';
+        document.getElementById('modal_event_type').value = row.event_type || '';
+        document.getElementById('modal_venue').value = row.venue || '';
+        document.getElementById('modal_coordinator').value = row.coordinator || '';
+        document.getElementById('modal_resource_person').value = row.resource_person || '';
+        document.getElementById('modal_organizer').value = row.organizer || '';
+        document.getElementById('modal_chief_patron').value = row.chief_patron || '';
+        document.getElementById('modal_patrons').value = row.patrons || '';
+        document.getElementById('modal_convener').value = row.convener || '';
+        document.getElementById('modal_organising_committee').value = row.organising_committee || '';
+        document.getElementById('modal_registration_guidelines').value = row.registration_guidelines || '';
+        document.getElementById('modal_training_schedule').value = row.training_schedule || '';
+        document.getElementById('modal_visibility').value = row.visibility || 'public';
+        document.getElementById('modal_status').value = row.status || 'upcoming';
         document.getElementById('modal_publish_status').checked = (row.publish_status == 1);
     }
 

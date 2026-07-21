@@ -30,11 +30,9 @@ try {
     $stmt->execute($params);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Group events by date format YYYY-MM-DD
+    // Group events by date format YYYY-MM-DD (supporting multi-day events)
     $calendarEvents = [];
     foreach ($rows as $row) {
-        $dateKey = $row['event_date'];
-        
         $start = date("g:i A", strtotime($row['start_time']));
         $end = date("g:i A", strtotime($row['end_time']));
         $timeStr = "{$start} - {$end}";
@@ -42,16 +40,26 @@ try {
         $coordinator = !empty($row['coordinator']) ? $row['coordinator'] : $row['created_by'];
 
         $eventObj = [
+            'id'          => (int)$row['id'],
             'title'       => $row['title'],
             'time'        => $timeStr,
             'venue'       => $row['venue'],
             'coordinator' => $coordinator
         ];
 
-        if (!isset($calendarEvents[$dateKey])) {
-            $calendarEvents[$dateKey] = [];
+        $startDate = $row['event_date'];
+        $endDate = !empty($row['end_date']) ? $row['end_date'] : $startDate;
+
+        $startTs = strtotime($startDate);
+        $endTs = strtotime($endDate);
+
+        for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
+            $dateKey = date('Y-m-d', $ts);
+            if (!isset($calendarEvents[$dateKey])) {
+                $calendarEvents[$dateKey] = [];
+            }
+            $calendarEvents[$dateKey][] = $eventObj;
         }
-        $calendarEvents[$dateKey][] = $eventObj;
     }
 
     echo json_encode($calendarEvents, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
