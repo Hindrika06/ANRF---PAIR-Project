@@ -197,17 +197,17 @@ $pageTitle = "Login | ANRF–PAIR Project";
             <div class="alert-custom" style="background:#ecfdf5; color:#047857; border-color:#d1fae5; margin-bottom: 15px;">Registration successful. Please login.</div>
         <?php endif; ?>
 
-        <form method="POST">
+        <form method="POST" autocomplete="off">
             <!-- Email field -->
             <div class="form-group">
                 <label class="form-label" for="username">Email</label>
-                <input id="username" type="email" name="username" class="form-control-login" placeholder="admin@uoh.ac.in" autocomplete="email" required>
+                <input id="username" type="text" name="username" class="form-control-login" placeholder="admin@uoh.ac.in" autocomplete="off" required>
             </div>
 
             <!-- Password field -->
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input id="password" type="password" name="password" class="form-control-login" placeholder="•••••••••" autocomplete="current-password" required>
+                <input id="password" type="password" name="password" class="form-control-login" placeholder="•••••••••" autocomplete="new-password" required>
             </div>
 
             <!-- Sign in button -->
@@ -217,5 +217,11 @@ $pageTitle = "Login | ANRF–PAIR Project";
         </form>
     </div>
 </div>
+<script>
+window.addEventListener('load', function () {
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+});
+</script>
 </body>
 </html>
