@@ -248,7 +248,46 @@ $(document).ready(function($) {
             return;
         }
 
-        const calendarEvents = getCalendarEvents();
+        let calendarEvents = {
+            '2026-07-09': [
+                {
+                    title: 'University of Hyderabad Research Symposium',
+                    time: '10:00 AM – 1:00 PM',
+                    venue: 'Conference Hall A',
+                    coordinator: 'Dr. Ravi Kumar'
+                }
+            ],
+            '2026-07-14': [
+                {
+                    title: 'ANRF-PAIR Innovation Showcase',
+                    time: '11:00 AM – 2:00 PM',
+                    venue: 'Innovation Hub',
+                    coordinator: 'Dr. Priya Sharma'
+                },
+                {
+                    title: 'Research Seminar on Sustainable Health',
+                    time: '3:00 PM – 4:30 PM',
+                    venue: 'Seminar Room 3',
+                    coordinator: 'Prof. Anil Mehta'
+                }
+            ],
+            '2026-07-21': [
+                {
+                    title: 'Strengthening Health Systems Workshop',
+                    time: '10:00 AM – 12:30 PM',
+                    venue: 'Seminar Room 2',
+                    coordinator: 'Dr. Ravi Kumar'
+                }
+            ],
+            '2026-07-22': [
+                {
+                    title: 'WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research',
+                    time: '10:30 AM – 5:00 PM',
+                    venue: 'Tallapaka Annamacharya Senate Hall, YVU',
+                    coordinator: 'Prof. L. Dakshayani'
+                }
+            ]
+        };
 
         const monthNames = [
             'January','February','March','April','May','June',
@@ -256,41 +295,6 @@ $(document).ready(function($) {
         ];
 
         let currentDate = new Date();
-
-        function getCalendarEvents() {
-            return {
-                '2026-07-09': [
-                    {
-                        title: 'University of Hyderabad Research Symposium',
-                        time: '10:00 AM – 1:00 PM',
-                        venue: 'Conference Hall A',
-                        coordinator: 'Dr. Ravi Kumar'
-                    }
-                ],
-                '2026-07-14': [
-                    {
-                        title: 'ANRF-PAIR Innovation Showcase',
-                        time: '11:00 AM – 2:00 PM',
-                        venue: 'Innovation Hub',
-                        coordinator: 'Dr. Priya Sharma'
-                    },
-                    {
-                        title: 'Research Seminar on Sustainable Health',
-                        time: '3:00 PM – 4:30 PM',
-                        venue: 'Seminar Room 3',
-                        coordinator: 'Prof. Anil Mehta'
-                    }
-                ],
-                '2026-07-21': [
-                    {
-                        title: 'Strengthening Health Systems Workshop',
-                        time: '10:00 AM – 12:30 PM',
-                        venue: 'Seminar Room 2',
-                        coordinator: 'Dr. Ravi Kumar'
-                    }
-                ]
-            };
-        }
 
         function formatDateLabel(dateKey) {
             const [year, month, day] = dateKey.split('-');
@@ -388,7 +392,7 @@ $(document).ready(function($) {
             const allDates = calBody.querySelectorAll('td[data-date]');
             allDates.forEach(function (cell) {
                 cell.addEventListener('click', function () {
-                    const dateKey = this.getAttribute('data-date');
+                    const dateKey = this.getAttribute('date-date') || this.getAttribute('data-date');
                     updateNoticeForDate(dateKey);
                 });
             });
@@ -412,6 +416,20 @@ $(document).ready(function($) {
 
         buildCalendar();
         updateNoticeForDate(getActiveDateKey());
+
+        // Dynamically fetch events from database via get_events.php
+        fetch('get_events.php')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data && typeof data === 'object' && !data.error) {
+                    calendarEvents = Object.assign({}, calendarEvents, data);
+                    buildCalendar();
+                    updateNoticeForDate(getActiveDateKey());
+                }
+            })
+            .catch(function(err) {
+                console.warn('Could not load dynamic events:', err);
+            });
     }
 
     initializeEventBoard();

@@ -31,7 +31,7 @@ try {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <!-- Fallback: Static original list -->
-                        <a href="event-detail.html">📢 Webinar on SMART NANO BIOSENSORS – May 20, 2026</a>
+                        <a href="events_activities.php">📢 WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research – July 22–23, 2026 at YVU</a>
                         &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                         <a href="events_activities.php">🎓 Osmania University Education Week: May 11–17, 2026</a>
                         &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;

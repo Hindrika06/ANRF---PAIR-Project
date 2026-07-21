@@ -47,33 +47,30 @@ $bodyClass = 'page-homepage-courses'; include 'header.php';?>
                             </ul>
 
                    
-                            <div style="margin-top: 20px; padding: 20px; background: #f8f8f8; border-left: 4px solid #bc2121;">
+                             <div style="margin-top: 20px; padding: 20px; background: #f8f8f8; border-left: 4px solid #bc2121;">
 
-                                <h3 style="margin-top: 0; color:#000;">
-                                    Dr. K. Muralidharan
-                                </h3>
+                                 <h3 style="margin-top: 0; color:#000;">
+                                     Prof. L. Dakshayani (Convener)
+                                 </h3>
 
-                                <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
-                                    Professor <br>
-                                    School of Chemistry <br>
-                                    University of Hyderabad <br>
-                                    Hyderabad – 500046, India
-                                </p>
+                                 <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
+                                     Department of Genetics & Genomics <br>
+                                     Yogi Vemana University (YVU) <br>
+                                     Kadapa, Andhra Pradesh, India
+                                 </p>
 
-                                <h4 style="margin-top: 25px; color:#000;">
-                                    Lecture Presented
-                                </h4>
+                                 <h4 style="margin-top: 25px; color:#000;">
+                                     Workshop Organized
+                                 </h4>
 
-                                <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
-                                    Presented a Lecture on <strong>Electron Microscope (SEM)</strong> 
-                                    at the National Workshop for Practical Training on 
-                                    Steady State and Time Resolved Absorption, Emission 
-                                    Spectroscopy and Imaging, organized by UGC-NRCC, 
-                                    School of Chemistry, University of Hyderabad 
-                                    on 15th December 2025.
-                                </p>
+                                 <p class="font-color-grey-medium" style="font-size: 15px; line-height: 28px;">
+                                     Organizing <strong>WORKSHOP ON Flow Cytometry: Principles, Applications, and Hands-on Training for Biomedical Research</strong>, 
+                                     organized by ANRF-PAIR Project in association with BD Bioscience, India (Resource Person: Mr. Karuna Kumar Kondaveeti, Sr. Application Specialist) 
+                                     at Tallapaka Annamacharya Senate Hall, YVU 
+                                     on 22–23 July, 2026.
+                                 </p>
 
-                            </div>
+                             </div>
 
                         </div>
 
