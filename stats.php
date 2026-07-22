@@ -25,7 +25,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
         'publications'     => "SELECT COUNT(*) AS c FROM uoh_publications",
         'patents'          => "SELECT COUNT(*) AS c FROM uoh_patent",
         'conferences'      => "SELECT COUNT(*) AS c FROM uoh_conferences",
-        'webinars'         => "SELECT COUNT(*) AS c FROM uoh_webinars",
+        'webinars'         => "SELECT COUNT(*) AS c FROM uoh_webinars WHERE publish_status = 1",
         'internships'      => "SELECT COUNT(*) AS c FROM uoh_internships",
         'progress_reports' => "SELECT COUNT(*) AS c FROM uoh_progress_reports",
     ];

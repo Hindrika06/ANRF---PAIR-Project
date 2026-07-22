@@ -36,10 +36,27 @@ try {
             `webinar_date` DATETIME NOT NULL,
             `link` VARCHAR(1000) DEFAULT NULL,
             `description` TEXT DEFAULT NULL,
+            `publish_status` TINYINT(1) NOT NULL DEFAULT 1,
             `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             KEY `idx_webinar_date` (`webinar_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     ");
+
+    // Defensive Alterations to existing tables
+    $existingColumns = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+    $columnsToAdd = [
+        'taskno' => "VARCHAR(50) DEFAULT NULL AFTER `id`",
+        'speaker_name' => "VARCHAR(255) NULL AFTER `title`",
+        'affiliation' => "VARCHAR(255) DEFAULT NULL AFTER `speaker_name`",
+        'link' => "VARCHAR(1000) DEFAULT NULL AFTER `webinar_date`",
+        'description' => "TEXT DEFAULT NULL AFTER `link`",
+        'publish_status' => "TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"
+    ];
+    foreach ($columnsToAdd as $col => $definition) {
+        if (!in_array($col, $existingColumns)) {
+            $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` $definition");
+        }
+    }
 } catch (PDOException $e) {
     // Ignore error
 }
@@ -67,14 +84,15 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $taskno       = trim($_POST['taskno']       ?? '');
-    $title        = trim($_POST['title']        ?? '');
-    $speaker_name = trim($_POST['speaker_name']  ?? '');
-    $affiliation  = trim($_POST['affiliation']   ?? '');
-    $webinar_date = $_POST['webinar_date']       ?? '';
-    $link         = trim($_POST['link']          ?? '');
-    $description  = trim($_POST['description']   ?? '');
-    $edit_id      = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $taskno         = trim($_POST['taskno']         ?? '');
+    $title          = trim($_POST['title']          ?? '');
+    $speaker_name   = trim($_POST['speaker_name']   ?? '');
+    $affiliation    = trim($_POST['affiliation']    ?? '');
+    $webinar_date   = $_POST['webinar_date']        ?? '';
+    $link           = trim($_POST['link']           ?? '');
+    $description    = trim($_POST['description']    ?? '');
+    $publish_status = isset($_POST['publish_status']) ? 1 : 0;
+    $edit_id        = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
@@ -92,18 +110,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         affiliation = :affiliation,
                         webinar_date = :webinar_date,
                         link = :link,
-                        description = :description
+                        description = :description,
+                        publish_status = :publish_status
                     WHERE id = :id
                 ");
                 $stmt->execute([
-                    ':taskno'       => $taskno,
-                    ':title'        => $title,
-                    ':speaker_name' => $speaker_name,
-                    ':affiliation'  => $affiliation,
-                    ':webinar_date' => $webinar_date ?: null,
-                    ':link'         => $link ?: null,
-                    ':description'  => $description ?: null,
-                    ':id'           => $edit_id
+                    ':taskno'         => $taskno,
+                    ':title'          => $title,
+                    ':speaker_name'   => $speaker_name,
+                    ':affiliation'    => $affiliation,
+                    ':webinar_date'   => $webinar_date ?: null,
+                    ':link'           => $link ?: null,
+                    ':description'    => $description ?: null,
+                    ':publish_status' => $publish_status,
+                    ':id'             => $edit_id
                 ]);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
                 exit;
@@ -111,18 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // INSERT NEW RECORD
                 $stmt = $pdo->prepare("
                     INSERT INTO `$table`
-                        (taskno, title, speaker_name, affiliation, webinar_date, link, description)
+                        (taskno, title, speaker_name, affiliation, webinar_date, link, description, publish_status)
                     VALUES
-                        (:taskno, :title, :speaker_name, :affiliation, :webinar_date, :link, :description)
+                        (:taskno, :title, :speaker_name, :affiliation, :webinar_date, :link, :description, :publish_status)
                 ");
                 $stmt->execute([
-                    ':taskno'       => $taskno,
-                    ':title'        => $title,
-                    ':speaker_name' => $speaker_name,
-                    ':affiliation'  => $affiliation,
-                    ':webinar_date' => $webinar_date ?: null,
-                    ':link'         => $link ?: null,
-                    ':description'  => $description ?: null
+                    ':taskno'         => $taskno,
+                    ':title'          => $title,
+                    ':speaker_name'   => $speaker_name,
+                    ':affiliation'    => $affiliation,
+                    ':webinar_date'   => $webinar_date ?: null,
+                    ':link'           => $link ?: null,
+                    ':description'    => $description ?: null,
+                    ':publish_status' => $publish_status
                 ]);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
                 exit;
@@ -297,10 +318,19 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
         font-weight: 700;
         line-height: 1;
     }
-    .kpi-subtext {
-        font-size: 11px;
-        opacity: 0.8;
-        font-weight: 400;
+    .badge-pub {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .badge-pub-active {
+        background-color: #10b981;
+        color: #ffffff;
+    }
+    .badge-pub-draft {
+        background-color: #94a3b8;
+        color: #ffffff;
     }
 </style>
 
@@ -391,16 +421,17 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                             <thead>
                                 <tr>
                                     <th style="width: 5%; min-width: 60px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
-                                    <th style="width: 40%; min-width: 250px; background-color: #bc2121 !important; color: #ffffff !important;">Webinar Details</th>
+                                    <th style="width: 35%; min-width: 250px; background-color: #bc2121 !important; color: #ffffff !important;">Webinar Details</th>
                                     <th style="width: 25%; min-width: 180px; background-color: #bc2121 !important; color: #ffffff !important;">Speaker Info</th>
-                                    <th style="width: 18%; min-width: 160px; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Date &amp; Time</th>
-                                    <th style="width: 12%; min-width: 110px; text-align: center; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
+                                    <th style="width: 15%; min-width: 160px; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Date &amp; Time</th>
+                                    <th style="width: 10%; min-width: 100px; text-align: center; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
+                                    <th style="width: 10%; min-width: 110px; text-align: center; white-space: nowrap; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($webinars)): ?>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4" style="font-size: 13px;">No webinar records tracked yet.</td>
+                                        <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No webinar records tracked yet.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php
@@ -411,6 +442,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                         $affiliationVal = htmlspecialchars($webinar['affiliation'] ?? $webinar['institute'] ?? '');
                                         $descriptionVal = htmlspecialchars($webinar['description'] ?? $webinar['content'] ?? '');
                                         $linkVal        = htmlspecialchars($webinar['link'] ?? '');
+                                        $publishStatus  = (int)($webinar['publish_status'] ?? 1);
                                     ?>
                                         <tr>
                                             <td style="text-align: center; vertical-align: middle;">
@@ -444,6 +476,11 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                     <?= $webinar['webinar_date'] ? date('d M Y, h:i A', strtotime($webinar['webinar_date'])) : '—' ?>
                                                 </span>
                                             </td>
+                                            <td style="text-align: center; vertical-align: middle;">
+                                                <span class="badge badge-pub badge-pub-<?= ($publishStatus == 1) ? 'active' : 'draft' ?>">
+                                                    <?= ($publishStatus == 1) ? 'Published' : 'Draft' ?>
+                                                </span>
+                                            </td>
                                             <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <?php if (canEditInstitute($prefix)): ?>
@@ -459,14 +496,15 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
                                                             data-link="<?= $linkVal ?>"
                                                             data-description="<?= $descriptionVal ?>"
+                                                            data-publish_status="<?= $publishStatus ?>"
                                                             title="Edit Record">
-                                                        <i class="fa fa-pencil"></i>
+                                                         <i class="fa fa-pencil"></i>
                                                     </button>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $webinar['id'] ?>"
                                                             title="Delete Record">
-                                                        <i class="fa fa-trash"></i>
+                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                     <?php else: ?>
                                                     <button type="button"
@@ -482,8 +520,9 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
                                                             data-link="<?= $linkVal ?>"
                                                             data-description="<?= $descriptionVal ?>"
+                                                            data-publish_status="<?= $publishStatus ?>"
                                                             title="View Details">
-                                                        <i class="fa fa-eye"></i>
+                                                         <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -550,9 +589,16 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-9 mb-3">
                                 <label class="form-label">Registration / Recording Link</label>
                                 <input type="url" name="link" id="modal_link" class="form-control" placeholder="https://zoom.us/... or recording link">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Publish Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" name="publish_status" id="modal_publish_status" value="1" checked>
+                                    <label class="form-check-label text-dark font-w600" for="modal_publish_status">Publish immediately</label>
+                                </div>
                             </div>
                         </div>
 
@@ -630,6 +676,7 @@ document.addEventListener("DOMContentLoaded", function() {
             modalForm.reset();
             webinarDatePicker.clear();
             document.getElementById('modal_edit_id').value = '';
+            document.getElementById('modal_publish_status').checked = true;
             modalTitle.innerText = "Add Webinar";
             modalSubmitBtn.innerText = "Save Records";
             modalSubmitBtn.style.display = "block";
@@ -675,6 +722,9 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_affiliation').value = this.getAttribute('data-affiliation');
             document.getElementById('modal_link').value = this.getAttribute('data-link');
             document.getElementById('modal_description').value = this.getAttribute('data-description');
+            
+            const pubStatus = this.getAttribute('data-publish_status');
+            document.getElementById('modal_publish_status').checked = (pubStatus == 1);
         });
     });
 

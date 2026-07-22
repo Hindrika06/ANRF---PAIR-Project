@@ -9,7 +9,7 @@ $webinars = [];
 $hasData = false;
 
 try {
-    $stmt = $pdo->query("SELECT * FROM uoh_webinars ORDER BY webinar_date DESC, id DESC");
+    $stmt = $pdo->query("SELECT * FROM uoh_webinars WHERE publish_status = 1 ORDER BY webinar_date DESC, id DESC");
     $webinars = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (!empty($webinars)) {
         $hasData = true;
@@ -50,6 +50,13 @@ try {
                                     $day   = date('d', $timestamp);
                                     $year  = date('Y', $timestamp);
                                     $fullDisplayDate = date('F d, Y \a\t h:i A', $timestamp);
+
+                                    // Defensive fallback mapping
+                                    $speakerVal     = !empty($row['speaker_name']) ? $row['speaker_name'] : ($row['investigator'] ?? '');
+                                    $affiliationVal = !empty($row['affiliation']) ? $row['affiliation'] : ($row['institute'] ?? '');
+                                    $descriptionVal = !empty($row['description']) ? $row['description'] : ($row['content'] ?? '');
+                                    $linkVal        = !empty($row['link']) ? $row['link'] : '';
+                                    $organisersVal  = !empty($row['organisers']) ? $row['organisers'] : '';
                                 ?>
                                     <article class="event-row">
                                         
@@ -67,21 +74,25 @@ try {
                                             <div class="event-meta-info">
                                                 <span><i class="fa fa-calendar icon-red"></i> <?= htmlspecialchars($fullDisplayDate) ?></span>
                                                 
-                                                <?php if (!empty($row['investigator'])): ?>
-                                                    <span><i class="fa fa-user icon-red"></i> <strong>Investigator:</strong> <?= htmlspecialchars($row['investigator']) ?></span>
+                                                <?php if (!empty($speakerVal)): ?>
+                                                    <span><i class="fa fa-user icon-red"></i> <strong>Speaker:</strong> <?= htmlspecialchars($speakerVal) ?></span>
                                                 <?php endif; ?>
                                                 
-                                                <?php if (!empty($row['institute'])): ?>
-                                                    <span><i class="fa fa-university icon-red"></i> <?= htmlspecialchars($row['institute']) ?></span>
+                                                <?php if (!empty($affiliationVal)): ?>
+                                                    <span><i class="fa fa-university icon-red"></i> <?= htmlspecialchars($affiliationVal) ?></span>
+                                                <?php endif; ?>
+
+                                                <?php if (!empty($linkVal)): ?>
+                                                    <span><i class="fa fa-link icon-red"></i> <a href="<?= htmlspecialchars($linkVal) ?>" target="_blank" style="color: #0b4c8c; font-weight: 600; text-decoration: underline;">Join / Recording URL</a></span>
                                                 <?php endif; ?>
                                             </div>
 
                                             <div class="event-body-content">
-                                                <p><?= nl2br(htmlspecialchars($row['content'] ?? '')) ?></p>
+                                                <p><?= nl2br(htmlspecialchars($descriptionVal)) ?></p>
                                                 
-                                                <?php if (!empty($row['organisers'])): ?>
+                                                <?php if (!empty($organisersVal)): ?>
                                                     <div class="event-organiser-tag">
-                                                        <strong>Organized by:</strong> <?= htmlspecialchars($row['organisers']) ?>
+                                                        <strong>Organized by:</strong> <?= htmlspecialchars($organisersVal) ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
