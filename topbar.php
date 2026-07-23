@@ -144,7 +144,7 @@
         border: 1px solid #e5e7eb !important;
         list-style: none !important;
         padding: 4px 0 !important;
-        margin: 5px 0 0 0 !important;
+        margin: 0 !important;
         min-width: 150px !important;
         z-index: 10000 !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
@@ -216,7 +216,7 @@
         }
         .topbar-dropdown-menu {
             min-width: 140px !important;
-            margin-top: calc(var(--logo-h-tablet) * 0.1) !important;
+            margin-top: 0 !important;
         }
         .topbar-dropdown-menu li a {
             font-size: 12px !important;
@@ -243,7 +243,7 @@
             font-size: calc(var(--logo-h-mobile) * 0.24) !important;
         }
         .topbar-dropdown-menu {
-            margin-top: calc(var(--logo-h-mobile) * 0.1) !important;
+            margin-top: 0 !important;
         }
         .topbar-dropdown-menu li a {
             font-size: calc(var(--logo-h-mobile) * 0.24) !important;

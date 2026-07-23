@@ -229,6 +229,22 @@
                         $stmt->execute([$alb_id]);
                         $photos = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         if (!empty($photos)):
+                            // Reorder for PAIR Office Inauguration Photos: move golden shawl image to index 0
+                            if ($alb['album_name'] === "PAIR Office Inauguration Photos") {
+                                $foundIdx = -1;
+                                foreach ($photos as $idx => $ph) {
+                                    if (strpos($ph['photo_path'], 'WhatsApp Image 2026-06-02 at 12.38.18') !== false) {
+                                        $foundIdx = $idx;
+                                        break;
+                                    }
+                                }
+                                if ($foundIdx !== -1) {
+                                    $targetPhoto = $photos[$foundIdx];
+                                    unset($photos[$foundIdx]);
+                                    array_unshift($photos, $targetPhoto);
+                                    $photos = array_values($photos);
+                                }
+                            }
                             $eventName = $alb['album_name'];
                             $eventMeta = $alb['album_date'] ? date('F d, Y', strtotime($alb['album_date'])) : '';
                             if ($alb['institute_prefix'] !== 'all') {
@@ -275,6 +291,22 @@
                         if (is_dir($folder)) {
                             $images = glob($folder . "/*.{jpg,JPG,jpeg,JPEG,png,PNG,gif,GIF}", GLOB_BRACE);
                             if ($images):
+                                // Reorder for PAIR Office Inauguration Photos: move golden shawl image to index 0
+                                if ($eventName === "PAIR Office Inauguration Photos" || $folder === "gallery/pair office Inaguration") {
+                                    $foundIdx = -1;
+                                    foreach ($images as $idx => $img) {
+                                        if (strpos($img, 'WhatsApp Image 2026-06-02 at 12.38.18') !== false) {
+                                            $foundIdx = $idx;
+                                            break;
+                                        }
+                                    }
+                                    if ($foundIdx !== -1) {
+                                        $targetImg = $images[$foundIdx];
+                                        unset($images[$foundIdx]);
+                                        array_unshift($images, $targetImg);
+                                        $images = array_values($images);
+                                    }
+                                }
                                 $totalImages = count($images);
                                 ?>
                                 <div class="event-block">

@@ -12,11 +12,11 @@ $kpiActive = in_array($currentPage, [
     'conferences.php',
     'webinars.php',
     'internships.php',
-    'progress_reports.php'
+    'progress_reports.php',
+    'collaborations_management.php',
+    'research_infrastructure.php'
 ]);
 $pagesActive = isSuperAdmin() && in_array($currentPage, [
-    'collaborations_management.php',
-    'research_infrastructure.php',
     'gallery_albums_management.php',
     'gallery.php',
     'event_calendar.php',
@@ -358,6 +358,11 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     transform: translateY(-7px) rotate(-45deg) !important;
     width: 22px !important;
 }
+
+/* Rotate chevron when parent menu item is open/active */
+.custom-sidebar li.mm-active > a.nav-group-toggle .nav-arrow {
+    transform: rotate(180deg);
+}
 </style>
 
 <!--**********************************
@@ -380,12 +385,12 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 
             <!-- KPI Dropdown Group -->
             <li class="nav-group <?= $kpiActive ? 'mm-active' : '' ?>" id="nav-kpi-group">
-                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('kpi-sub')">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow">
                     <i class="fas fa-chart-bar"></i>
                     <span class="nav-text">KPI</span>
                     <i class="fas fa-chevron-down nav-arrow" id="kpi-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
-                <ul class="nav-group-sub" id="kpi-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
+                <ul class="nav-group-sub mm-collapse <?= $kpiActive ? 'mm-show' : '' ?>" id="kpi-sub" style="list-style:none; padding: 4px 0 4px 20px;">
                     <li class="<?= ($currentPage === 'publications.php') ? 'mm-active' : '' ?>">
                         <a href="publications.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-book-open" style="font-size:0.95rem;"></i>
@@ -422,20 +427,6 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                             <span class="nav-text">Progress Reports</span>
                         </a>
                     </li>
-
-                </ul>
-            </li>
-
-            <?php /* ── Pages: Super Admin ONLY — rendered server-side, not CSS-hidden ── */ ?>
-            <?php if (isSuperAdmin()): ?>
-            <!-- Pages Dropdown Group -->
-            <li class="nav-group <?= $pagesActive ? 'mm-active' : '' ?>" id="nav-pages-group">
-                <a href="javascript:void(0)" class="nav-group-toggle has-arrow" onclick="toggleNavGroup('pages-sub')">
-                    <i class="fas fa-copy"></i>
-                    <span class="nav-text">Pages</span>
-                    <i class="fas fa-chevron-down nav-arrow" id="pages-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
-                </a>
-                <ul class="nav-group-sub" id="pages-sub" style="display:none; list-style:none; padding: 4px 0 4px 20px;">
                     <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
                         <a href="collaborations_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
@@ -448,6 +439,19 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                             <span class="nav-text">Research &amp; Infrastructure</span>
                         </a>
                     </li>
+                </ul>
+            </li>
+
+            <?php /* ── Pages: Super Admin ONLY — rendered server-side, not CSS-hidden ── */ ?>
+            <?php if (isSuperAdmin()): ?>
+            <!-- Pages Dropdown Group -->
+            <li class="nav-group <?= $pagesActive ? 'mm-active' : '' ?>" id="nav-pages-group">
+                <a href="javascript:void(0)" class="nav-group-toggle has-arrow">
+                    <i class="fas fa-copy"></i>
+                    <span class="nav-text">Pages</span>
+                    <i class="fas fa-chevron-down nav-arrow" id="pages-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
+                </a>
+                <ul class="nav-group-sub mm-collapse <?= $pagesActive ? 'mm-show' : '' ?>" id="pages-sub" style="list-style:none; padding: 4px 0 4px 20px;">
                     <li class="<?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
                         <a href="gallery_albums_management.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-images" style="font-size:0.95rem;"></i>
@@ -495,58 +499,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
             <?php endif; /* isSuperAdmin() — Pages group */ ?>
         </ul>
 
-        <script>
-        function toggleNavGroup(subId) {
-            var sub = document.getElementById(subId);
-            var arrowId = subId.replace('-sub', '-arrow');
-            var arrow = document.getElementById(arrowId);
-            if (!sub) return;
-            var isOpen = sub.style.display === 'block';
-            // Close all open groups first
-            document.querySelectorAll('.nav-group-sub').forEach(function(el) {
-                el.style.display = 'none';
-            });
-            document.querySelectorAll('.nav-arrow').forEach(function(el) {
-                el.style.transform = '';
-            });
-            // Toggle clicked group
-            if (!isOpen) {
-                sub.style.display = 'block';
-                if (arrow) arrow.style.transform = 'rotate(180deg)';
-            }
-        }
-        // Auto-open the group that contains the active page on load
-        document.addEventListener('DOMContentLoaded', function() {
-            var currentPage = window.location.pathname.split('/').pop();
-            
-            var kpiPages = [
-                'publications.php',
-                'patents.php',
-                'conferences.php',
-                'webinars.php',
-                'internships.php',
-                'progress_reports.php'
-            ];
-            
-            var pagesPages = [
-                'collaborations_management.php',
-                'research_infrastructure.php',
-                'gallery_albums_management.php',
-                'gallery.php',
-                'event_calendar.php',
-                'banner_management.php',
-                'announcements_management.php',
-                'team_management.php',
-                'manage_admins.php'
-            ];
-            
-            if (kpiPages.indexOf(currentPage) !== -1) {
-                toggleNavGroup('kpi-sub');
-            } else if (pagesPages.indexOf(currentPage) !== -1) {
-                toggleNavGroup('pages-sub');
-            }
-        });
-        </script>
+
 
         <!-- Logout Button Section -->
         <div class="sidebar-footer" style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.08);">

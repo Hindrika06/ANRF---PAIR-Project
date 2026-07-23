@@ -1,11 +1,10 @@
 <?php
-session_start();
-
+require_once 'auth_check.php';
 require_once 'role_access.php';
 
 // Auth Guard: Only Super Admin can access team management
-if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix']) || !isSuperAdmin()) {
-    header("Location: index.php");
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
     exit();
 }
 

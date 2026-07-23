@@ -23,11 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $role = $row['role'] ?? 'admin';
 
             if (password_verify($password, $row['password'])) {
+                session_regenerate_id(true);
                 $_SESSION['user_id']          = $row['id'];
                 $_SESSION['username']         = $row['username'];
                 $_SESSION['institute_prefix'] = $row['institute_prefix'];
                 $_SESSION['role']             = $role;
                 $_SESSION['active_prefix']    = $row['institute_prefix'];
+                $_SESSION['LAST_ACTIVITY']    = time();
 
                 header("Location: admin/publications.php");
                 exit();
@@ -37,11 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update  = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
                 $update->execute([$newHash, $row['id']]);
 
+                session_regenerate_id(true);
                 $_SESSION['user_id']          = $row['id'];
                 $_SESSION['username']         = $row['username'];
                 $_SESSION['institute_prefix'] = $row['institute_prefix'];
                 $_SESSION['role']             = $role;
                 $_SESSION['active_prefix']    = $row['institute_prefix'];
+                $_SESSION['LAST_ACTIVITY']    = time();
 
                 header("Location: admin/publications.php");
                 exit();
@@ -191,6 +195,10 @@ $pageTitle = "Login | ANRF–PAIR Project";
 
         <?php if ($error !== ""): ?>
             <div class="alert-custom"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['timeout']) && $_GET['timeout'] === '1'): ?>
+            <div class="alert-custom">Your session has expired due to 2 minutes of inactivity. Please log in again.</div>
         <?php endif; ?>
 
         <?php if (isset($_GET['registered']) && $_GET['registered'] === '1'): ?>

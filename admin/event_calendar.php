@@ -1,13 +1,6 @@
 <?php
-session_start();
-
+require_once 'auth_check.php';
 require_once 'role_access.php';
-
-// ── Check if user is logged in ─────
-if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
-    header("Location: index.php");
-    exit();
-}
 
 $is_super = isSuperAdmin();
 $user_prefix = $_SESSION['institute_prefix'];

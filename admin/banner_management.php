@@ -1,10 +1,9 @@
 <?php
-session_start();
-
+require_once 'auth_check.php';
 require_once 'role_access.php';
 
 // Auth Guard: Only Super Admin can manage homepage banners
-if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix']) || !isSuperAdmin()) {
+if (!isSuperAdmin()) {
     header("Location: dashboard.php");
     exit();
 }
