@@ -120,9 +120,6 @@
 <script src="assets/js/icheck.min.js"></script>
 <script src="assets/js/jquery.vanillabox-0.1.5.min.js"></script>
 <script src="assets/js/jquery.tablesorter.min.js"></script>
-<script src="assets/js/greensock.js"></script>
-<script src="assets/js/layerslider.transitions.js"></script>
-<script src="assets/js/layerslider.kreaturamedia.jquery.js"></script>
 <script src="assets/js/jquery.flexslider-min.js"></script>
 <script src="assets/js/retina-1.1.0.min.js"></script>
 <script src="assets/js/custom.js?v=<?= filemtime('assets/js/custom.js') ?>"></script>

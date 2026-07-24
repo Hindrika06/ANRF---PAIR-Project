@@ -10,7 +10,6 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="ANRF–PAIR Project, University of Hyderabad">
 
-    <link rel="shortcut icon" href="logo.ico" type="image/x-icon">
     <link rel="icon" href="2.png" type="image/png" sizes="32x32">
     <link rel="apple-touch-icon" href="2.png">
 
@@ -20,7 +19,6 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
     <link rel="stylesheet" href="assets/css/selectize.css"            type="text/css">
     <link rel="stylesheet" href="assets/css/owl.carousel.css"         type="text/css">
     <link rel="stylesheet" href="assets/css/vanillabox/vanillabox.css" type="text/css">
-    <link rel="stylesheet" href="assets/css/layerslider.css"          type="text/css">
     <link rel="stylesheet" href="assets/css/flexslider.css"           type="text/css">
     <link rel="stylesheet" href="assets/css/style.css"                type="text/css">
     <link rel="stylesheet" href="assets/css/custom.css?v=<?= filemtime('assets/css/custom.css') ?>"                type="text/css">
