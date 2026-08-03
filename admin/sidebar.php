@@ -191,15 +191,41 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 
 /* ═══════════════════════════════════════════════════════
    CHILD SUBMENU LIST  (.nav-group-sub)
-═══════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════ */
 .nav-group-sub {
-    /* Vertical guide line on the left */
-    border-left: 2px solid rgba(255,255,255,0.12) !important;
-    margin-left: 20px !important;
+    border-left: none !important;
+    margin-left: 10px !important;
     margin-top: 4px !important;
     margin-bottom: 4px !important;
     padding: 2px 0 2px 0 !important;
     list-style: none !important;
+}
+
+/* Remove vertical guide line & hyphen (-) symbol pseudo-elements completely */
+.nav-group-sub::before,
+.nav-group-sub::after,
+.nav-group-sub li::before,
+.nav-group-sub li::after,
+.nav-group-sub li a::before,
+.nav-group-sub li a::after,
+.metismenu ul::before,
+.metismenu ul::after,
+.metismenu ul a::before,
+.metismenu ul a::after,
+.metismenu ul li::before,
+.metismenu ul li::after,
+.deznav .metismenu ul::before,
+.deznav .metismenu ul::after,
+.deznav .metismenu ul a::before,
+.deznav .metismenu ul a::after,
+.deznav .metismenu ul li::before,
+.deznav .metismenu ul li::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 /* --- Child Item Links --- */

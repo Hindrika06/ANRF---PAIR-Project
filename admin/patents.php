@@ -414,7 +414,7 @@ $total_inventors = count($unique_inventors);
     }
 
     .kpi-widget-card {
-        border-radius: 10px !important;
+        border-radius: 0 !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;

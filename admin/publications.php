@@ -326,7 +326,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 
     /* ──── UNIFIED KPI CARD COLOR (#bc2121) ──── */
     .kpi-widget-card {
-        border-radius: 14px !important;
+        border-radius: 0 !important;
         padding: 22px 24px;
         color: #ffffff;
         border: none;
@@ -337,15 +337,8 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .kpi-widget-card::after {
-        content: '';
-        position: absolute;
-        top: -30px;
-        right: -30px;
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.1);
-        pointer-events: none;
+        display: none !important;
+        content: none !important;
     }
     .kpi-widget-card:hover {
         transform: translateY(-4px);

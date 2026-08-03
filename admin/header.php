@@ -431,18 +431,24 @@
         }
 
         /* ── 6. KPI Cards: Beautiful Gradient & Glassy Shine ── */
+        .kpi-widget-card,
         body.theme-super-admin .kpi-widget-card {
             border: none !important;
             box-shadow: 0 6px 20px rgba(2, 66, 131, 0.12) !important;
-            border-radius: 14px !important;
+            border-radius: 0 !important;
             transition: transform 0.2s ease, box-shadow 0.2s ease !important;
             position: relative;
             overflow: hidden;
         }
 
-        /* Premium Gloss/Shine Highlight Overlay for KPI Cards */
-        body.theme-super-admin .kpi-widget-card::before {
+        /* Remove corner circle / shine highlight overlays */
+        .kpi-widget-card::before,
+        .kpi-widget-card::after,
+        body.theme-super-admin .kpi-widget-card::before,
+        body.theme-super-admin .kpi-widget-card::after {
             display: none !important;
+            content: none !important;
+            border-radius: 0 !important;
         }
 
         body.theme-super-admin .kpi-widget-card:hover {
