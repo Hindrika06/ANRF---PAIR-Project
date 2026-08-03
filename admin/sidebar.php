@@ -14,7 +14,8 @@ $kpiActive = in_array($currentPage, [
     'internships.php',
     'progress_reports.php',
     'collaborations_management.php',
-    'research_infrastructure.php'
+    'research_infrastructure.php',
+    'sheets.php'
 ]);
 $pagesActive = isSuperAdmin() && in_array($currentPage, [
     'gallery_albums_management.php',
@@ -437,6 +438,12 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                         <a href="research_infrastructure.php" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-flask" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Research &amp; Infrastructure</span>
+                        </a>
+                    </li>
+                    <li class="<?= ($currentPage === 'sheets.php') ? 'mm-active' : '' ?>">
+                        <a href="sheets.php" style="padding: 9px 14px !important; font-size: 13px;">
+                            <i class="fas fa-file-excel" style="font-size:0.95rem;"></i>
+                            <span class="nav-text">Sheets</span>
                         </a>
                     </li>
                 </ul>

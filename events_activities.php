@@ -33,10 +33,18 @@ include 'header.php';
                                         $endDateFormatted = !empty($event['end_date']) && $event['end_date'] !== $event['event_date']
                                             ? ' – ' . date("d F, Y", strtotime($event['end_date']))
                                             : '';
-                                        $startTime = date("g:i A", strtotime($event['start_time']));
-                                        $endTime = date("g:i A", strtotime($event['end_time']));
-                                        $timeStr = "{$startTime} - {$endTime}";
-                                        $detailMeta = "{$startDateFormatted}{$endDateFormatted} | {$timeStr} | {$event['venue']} | " . ($event['organizer'] ?: 'ANRF-PAIR Project');
+
+                                        $startTime = !empty($event['start_time']) ? date("g:i A", strtotime($event['start_time'])) : '';
+                                        $endTime   = !empty($event['end_time'])   ? date("g:i A", strtotime($event['end_time']))   : '';
+                                        $timeStr   = ($startTime && $endTime) ? "{$startTime} - {$endTime}" : ($startTime ?: $endTime);
+                                        $timePart  = $timeStr !== '' ? "{$timeStr} | " : '';
+
+                                        $venue     = !empty($event['venue']) ? $event['venue'] : '';
+                                        $venuePart = $venue !== '' ? "{$venue} | " : '';
+
+                                        $organizer = !empty($event['organizer']) ? $event['organizer'] : 'ANRF-PAIR Project';
+
+                                        $detailMeta = "{$startDateFormatted}{$endDateFormatted} | {$timePart}{$venuePart}{$organizer}";
                                     ?>
                                     <article class="event">
                                         <figure class="date">
@@ -66,8 +74,3 @@ include 'header.php';
 <!-- end Page Content -->
 
 <?php include 'footer.php';?>
-
-</div>
-
-</body>
-</html>

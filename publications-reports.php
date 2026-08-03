@@ -1,12 +1,12 @@
 
 <?php 
+$bodyClass = 'page-homepage-courses';
+$activePage = '';
 // 1. INTEGRATE DATABASE CONNECTION VIA YOUR EXISTING CONFIG FILE
 require_once 'config.php'; 
 
 include 'header.php';
 ?>
-
-<body class="page-homepage-courses" style="font-size: 16px; line-height: 1.6;">
 
 
 <div id="page-content">
@@ -107,8 +107,6 @@ include 'header.php';
 
 </div>
 
-</div>
-
 <style>
     /* Strict overrides to completely crush template-generated heading lines/borders */
     h2.no-theme-underline::after,
@@ -155,5 +153,4 @@ include 'header.php';
         text-decoration: none !important;
     }
 </style>
-</body>
 <?php include 'footer.php';?>

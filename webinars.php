@@ -9,13 +9,26 @@ $webinars = [];
 $hasData = false;
 
 try {
-    $stmt = $pdo->query("SELECT * FROM uoh_webinars WHERE publish_status = 1 ORDER BY webinar_date DESC, id DESC");
+    // Self-healing schema update for uoh_webinars table if publish_status is missing
+    try {
+        $existingColumns = $pdo->query("SHOW COLUMNS FROM `uoh_webinars`")->fetchAll(PDO::FETCH_COLUMN);
+        if ($existingColumns && !in_array('publish_status', $existingColumns, true)) {
+            $pdo->exec("ALTER TABLE `uoh_webinars` ADD COLUMN `publish_status` TINYINT(1) NOT NULL DEFAULT 1");
+        }
+    } catch (Exception $ignored) {}
+
+    try {
+        $stmt = $pdo->query("SELECT * FROM uoh_webinars WHERE publish_status = 1 ORDER BY webinar_date DESC, id DESC");
+    } catch (PDOException $ex) {
+        $stmt = $pdo->query("SELECT * FROM uoh_webinars ORDER BY webinar_date DESC, id DESC");
+    }
+
     $webinars = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (!empty($webinars)) {
         $hasData = true;
     }
 } catch (PDOException $e) {
-    echo "<div class='container' style='margin-top:20px;'><div class='alert alert-danger'>Database Error: " . htmlspecialchars($e->getMessage()) . "</div></div>";
+    // Catch database errors gracefully
 }
 ?>
 
