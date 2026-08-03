@@ -16,7 +16,7 @@ try {
     }
 
     // 2. Fetch published events
-    $stmtEvt = $pdo->query("SELECT id, title, event_date, end_date, venue FROM `events` WHERE publish_status = 1 ORDER BY event_date ASC");
+    $stmtEvt = $pdo->query("SELECT id, title, event_date, end_time, venue FROM `events` WHERE publish_status = 1 ORDER BY event_date ASC");
     while ($evt = $stmtEvt->fetch(PDO::FETCH_ASSOC)) {
         $dateStr = date("M d, Y", strtotime($evt['event_date']));
         $tickerItems[] = [

@@ -1,6 +1,6 @@
-<?php 
+<?php
 // 1. INTEGRATE DATABASE CONNECTION VIA YOUR EXISTING CONFIG FILE
-require_once 'config.php'; 
+require_once 'config.php';
 
 include 'header.php';
 
@@ -9,22 +9,33 @@ $webinars = [];
 $hasData = false;
 
 try {
-    // Self-healing schema update for uoh_webinars table if publish_status is missing
-    try {
-        $existingColumns = $pdo->query("SHOW COLUMNS FROM `uoh_webinars`")->fetchAll(PDO::FETCH_COLUMN);
-        if ($existingColumns && !in_array('publish_status', $existingColumns, true)) {
-            $pdo->exec("ALTER TABLE `uoh_webinars` ADD COLUMN `publish_status` TINYINT(1) NOT NULL DEFAULT 1");
-        }
-    } catch (Exception $ignored) {}
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $webinars = [];
 
-    try {
-        $stmt = $pdo->query("SELECT * FROM uoh_webinars WHERE publish_status = 1 ORDER BY webinar_date DESC, id DESC");
-    } catch (PDOException $ex) {
-        $stmt = $pdo->query("SELECT * FROM uoh_webinars ORDER BY webinar_date DESC, id DESC");
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_webinars";
+        try {
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check > 0) {
+                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $hasPublish = in_array('publish_status', $cols, true);
+
+                $whereClause = $hasPublish ? "WHERE publish_status = 1" : "";
+                $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                    $webinars = array_merge($webinars, $rows);
+                }
+            }
+        } catch (Exception $e) {}
     }
 
-    $webinars = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (!empty($webinars)) {
+        usort($webinars, function($a, $b) {
+            $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
+            $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
+            return $tB <=> $tA;
+        });
         $hasData = true;
     }
 } catch (PDOException $e) {
@@ -43,7 +54,7 @@ try {
 
 <div id="page-content" style="padding-top: 15px;">
     <div class="container">
-        
+
         <!-- Clean Editorial Hero Banner -->
         <div class="webinar-hero-banner">
             <div class="hero-badge-container">
@@ -74,14 +85,14 @@ try {
 
                             <?php if ($hasData): ?>
                                 <div class="webinar-list">
-                                    <?php foreach ($webinars as $row): 
+                                    <?php foreach ($webinars as $row):
                                         // Parse the 'webinar_date' column
                                         $timestamp = !empty($row['webinar_date']) ? strtotime($row['webinar_date']) : time();
                                         $month = date('M', $timestamp);
                                         $day   = date('d', $timestamp);
                                         $year  = date('Y', $timestamp);
                                         $fullDisplayDate = date('F d, Y \a\t h:i A', $timestamp);
-                                        
+
                                         // Determine if upcoming or past
                                         $isUpcoming = $timestamp >= time();
                                         $typeAttr = $isUpcoming ? 'upcoming' : 'past';
@@ -93,13 +104,13 @@ try {
                                         $linkVal        = !empty($row['link']) ? $row['link'] : '';
                                         $organisersVal  = !empty($row['organisers']) ? $row['organisers'] : '';
                                     ?>
-                                        <article class="webinar-card" 
-                                                 data-title="<?= htmlspecialchars(strtolower($row['title'] ?? '')) ?>" 
-                                                 data-speaker="<?= htmlspecialchars(strtolower($speakerVal)) ?>" 
-                                                 data-description="<?= htmlspecialchars(strtolower($descriptionVal)) ?>" 
-                                                 data-organizer="<?= htmlspecialchars(strtolower($organisersVal)) ?>" 
+                                        <article class="webinar-card"
+                                                 data-title="<?= htmlspecialchars(strtolower($row['title'] ?? '')) ?>"
+                                                 data-speaker="<?= htmlspecialchars(strtolower($speakerVal)) ?>"
+                                                 data-description="<?= htmlspecialchars(strtolower($descriptionVal)) ?>"
+                                                 data-organizer="<?= htmlspecialchars(strtolower($organisersVal)) ?>"
                                                  data-type="<?= $typeAttr ?>">
-                                            
+
                                             <!-- Date Badge (Calendar Style) -->
                                             <div class="webinar-date-card">
                                                 <div class="webinar-date-header"><?= htmlspecialchars($month) ?></div>
@@ -108,13 +119,13 @@ try {
                                                     <span class="webinar-date-year"><?= htmlspecialchars($year) ?></span>
                                                 </div>
                                             </div>
-                                            
+
                                             <!-- Main content -->
                                             <div class="webinar-card-content">
                                                 <div class="webinar-status-badge <?= $isUpcoming ? 'badge-upcoming' : 'badge-past' ?>">
                                                     <?= $isUpcoming ? 'Upcoming Session' : 'Completed Session' ?>
                                                 </div>
-                                                
+
                                                 <h3 class="webinar-title"><?= htmlspecialchars($row['title'] ?? 'Untitled Webinar') ?></h3>
 
                                                 <div class="webinar-meta-grid">
@@ -122,14 +133,14 @@ try {
                                                         <i class="fa fa-clock-o meta-icon"></i>
                                                         <span><?= htmlspecialchars(date('h:i A', $timestamp)) ?> (IST)</span>
                                                     </div>
-                                                    
+
                                                     <?php if (!empty($speakerVal)): ?>
                                                         <div class="meta-item">
                                                             <i class="fa fa-user-md meta-icon"></i>
                                                             <span><strong>Speaker:</strong> <?= htmlspecialchars($speakerVal) ?></span>
                                                         </div>
                                                     <?php endif; ?>
-                                                    
+
                                                     <?php if (!empty($affiliationVal)): ?>
                                                         <div class="meta-item">
                                                             <i class="fa fa-university meta-icon"></i>
@@ -147,7 +158,7 @@ try {
                                                             <span class="tag-value"><?= htmlspecialchars($organisersVal) ?></span>
                                                         </div>
                                                     <?php endif; ?>
-                                                    
+
                                                     <?php if (!empty($linkVal)): ?>
                                                         <a href="<?= htmlspecialchars($linkVal) ?>" target="_blank" class="webinar-btn <?= $isUpcoming ? 'btn-join' : 'btn-recording' ?>">
                                                             <i class="fa <?= $isUpcoming ? 'fa-video-camera' : 'fa-play-circle' ?>"></i>
@@ -159,8 +170,11 @@ try {
 
                                             <!-- Card Image Thumbnail -->
                                             <div class="webinar-image-wrapper">
-                                                <?php if (!empty($row['image'])): ?>
-                                                    <img src="admin/<?= htmlspecialchars($row['image']) ?>" alt="Webinar Presentation" class="webinar-thumbnail">
+                                                 <?php if (!empty($row['image'])):
+                                                     $imgPath = $row['image'];
+                                                     $imgSrc = file_exists($imgPath) ? $imgPath : (file_exists('admin/' . $imgPath) ? 'admin/' . $imgPath : htmlspecialchars($imgPath));
+                                                 ?>
+                                                     <img src="<?= $imgSrc ?>" alt="Webinar Presentation" class="webinar-thumbnail">
                                                 <?php else: ?>
                                                     <div class="webinar-fallback-thumbnail">
                                                         <i class="fa fa-graduation-cap"></i>
@@ -213,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function filterCards() {
         let visibleCount = 0;
-        
+
         cards.forEach(card => {
             const title = card.getAttribute("data-title") || "";
             const speaker = card.getAttribute("data-speaker") || "";
@@ -221,10 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const organizer = card.getAttribute("data-organizer") || "";
             const cardType = card.getAttribute("data-type") || "";
 
-            const matchesSearch = 
-                title.includes(searchQuery) || 
-                speaker.includes(searchQuery) || 
-                desc.includes(searchQuery) || 
+            const matchesSearch =
+                title.includes(searchQuery) ||
+                speaker.includes(searchQuery) ||
+                desc.includes(searchQuery) ||
                 organizer.includes(searchQuery);
 
             const matchesTab = (activeFilter === "all") || (cardType === activeFilter);
