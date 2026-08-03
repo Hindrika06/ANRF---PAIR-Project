@@ -76,7 +76,7 @@
                         margin-bottom: 10px;
                         padding: 0 15px;
                     ">
-                        <h2 class="gallery-main-heading">SPOKE INSTITUTIONS</h2>
+                        <h2 class="gallery-main-heading">SPOKE INSTITUTIONS' KPIs</h2>
 
                         <a href="institute.php" class="view-institutes-btn view-institutes-desktop">View Institutes
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -92,55 +92,79 @@
                             <div class="logos-ticker" id="logosTicker">
                                 <!-- Central University of Karnataka -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Central University of Karnataka">
+                                    <a href="https://www.cuk.ac.in" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/cuk1.jpg" alt="Central University of Karnataka">
                                     </a>
-                                    <p class="institution-name">Central University of Karnataka</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.cuk.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Central University of Karnataka
+                                        </a>
+                                    </p>
                                     <p class="institution-address">Kadaganchi, Aland Road</p>
                                 </div>
 
                                 <!-- Kannur University -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Kannur University">
+                                    <a href="https://www.kannuruniversity.ac.in" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/ku1.jpg" alt="Kannur University">
                                     </a>
-                                    <p class="institution-name">Kannur University</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.kannuruniversity.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Kannur University
+                                        </a>
+                                    </p>
                                     <p class="institution-address">Thavakkara Civil Station</p>
                                 </div>
 
                                 <!-- Mahatma Gandhi University -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Mahatma Gandhi University">
+                                    <a href="https://www.mgu.ac.in" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/mg1.jpg" alt="Mahatma Gandhi University">
                                     </a>
-                                    <p class="institution-name">Mahatma Gandhi University</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.mgu.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Mahatma Gandhi University
+                                        </a>
+                                    </p>
                                     <p class="institution-address">Priyadarshi Hills Post</p>
                                 </div>
 
                                 <!-- Osmania University -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Osmania University">
+                                    <a href="https://www.osmania.ac.in" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/ou1.jpg" alt="Osmania University">
                                     </a>
-                                    <p class="institution-name">Osmania University</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.osmania.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Osmania University
+                                        </a>
+                                    </p>
                                     <p class="institution-address">Amberpet, Hyderabad</p>
                                 </div>
 
                                 <!-- Sri Venkateswara University -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Sri Venkateswara University">
+                                    <a href="https://www.svuniversity.edu.in" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/gan1.jpg" alt="Sri Venkateswara University">
                                     </a>
-                                    <p class="institution-name">Sri Venkateswara University</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.svuniversity.edu.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Sri Venkateswara University
+                                        </a>
+                                    </p>
                                     <p class="institution-address">University Campus</p>
                                 </div>
 
                                 <!-- Yogi Vemana University -->
                                 <div class="logo-item">
-                                    <a href="institute.php?name=Yogi Vemana University">
+                                    <a href="https://www.yvu.edu.in/" target="_blank" rel="noopener noreferrer">
                                         <img src="logos/yu.jpg" alt="Yogi Vemana University">
                                     </a>
-                                    <p class="institution-name">Yogi Vemana University</p>
+                                    <p class="institution-name">
+                                        <a href="https://www.yvu.edu.in/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                            Yogi Vemana University
+                                        </a>
+                                    </p>
                                     <p class="institution-address">Vemana Puram, Gaganapalle</p>
                                 </div>
                             </div>
