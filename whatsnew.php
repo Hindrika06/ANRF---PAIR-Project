@@ -11,7 +11,7 @@ try {
     while ($ann = $stmtAnn->fetch(PDO::FETCH_ASSOC)) {
         $tickerItems[] = [
             'title' => $ann['title'],
-            'link'  => $ann['link'] ?: 'events_activities.php'
+            'link'  => $ann['link'] ?: 'conferences.php'
         ];
     }
 

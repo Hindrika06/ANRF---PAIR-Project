@@ -115,8 +115,8 @@
 
         <div class="row modern-ql-grid">
             <div class="col-md-3 col-sm-6 col-xs-12">
-                <a href="events_activities.php" class="modern-ql-box">
-                    <span class="ql-text">Upcoming Events</span>
+                <a href="conferences.php" class="modern-ql-box">
+                    <span class="ql-text">Conferences &amp; Workshops</span>
                     <span class="ql-arrow">&#10230;</span>
                 </a>
             </div>

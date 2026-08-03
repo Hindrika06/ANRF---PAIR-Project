@@ -5,8 +5,36 @@ $conferences = [];
 $error       = '';
 
 try {
-    $stmt        = $pdo->query("SELECT * FROM uoh_conferences ORDER BY conf_date ASC");
-    $conferences = $stmt->fetchAll();
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $conferences = [];
+
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_conferences";
+        try {
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check > 0) {
+                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $hasPublish = in_array('publish_status', $cols, true);
+
+                $whereClause = $hasPublish ? "WHERE publish_status = 1" : "";
+                $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                    $conferences = array_merge($conferences, $rows);
+                }
+            }
+        } catch (Exception $e) {}
+    }
+
+    if (!empty($conferences)) {
+        usort($conferences, function($a, $b) {
+            $dateA = !empty($a['conf_date']) ? $a['conf_date'] : ($a['start_date'] ?? '');
+            $dateB = !empty($b['conf_date']) ? $b['conf_date'] : ($b['start_date'] ?? '');
+            $tA = !empty($dateA) ? strtotime($dateA) : 0;
+            $tB = !empty($dateB) ? strtotime($dateB) : 0;
+            return $tB <=> $tA;
+        });
+    }
 } catch (PDOException $e) {
     $error = 'Could not load records: ' . $e->getMessage();
 }
@@ -325,8 +353,11 @@ try {
 
                                     <!-- Image / date strip -->
                                     <div class="conf-card-image">
-                                        <?php if (!empty($conf['image']) && file_exists($conf['image'])): ?>
-                                            <img src="<?= htmlspecialchars($conf['image']) ?>" alt="<?= htmlspecialchars($conf['title']) ?>">
+                                         <?php if (!empty($conf['image'])):
+                                             $imgPath = $conf['image'];
+                                             $imgSrc = file_exists($imgPath) ? $imgPath : (file_exists('admin/' . $imgPath) ? 'admin/' . $imgPath : htmlspecialchars($imgPath));
+                                         ?>
+                                             <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($conf['title']) ?>">
                                         <?php else: ?>
                                             <div class="conf-no-image">
                                                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
