@@ -17,8 +17,6 @@ try {
 }
 ?>
 
-
-
 <!-- Header -->
 <?php include 'header.php';?>
 <!-- end Header -->
@@ -97,6 +95,204 @@ try {
     </div>
 </div>
 <!-- end Page Content -->
+
+<style>
+    :root {
+        --pr-red: #B33A3A;
+        --pr-red-dark: #8C2424;
+        --pr-ink: #1F2937;
+        --pr-slate: #4B5563;
+        --pr-panel: #FAF5F4;
+        --pr-hair: #E5E7EB;
+    }
+
+    .pr-page { padding: 10px 0 60px !important; background: #fff !important; }
+
+    .pr-header {
+        max-width: 680px !important;
+        margin: 10px auto 36px !important;
+        text-align: center !important;
+    }
+    .pr-eyebrow {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        color: var(--pr-red) !important;
+        margin: 0 0 10px !important;
+        line-height: 1.4 !important;
+    }
+    .pr-title {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 32px !important;
+        line-height: 1.2 !important;
+        margin: 0 0 12px !important;
+        padding: 0 !important;
+        color: var(--pr-ink) !important;
+        background: transparent !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+        border: none !important;
+    }
+    .pr-subtitle {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        font-size: 15px !important;
+        color: var(--pr-slate) !important;
+        line-height: 1.6 !important;
+        margin: 0 !important;
+    }
+
+    /* ---------- Table wrap ---------- */
+    .pr-table-wrap {
+        max-width: 1180px !important;
+        margin: 0 auto !important;
+        border: 1px solid var(--pr-hair) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+        overflow: hidden !important;
+    }
+
+    .pr-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        background: #fff !important;
+        margin: 0 !important;
+    }
+
+    .pr-table thead th {
+        background: var(--pr-red) !important;
+        color: #fff !important;
+        text-align: left !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+        padding: 14px 18px !important;
+        white-space: nowrap !important;
+        border: none !important;
+        vertical-align: middle !important;
+    }
+
+    .pr-table tbody td {
+        padding: 16px 18px !important;
+        font-size: 13.5px !important;
+        color: var(--pr-ink) !important;
+        line-height: 1.55 !important;
+        border-bottom: 1px solid var(--pr-hair) !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        vertical-align: top !important;
+        background: transparent !important;
+    }
+
+    .pr-table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .pr-table tbody tr:nth-child(even) td {
+        background: var(--pr-panel) !important;
+    }
+
+    .pr-table tbody tr:hover td {
+        background: #F5EAE8 !important;
+    }
+
+    .pr-td-title {
+        font-weight: 700 !important;
+        color: var(--pr-red-dark) !important;
+        min-width: 180px !important;
+    }
+    .pr-td-people { white-space: nowrap !important; }
+    .pr-person { font-size: 13px !important; color: var(--pr-slate) !important; margin: 0 !important; }
+    .pr-person strong {
+        color: var(--pr-ink) !important;
+        font-weight: 700 !important;
+        margin-right: 4px !important;
+    }
+    .pr-td-text { min-width: 220px !important; }
+    .pr-td-progress { font-weight: 500 !important; }
+
+    .pr-empty {
+        text-align: center !important;
+        padding: 50px 20px !important;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+        color: var(--pr-slate) !important;
+        border: 1px dashed var(--pr-hair) !important;
+        border-radius: 8px !important;
+        max-width: 1180px !important;
+        margin: 0 auto !important;
+    }
+
+    @media (max-width: 767px) {
+        .pr-table-wrap {
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+        }
+
+        .pr-table,
+        .pr-table tbody {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .pr-table thead {
+            display: none !important;
+        }
+
+        .pr-card-row {
+            display: block !important;
+            background: #fff !important;
+            border: 1px solid var(--pr-hair) !important;
+            border-radius: 10px !important;
+            margin-bottom: 16px !important;
+            padding: 4px 0 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .pr-card-row:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        .pr-table tbody tr:nth-child(even) td,
+        .pr-table tbody tr:hover td {
+            background: transparent !important;
+        }
+
+        .pr-table tbody td {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 10px 16px !important;
+            border-bottom: 1px solid var(--pr-hair) !important;
+        }
+
+        .pr-card-row td:last-child {
+            border-bottom: none !important;
+        }
+
+        .pr-table tbody td[data-label]::before {
+            content: attr(data-label) !important;
+            display: block !important;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            color: var(--pr-red) !important;
+            margin-bottom: 6px !important;
+        }
+
+        .pr-td-title { min-width: 0 !important; font-size: 15px !important; }
+        .pr-td-text { min-width: 0 !important; }
+        .pr-person { white-space: normal !important; }
+    }
+</style>
 
 <!-- Footer -->
 <?php include 'footer.php';?>
