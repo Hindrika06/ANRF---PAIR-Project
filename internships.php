@@ -22,56 +22,57 @@ try {
 }
 ?>
 
-
-
 <?php include 'header.php';?>
 
-<!-- ── HERO: Split layout ── -->
+<!-- Breadcrumb -->
+<div class="container">
+    <ol class="breadcrumb" style="font-size: 14px; margin-bottom: 0; background: transparent; padding-left: 0;">
+        <li><a href="index.php">Home</a></li>
+        <li class="active">Internships & Training Records</li>
+    </ol>
+</div>
+<!-- end Breadcrumb -->
+
+<!-- ── HERO SECTION ── -->
 <section class="itr-hero">
     <div class="container">
-        <div class="itr-hero-grid">
-
-            <!-- LEFT: Text block -->
-            <div class="itr-hero-left">
-                <span class="itr-tag">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    ANRF-PAIR Initiative
-                </span>
+        <div class="itr-hero-inner">
+            <!-- LEFT: Hero Header (Stacked on separate lines, left-aligned) -->
+            <div class="itr-hero-content">
+                <span class="itr-hero-eyebrow">ANRF&ndash;PAIR INITIATIVE</span>
                 <h1 class="itr-hero-title">Internships &amp; Training Records</h1>
-                <p class="itr-hero-desc">
-                    A curated log of internship and training cohorts conducted under the initiative,
-                    tracking mentors, students, and real-world outcomes.
+                <p class="itr-hero-subtitle">
+                    A curated log of internship and training cohorts conducted under the ANRF-PAIR initiative,
+                    tracking faculty mentors, student participation, and key outcomes.
                 </p>
-
             </div>
 
-            <!-- RIGHT: Stat cards stack -->
+            <!-- RIGHT / STATS: Statistics Cards -->
             <?php if ($hasData): ?>
-            <div class="itr-hero-right">
-                <div class="itr-stat-card itr-sc-green">
-                    <div class="itr-sc-icon"><i class="fa-solid fa-folder-open"></i></div>
-                    <div class="itr-sc-body">
-                        <span class="itr-sc-num"><?= count($internships) ?></span>
-                        <span class="itr-sc-label">Programs Logged</span>
+            <div class="itr-stats-grid">
+                <div class="itr-stat-card itr-stat-blue">
+                    <div class="itr-stat-icon"><i class="fa fa-folder-open"></i></div>
+                    <div class="itr-stat-info">
+                        <span class="itr-stat-number"><?= count($internships) ?></span>
+                        <span class="itr-stat-label">Programs Logged</span>
                     </div>
                 </div>
-                <div class="itr-stat-card itr-sc-amber">
-                    <div class="itr-sc-icon"><i class="fa-solid fa-users"></i></div>
-                    <div class="itr-sc-body">
-                        <span class="itr-sc-num"><?= $totalStudents ?></span>
-                        <span class="itr-sc-label">Students Trained</span>
+                <div class="itr-stat-card itr-stat-red">
+                    <div class="itr-stat-icon"><i class="fa fa-users"></i></div>
+                    <div class="itr-stat-info">
+                        <span class="itr-stat-number"><?= $totalStudents ?></span>
+                        <span class="itr-stat-label">Students Trained</span>
                     </div>
                 </div>
-                <div class="itr-stat-card itr-sc-violet">
-                    <div class="itr-sc-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div class="itr-sc-body">
-                        <span class="itr-sc-num"><?= $totalDays ?></span>
-                        <span class="itr-sc-label">Training Days</span>
+                <div class="itr-stat-card itr-stat-blue">
+                    <div class="itr-stat-icon"><i class="fa fa-clock-o"></i></div>
+                    <div class="itr-stat-info">
+                        <span class="itr-stat-number"><?= $totalDays ?></span>
+                        <span class="itr-stat-label">Training Days</span>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
-
         </div>
     </div>
 </section>
@@ -84,14 +85,13 @@ try {
             <!-- Section header -->
             <div class="itr-section-header">
                 <div class="itr-sh-left">
-                    <span class="itr-sh-line"></span>
                     <div>
                         <h2 class="itr-sh-title">All Programs</h2>
-                        <p class="itr-sh-sub">Browse all logged internship and training cohorts below.</p>
+                        <p class="itr-sh-desc">Browse all logged internship and training cohorts below.</p>
                     </div>
                 </div>
                 <?php if ($hasData): ?>
-                <span class="itr-sh-count"><?= count($internships) ?> record<?= count($internships) !== 1 ? 's' : '' ?></span>
+                <span class="itr-sh-badge"><i class="fa fa-list-alt"></i> <?= count($internships) ?> record<?= count($internships) !== 1 ? 's' : '' ?></span>
                 <?php endif; ?>
             </div>
 
@@ -103,51 +103,51 @@ try {
                     $students = (int)($row['no_students_trained'] ?? 0);
                 ?>
                 <div class="int-card">
-                    <div class="int-card-accent"></div>
-                    <div class="int-card-inner">
+                    <div class="int-card-accent-bar"></div>
+                    <div class="int-card-body">
 
-                        <div class="int-card-top">
-                            <div class="int-card-index"><?= $idx + 1 ?></div>
-                            <div class="int-card-header">
-                                <h2 class="int-card-title"><?= htmlspecialchars($row['title'] ?? 'Untitled Program') ?></h2>
+                        <div class="int-card-header">
+                            <div class="int-card-badge-num">#<?= sprintf('%02d', $idx + 1) ?></div>
+                            <div class="int-card-main-title">
+                                <h3 class="int-card-title"><?= htmlspecialchars($row['title'] ?? 'Untitled Program') ?></h3>
                                 <?php if (!empty($row['project_investigator'])): ?>
-                                <p class="int-card-mentor">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                    <?= htmlspecialchars($row['project_investigator']) ?>
-                                </p>
+                                <div class="int-card-mentor">
+                                    <i class="fa fa-user-circle"></i>
+                                    <span><strong>Mentor / PI:</strong> <?= htmlspecialchars($row['project_investigator']) ?></span>
+                                </div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <?php if (!empty($row['content'])): ?>
-                        <p class="int-card-desc"><?= nl2br(htmlspecialchars($row['content'])) ?></p>
+                        <div class="int-card-desc">
+                            <?= nl2br(htmlspecialchars($row['content'])) ?>
+                        </div>
                         <?php endif; ?>
 
                         <?php if ($days || $students): ?>
-                        <div class="int-card-metrics">
+                        <div class="int-card-badges">
                             <?php if ($days): ?>
-                            <div class="int-metric">
-                                <i class="fa-regular fa-clock"></i>
-                                <span class="int-metric-val"><?= $days ?></span>
-                                <span class="int-metric-lbl">Training Days</span>
-                            </div>
+                            <span class="int-badge int-badge-days">
+                                <i class="fa fa-clock-o"></i> <?= $days ?> Days
+                            </span>
                             <?php endif; ?>
                             <?php if ($students): ?>
-                            <div class="int-metric">
-                                <i class="fa-solid fa-user-graduate"></i>
-                                <span class="int-metric-val"><?= $students ?></span>
-                                <span class="int-metric-lbl">Students Trained</span>
-                            </div>
+                            <span class="int-badge int-badge-students">
+                                <i class="fa fa-graduation-cap"></i> <?= $students ?> Students
+                            </span>
                             <?php endif; ?>
                         </div>
                         <?php endif; ?>
 
                         <?php if (!empty($studentsList)): ?>
                         <div class="int-roster">
-                            <span class="int-roster-label"><i class="fa-solid fa-list-ul"></i> Enrolled Students</span>
-                            <div class="int-roster-tags">
+                            <div class="int-roster-header">
+                                <i class="fa fa-users"></i> Enrolled Students
+                            </div>
+                            <div class="int-roster-pills">
                                 <?php foreach ($studentsList as $student): ?>
-                                <span class="int-student-tag"><?= htmlspecialchars($student) ?></span>
+                                <span class="int-student-pill"><?= htmlspecialchars($student) ?></span>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -160,7 +160,7 @@ try {
 
             <?php else: ?>
             <div class="int-empty">
-                <i class="fa-solid fa-inbox"></i>
+                <i class="fa fa-inbox"></i>
                 <p>No training programs on record yet.</p>
             </div>
             <?php endif; ?>
@@ -169,305 +169,399 @@ try {
     </div>
 </div>
 
-<?php include 'footer.php';?>
-</div>
-
 <style>
-/* ═══════════════════════════════════════════════════════════
-   INTERNSHIPS — SPLIT HERO + EMERALD / AMBER REDESIGN
-═══════════════════════════════════════════════════════════ */
+/* ============================================================
+   ANRF-PAIR INTERNSHIPS & TRAINING RECORDS THEME
+   ============================================================ */
 :root {
-    /* New palette */
-    --itr-green:      #065f46;
-    --itr-green-mid:  #059669;
-    --itr-green-lt:   #d1fae5;
-    --itr-amber:      #b45309;
-    --itr-amber-lt:   #fef3c7;
-    --itr-violet:     #5b21b6;
-    --itr-violet-lt:  #ede9fe;
-
-    --itr-text:   #1e293b;
-    --itr-sub:    #64748b;
-    --itr-border: #e2e8f0;
-    --itr-bg:     #f8fafc;
-    --itr-white:  #ffffff;
+    --anrf-blue:       #0B4F9C;
+    --anrf-blue-dark:  #1B3A6B;
+    --anrf-blue-light: #EFF6FF;
+    --anrf-red:        #BC2121;
+    --anrf-red-dark:   #991B1B;
+    --anrf-red-light:  #FEF2F2;
+    --anrf-text:       #1E293B;
+    --anrf-slate:      #475569;
+    --anrf-slate-light:#64748B;
+    --anrf-border:     #E2E8F0;
+    --anrf-bg:         #F8FAFC;
+    --anrf-white:      #FFFFFF;
 }
 
-/* ══ HERO ══ */
+/* Strict reset of decorative lines */
+.itr-hero-title::before,
+.itr-hero-title::after,
+.itr-sh-title::before,
+.itr-sh-title::after,
+.itr-hero::before,
+.itr-hero::after,
+.itr-section-header::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+/* ── HERO SECTION ── */
 .itr-hero {
-    background: #f0fdf4;           /* very soft green tint */
-    border-bottom: 3px solid var(--itr-green-mid);
-    padding: 54px 0 50px;
-    position: relative;
-    overflow: hidden;
-}
-/* Subtle decorative circle */
-.itr-hero::before {
-    content: '';
-    position: absolute;
-    right: -120px; top: -80px;
-    width: 400px; height: 400px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(5,150,105,.08) 0%, transparent 70%);
-    pointer-events: none;
+    background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+    border-bottom: none !important;
+    padding: 35px 0 30px;
+    margin-bottom: 0;
 }
 
-.itr-hero-grid {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 48px;
+.itr-hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
-/* Left */
-.itr-hero-left { max-width: 520px; }
+.itr-hero-content {
+    max-width: 800px;
+    text-align: left;
+}
 
-.itr-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--itr-green-lt);
-    color: var(--itr-green);
-    font-size: 11.5px;
+.itr-hero-eyebrow {
+    display: block;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: .7px;
     text-transform: uppercase;
-    padding: 5px 13px;
-    border-radius: 20px;
-    margin-bottom: 18px;
+    letter-spacing: 0.08em;
+    color: var(--anrf-red);
+    margin-bottom: 6px;
 }
 
 .itr-hero-title {
-    font-size: 30px;
-    font-weight: 900;
-    color: var(--itr-text);
-    line-height: 1.2;
-    margin: 0 0 16px;
-    letter-spacing: -.3px;
-    white-space: nowrap;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--anrf-blue-dark);
+    margin: 0 0 10px;
+    line-height: 1.25;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-.itr-hero-desc {
-    font-size: 15px;
-    color: var(--itr-sub);
-    line-height: 1.75;
-    margin: 0 0 24px;
+.itr-hero-subtitle {
+    font-size: 15.5px;
+    color: var(--anrf-slate);
+    line-height: 1.6;
+    margin: 0;
+    border: none !important;
 }
 
-.itr-hero-crumb {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: var(--itr-sub);
-}
-.itr-hero-crumb a {
-    color: var(--itr-green);
-    text-decoration: none;
-    font-weight: 600;
-}
-.itr-hero-crumb a:hover { text-decoration: underline; }
-.itr-crumb-sep { opacity: .4; font-size: 16px; }
-
-/* Right — 3 stacked stat cards */
-.itr-hero-right {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 230px;
+/* ── STATS CARDS ── */
+.itr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
 .itr-stat-card {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 16px 22px;
+    background: var(--anrf-white);
+    border: 1px solid var(--anrf-border);
     border-radius: 12px;
-    border: 1px solid transparent;
-    transition: transform .18s ease;
+    padding: 18px 22px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.itr-stat-card:hover { transform: translateX(4px); }
 
-.itr-sc-green  { background: var(--itr-green-lt);  border-color: #a7f3d0; }
-.itr-sc-amber  { background: var(--itr-amber-lt);  border-color: #fcd34d; }
-.itr-sc-violet { background: var(--itr-violet-lt); border-color: #c4b5fd; }
+.itr-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(11, 79, 156, 0.08);
+}
 
-.itr-sc-icon {
-    width: 42px; height: 42px;
+.itr-stat-icon {
+    width: 46px;
+    height: 46px;
     border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     flex-shrink: 0;
 }
-.itr-sc-green  .itr-sc-icon { background: #a7f3d0; color: var(--itr-green); }
-.itr-sc-amber  .itr-sc-icon { background: #fcd34d; color: var(--itr-amber); }
-.itr-sc-violet .itr-sc-icon { background: #c4b5fd; color: var(--itr-violet); }
 
-.itr-sc-num {
+.itr-stat-blue .itr-stat-icon {
+    background: var(--anrf-blue-light);
+    color: var(--anrf-blue);
+}
+
+.itr-stat-red .itr-stat-icon {
+    background: var(--anrf-red-light);
+    color: var(--anrf-red);
+}
+
+.itr-stat-number {
     display: block;
     font-size: 26px;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--itr-text);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--anrf-text);
 }
-.itr-sc-label {
+
+.itr-stat-label {
     display: block;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .55px;
-    margin-top: 3px;
+    letter-spacing: 0.04em;
+    color: var(--anrf-slate-light);
+    margin-top: 4px;
 }
-.itr-sc-green  .itr-sc-label { color: var(--itr-green); }
-.itr-sc-amber  .itr-sc-label { color: var(--itr-amber); }
-.itr-sc-violet .itr-sc-label { color: var(--itr-violet); }
 
-/* ══ SECTION ══ */
-.itr-section { background: var(--itr-bg); padding: 52px 0 70px; }
+/* ── SECTION CONTENT ── */
+.itr-section {
+    padding: 35px 0 60px;
+    background: #ffffff;
+}
 
-/* Section Header */
 .itr-section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 30px;
-    gap: 20px;
+    margin-bottom: 28px;
+    gap: 16px;
+    border-bottom: none !important;
 }
+
 .itr-sh-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
-.itr-sh-line {
-    display: inline-block;
-    width: 5px;
-    height: 44px;
-    border-radius: 3px;
-    background: linear-gradient(180deg, var(--itr-green-mid), #34d399);
-    flex-shrink: 0;
-}
+
 .itr-sh-title {
     font-size: 22px;
-    font-weight: 800;
-    color: var(--itr-text);
-    margin: 0 0 3px;
+    font-weight: 700;
+    color: var(--anrf-blue-dark);
+    margin: 0 0 2px;
+    border: none !important;
 }
-.itr-sh-sub {
+
+.itr-sh-desc {
     font-size: 13.5px;
-    color: var(--itr-sub);
+    color: var(--anrf-slate);
     margin: 0;
+    border: none !important;
 }
-.itr-sh-count {
+
+.itr-sh-badge {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .6px;
-    color: var(--itr-green);
-    background: var(--itr-green-lt);
-    border: 1px solid #a7f3d0;
+    letter-spacing: 0.05em;
+    color: var(--anrf-blue);
+    background: var(--anrf-blue-light);
+    border: 1px solid #BFDBFE;
     padding: 6px 14px;
     border-radius: 20px;
     white-space: nowrap;
 }
 
-/* ══ GRID ══ */
+/* ── CARDS GRID ── */
 .int-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
 }
 
-/* ══ CARD ══ (kept, just accent color updated) */
 .int-card {
     display: flex;
-    background: var(--itr-white);
+    background: var(--anrf-white);
+    border: 1px solid var(--anrf-border);
     border-radius: 12px;
-    border: 1px solid var(--itr-border);
-    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
     overflow: hidden;
-    transition: transform .2s ease, box-shadow .2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
+
 .int-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 28px rgba(5, 150, 105, .12);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(11, 79, 156, 0.1);
+    border-color: #CBD5E1;
 }
-.int-card-accent {
+
+.int-card-accent-bar {
     width: 5px;
     flex-shrink: 0;
-    background: linear-gradient(180deg, var(--itr-green-mid), #34d399);
+    background: linear-gradient(180deg, var(--anrf-blue) 0%, var(--anrf-red) 100%);
 }
-.int-card-inner {
+
+.int-card-body {
     flex: 1;
-    padding: 26px 28px;
+    padding: 24px 26px;
     display: flex;
     flex-direction: column;
+    gap: 16px;
+}
+
+.int-card-header {
+    display: flex;
+    align-items: flex-start;
     gap: 14px;
 }
-.int-card-top { display: flex; align-items: flex-start; gap: 14px; }
-.int-card-index {
-    width: 30px; height: 30px;
+
+.int-card-badge-num {
+    background: var(--anrf-blue-light);
+    color: var(--anrf-blue);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid #DBEAFE;
     flex-shrink: 0;
-    background: var(--itr-green-lt);
-    color: var(--itr-green);
-    font-size: 13px; font-weight: 800;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
     margin-top: 2px;
 }
-.int-card-title {
-    font-size: 17px; font-weight: 700;
-    color: var(--itr-text);
-    margin: 0 0 6px; line-height: 1.4;
-}
-.int-card-mentor {
-    font-size: 13px; color: var(--itr-sub);
-    margin: 0; display: flex; align-items: center; gap: 6px;
-}
-.int-card-desc {
-    font-size: 14px; color: #475569;
-    line-height: 1.7; margin: 0;
-}
-.int-card-metrics { display: flex; gap: 10px; flex-wrap: wrap; }
-.int-metric {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--itr-bg);
-    border: 1px solid var(--itr-border);
-    border-radius: 8px; padding: 8px 14px;
-}
-.int-metric i { font-size: 14px; color: var(--itr-green-mid); }
-.int-metric-val { font-size: 20px; font-weight: 800; color: var(--itr-text); line-height: 1; }
-.int-metric-lbl {
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px; color: var(--itr-sub);
-}
-.int-roster { border-top: 1px solid var(--itr-border); padding-top: 14px; }
-.int-roster-label {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .6px;
-    color: var(--itr-green); margin-bottom: 10px;
-}
-.int-roster-tags { display: flex; flex-wrap: wrap; gap: 7px; }
-.int-student-tag {
-    font-size: 12.5px; font-weight: 500;
-    color: var(--itr-green);
-    background: var(--itr-green-lt);
-    border-radius: 20px; padding: 4px 12px;
-}
-.int-empty { text-align: center; padding: 80px 20px; color: var(--itr-sub); }
-.int-empty i { font-size: 48px; margin-bottom: 16px; display: block; opacity: .4; }
-.int-empty p { font-size: 16px; margin: 0; }
 
-/* ══ RESPONSIVE ══ */
-@media (max-width: 900px) {
-    .itr-hero-grid { grid-template-columns: 1fr; }
-    .itr-hero-right { flex-direction: row; flex-wrap: wrap; min-width: 0; }
-    .itr-stat-card { flex: 1; min-width: 140px; }
-    .itr-hero-title { font-size: 28px; }
+.int-card-main-title {
+    flex: 1;
 }
-@media (max-width: 700px) {
-    .int-grid { grid-template-columns: 1fr; }
-    .itr-hero-right { flex-direction: column; }
-    .itr-section-header { flex-direction: column; align-items: flex-start; }
+
+.int-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--anrf-blue-dark);
+    margin: 0 0 6px;
+    line-height: 1.35;
+    border: none !important;
+}
+
+.int-card-mentor {
+    font-size: 13.5px;
+    color: var(--anrf-slate);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.int-card-mentor i {
+    color: var(--anrf-red);
+}
+
+.int-card-desc {
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* ── BADGES ── */
+.int-card-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.int-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    line-height: 1.3;
+}
+
+.int-badge-days {
+    background: var(--anrf-blue-light);
+    color: var(--anrf-blue);
+    border: 1px solid #BFDBFE;
+}
+
+.int-badge-students {
+    background: var(--anrf-red-light);
+    color: var(--anrf-red);
+    border: 1px solid #FECACA;
+}
+
+/* ── ROSTER ── */
+.int-roster {
+    border-top: 1px solid var(--anrf-border);
+    padding-top: 14px;
+    margin-top: 2px;
+}
+
+.int-roster-header {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--anrf-blue-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.int-roster-header i {
+    color: var(--anrf-red);
+}
+
+.int-roster-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.int-student-pill {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--anrf-slate);
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 3px 11px;
+}
+
+.int-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--anrf-slate-light);
+    background: var(--anrf-bg);
+    border: 1px dashed var(--anrf-border);
+    border-radius: 12px;
+}
+
+.int-empty i {
+    font-size: 40px;
+    color: var(--anrf-slate-light);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.int-empty p {
+    font-size: 15px;
+    margin: 0;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 991px) {
+    .itr-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .int-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .itr-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .itr-hero-title {
+        font-size: 26px;
+    }
+    .itr-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 </style>
+
+<?php include 'footer.php';?>
