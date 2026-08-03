@@ -76,7 +76,7 @@
                         margin-bottom: 10px;
                         padding: 0 15px;
                     ">
-                        <h2 class="gallery-main-heading">SPOKE INSTITUTIONS' KPIs</h2>
+                        <h2 class="gallery-main-heading">SPOKE INSTITUTIONS KPI's</h2>
 
                         <a href="institute.php" class="view-institutes-btn view-institutes-desktop">View Institutes
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"

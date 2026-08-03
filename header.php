@@ -241,7 +241,7 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
         /* Desktop dropdowns */
         .menu-bar-wrapper .child-navigation {
             background-color: #BC2121;
-            border: 1px solid #a01818;
+            border: none;
             position: absolute;
             top: 100% !important;
             left: 0;
@@ -1036,7 +1036,6 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                                     <li><a href="publications-reports.php"><i class="fa fa-book"></i> Publications &amp; Reports</a></li>
                                     <li><a href="patents-innovations.php"><i class="fa fa-lightbulb-o"></i> Patents &amp; Innovations</a></li>
                                     <li><a href="downloads.php"><i class="fa fa-download"></i> Downloads (Forms/SOPs)</a></li>
-                                    <li><a href="events_activities.php"><i class="fa fa-calendar"></i> Events &amp; Activities</a></li>
                                     <li><a href="conferences.php"><i class="fa fa-microphone"></i> Conferences</a></li>
                                     <li><a href="webinars.php"><i class="fa fa-video-camera"></i> Webinars</a></li>
                                     <li><a href="progress_reports.php"><i class="fa fa-signal"></i> Progress Reports</a></li>
