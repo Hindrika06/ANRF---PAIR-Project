@@ -22,6 +22,10 @@ function getTableCount($pdo, $tableName, $whereClause = "") {
 
 // Fetch counts
 $is_super = isSuperAdmin();
+$pendingApprovalsCount = 0;
+if ($is_super) {
+    $pendingApprovalsCount = getTableCount($pdo, "approval_requests", "status = 'Pending'");
+}
 
 $countPublications  = getTableCount($pdo, "{$prefix}_publications");
 $countPatents       = getTableCount($pdo, "{$prefix}_patent");
@@ -212,6 +216,40 @@ $pageTitle = "Dashboard | ANRF-PAIR Portal";
                 <h2>Welcome, <?= htmlspecialchars($adminDisplayName) ?></h2>
                 <p>PAIR Portal Database Registry Directory for <strong><?= $instituteName ?></strong></p>
             </div>
+
+            <?php if ($is_super && $pendingApprovalsCount > 0): ?>
+                <div class="alert alert-danger" style="background-color: #fef2f2; border: 1px solid #fee2e2; border-left: 5px solid #ef4444; border-radius: 6px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 20px; line-height: 1;">🔴</span>
+                        <div>
+                            <strong style="color: #991b1b; font-size: 14.5px;">Pending Approvals (<?= $pendingApprovalsCount ?>)</strong>
+                            <p style="color: #7f1d1d; font-size: 13px; margin: 2px 0 0 0;">There are pending admin modification requests that require your review.</p>
+                        </div>
+                    </div>
+                    <a href="approvals.php" class="btn btn-sm btn-danger" style="background-color: #ef4444; border-color: #ef4444; color: #fff; font-weight: 600; padding: 6px 12px; border-radius: 4px; text-decoration: none;">Review Requests</a>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$is_super): ?>
+                <?php
+                $adminPendingCount = getTableCount($pdo, "approval_requests", "status = 'Pending' AND requested_by = '" . $_SESSION['username'] . "'");
+                $adminRejectedCount = getTableCount($pdo, "approval_requests", "status = 'Rejected' AND requested_by = '" . $_SESSION['username'] . "'");
+                ?>
+                <?php if ($adminPendingCount > 0 || $adminRejectedCount > 0): ?>
+                    <div class="alert alert-info" style="background-color: #f0f9ff; border: 1px solid #e0f2fe; border-left: 5px solid #0284c7; border-radius: 6px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 20px; line-height: 1;">ℹ️</span>
+                            <div>
+                                <strong style="color: #075985; font-size: 14.5px;">Request Status Tracker</strong>
+                                <p style="color: #0c4a6e; font-size: 13px; margin: 2px 0 0 0;">
+                                    You have <strong><?= $adminPendingCount ?></strong> pending and <strong><?= $adminRejectedCount ?></strong> rejected requests.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="approvals.php" class="btn btn-sm btn-info" style="background-color: #0284c7; border-color: #0284c7; color: #fff; font-weight: 600; padding: 6px 12px; border-radius: 4px; text-decoration: none;">View Statuses</a>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
 
             <!-- ── SECTION 1: Registry Data ── -->
             <div class="sec-header">
