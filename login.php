@@ -209,13 +209,13 @@ $pageTitle = "Login | ANRF–PAIR Project";
             <!-- Email field -->
             <div class="form-group">
                 <label class="form-label" for="username">Email</label>
-                <input id="username" type="text" name="username" class="form-control-login" placeholder="admin@uoh.ac.in" autocomplete="off" required>
+                <input id="username" type="text" name="username" class="form-control-login" placeholder="Username" autocomplete="off" required>
             </div>
 
             <!-- Password field -->
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input id="password" type="password" name="password" class="form-control-login" placeholder="•••••••••" autocomplete="new-password" required>
+                <input id="password" type="password" name="password" class="form-control-login" placeholder="Password" autocomplete="new-password" required>
             </div>
 
             <!-- Sign in button -->
