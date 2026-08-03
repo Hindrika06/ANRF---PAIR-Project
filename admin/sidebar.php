@@ -6,6 +6,20 @@ $__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPr
 $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
+
+$__pendingCount = 0;
+try {
+    require_once 'config/db.php';
+    if ($__isSuper) {
+        $__stmt = $pdo->query("SELECT COUNT(*) FROM `approval_requests` WHERE `status` = 'Pending'");
+    } else {
+        $__stmt = $pdo->prepare("SELECT COUNT(*) FROM `approval_requests` WHERE `status` = 'Pending' AND `requested_by` = ?");
+        $__stmt->execute([$_SESSION['username']]);
+    }
+    $__pendingCount = (int)($__stmt->fetchColumn() ?: 0);
+} catch (Exception $e) {
+    // count defaults to 0
+}
 $kpiActive = in_array($currentPage, [
     'publications.php',
     'patents.php',
@@ -380,6 +394,18 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                 <a href="dashboard.php">
                     <i class="fas fa-th-large"></i>
                     <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="<?= ($currentPage === 'approvals.php') ? 'mm-active' : '' ?>">
+                <a href="approvals.php" style="display: flex; align-items: center;">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="nav-text">Approvals</span>
+                    <?php if ($__pendingCount > 0): ?>
+                        <span class="badge badge-danger" style="margin-left: auto; background-color: #ef4444; color: #ffffff; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: 700; line-height: 1;">
+                            <?= $__pendingCount ?>
+                        </span>
+                    <?php endif; ?>
                 </a>
             </li>
 

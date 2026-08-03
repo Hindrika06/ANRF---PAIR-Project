@@ -1068,3 +1068,11 @@
         <!--**********************************
             Header end ti-comment-alt
         ***********************************-->
+        <?php if (isset($_SESSION['approval_message'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 100px; right: 20px; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-left: 5px solid #22c55e; max-width: 400px; background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; padding-right: 40px;">
+                <strong>Submitted for Review!</strong><br>
+                <?= htmlspecialchars($_SESSION['approval_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; right: 10px; top: 12px; font-size: 10px; background: transparent; border: 0; opacity: 0.5;"></button>
+            </div>
+            <?php unset($_SESSION['approval_message']); ?>
+        <?php endif; ?>
