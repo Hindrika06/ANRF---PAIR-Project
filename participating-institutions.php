@@ -247,9 +247,9 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
                         <div class="logos-ticker-wrapper">
                             <div class="logos-ticker">
                                 <!-- Original Items -->
-                             <!-- Central University of Karnataka -->
+                              <!-- Central University of Karnataka -->
             <div class="logo-item">
-                <a href="https://www.cuk.ac.in/" target="_blank">
+                <a href="institute.php?name=Central University of Karnataka">
                     <img src="logos/cuk1.jpg" alt="Central University of Karnataka">
                 </a>
                 <p class="institution-name">Central University of Karnataka</p>
@@ -258,7 +258,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Kannur University -->
             <div class="logo-item">
-                <a href="https://www.kannuruniversity.ac.in/" target="_blank">
+                <a href="institute.php?name=Kannur University">
                     <img src="logos/ku1.jpg" alt="Kannur University">
                 </a>
                 <p class="institution-name">Kannur University</p>
@@ -267,7 +267,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Mahatma Gandhi University -->
             <div class="logo-item">
-                <a href="https://www.mgu.ac.in/" target="_blank">
+                <a href="institute.php?name=Mahatma Gandhi University">
                     <img src="logos/mg1.jpg" alt="Mahatma Gandhi University">
                 </a>
                 <p class="institution-name">Mahatma Gandhi University</p>
@@ -276,7 +276,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Osmania University -->
             <div class="logo-item">
-                <a href="https://www.osmania.ac.in/" target="_blank">
+                <a href="institute.php?name=Osmania University">
                     <img src="logos/ou1.jpg" alt="Osmania University">
                 </a>
                 <p class="institution-name">Osmania University</p>
@@ -285,7 +285,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Sri Venkateswara University -->
              <div class="logo-item">
-                <a href="https://svuniversity.edu.in/" target="_blank">
+                <a href="institute.php?name=Sri Venkateswara University">
                     <img src="logos/gan1.jpg" alt="Sri Venkateswara University">
                 </a>
                 <p class="institution-name">Sri Venkateswara University</p>
@@ -294,7 +294,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Yogi Vemana University -->
             <div class="logo-item">
-                <a href="https://yvu.edu.in/" target="_blank">
+                <a href="institute.php?name=Yogi Vemana University">
                     <img src="logos/yu.jpg" alt="Yogi Vemana University">
                 </a>
                 <p class="institution-name">Yogi Vemana University</p>
@@ -302,7 +302,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
             </div>
            <!-- Central University of Karnataka -->
             <div class="logo-item">
-                <a href="https://www.cuk.ac.in/" target="_blank">
+                <a href="institute.php?name=Central University of Karnataka">
                     <img src="logos/cuk1.jpg" alt="Central University of Karnataka">
                 </a>
                 <p class="institution-name">Central University of Karnataka</p>
@@ -311,7 +311,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Kannur University -->
             <div class="logo-item">
-                <a href="https://www.kannuruniversity.ac.in/" target="_blank">
+                <a href="institute.php?name=Kannur University">
                     <img src="logos/ku1.jpg" alt="Kannur University">
                 </a>
                 <p class="institution-name">Kannur University</p>
@@ -320,7 +320,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Mahatma Gandhi University -->
             <div class="logo-item">
-                <a href="https://www.mgu.ac.in/" target="_blank">
+                <a href="institute.php?name=Mahatma Gandhi University">
                     <img src="logos/mg1.jpg" alt="Mahatma Gandhi University">
                 </a>
                 <p class="institution-name">Mahatma Gandhi University</p>
@@ -329,7 +329,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Osmania University -->
             <div class="logo-item">
-                <a href="https://www.osmania.ac.in/" target="_blank">
+                <a href="institute.php?name=Osmania University">
                     <img src="logos/ou1.jpg" alt="Osmania University">
                 </a>
                 <p class="institution-name">Osmania University</p>
@@ -338,7 +338,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Sri Venkateswara University -->
             <div class="logo-item">
-                <a href="https://svuniversity.edu.in/" target="_blank">
+                <a href="institute.php?name=Sri Venkateswara University">
                     <img src="logos/gan1.jpg" alt="Sri Venkateswara University">
                 </a>
                 <p class="institution-name">Sri Venkateswara University</p>
@@ -347,7 +347,7 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
 
             <!-- Yogi Vemana University -->
             <div class="logo-item">
-                <a href="https://yvu.edu.in/" target="_blank">
+                <a href="institute.php?name=Yogi Vemana University">
                     <img src="logos/yu.jpg" alt="Yogi Vemana University">
                 </a>
                 <p class="institution-name">Yogi Vemana University</p>

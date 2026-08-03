@@ -92,11 +92,11 @@
                             <div class="logos-ticker" id="logosTicker">
                                 <!-- Central University of Karnataka -->
                                 <div class="logo-item">
-                                    <a href="https://www.cuk.ac.in" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Central University of Karnataka">
                                         <img src="logos/cuk1.jpg" alt="Central University of Karnataka">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.cuk.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Central University of Karnataka" style="color: inherit; text-decoration: none;">
                                             Central University of Karnataka
                                         </a>
                                     </p>
@@ -105,11 +105,11 @@
 
                                 <!-- Kannur University -->
                                 <div class="logo-item">
-                                    <a href="https://www.kannuruniversity.ac.in" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Kannur University">
                                         <img src="logos/ku1.jpg" alt="Kannur University">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.kannuruniversity.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Kannur University" style="color: inherit; text-decoration: none;">
                                             Kannur University
                                         </a>
                                     </p>
@@ -118,11 +118,11 @@
 
                                 <!-- Mahatma Gandhi University -->
                                 <div class="logo-item">
-                                    <a href="https://www.mgu.ac.in" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Mahatma Gandhi University">
                                         <img src="logos/mg1.jpg" alt="Mahatma Gandhi University">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.mgu.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Mahatma Gandhi University" style="color: inherit; text-decoration: none;">
                                             Mahatma Gandhi University
                                         </a>
                                     </p>
@@ -131,11 +131,11 @@
 
                                 <!-- Osmania University -->
                                 <div class="logo-item">
-                                    <a href="https://www.osmania.ac.in" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Osmania University">
                                         <img src="logos/ou1.jpg" alt="Osmania University">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.osmania.ac.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Osmania University" style="color: inherit; text-decoration: none;">
                                             Osmania University
                                         </a>
                                     </p>
@@ -144,11 +144,11 @@
 
                                 <!-- Sri Venkateswara University -->
                                 <div class="logo-item">
-                                    <a href="https://www.svuniversity.edu.in" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Sri Venkateswara University">
                                         <img src="logos/gan1.jpg" alt="Sri Venkateswara University">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.svuniversity.edu.in" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Sri Venkateswara University" style="color: inherit; text-decoration: none;">
                                             Sri Venkateswara University
                                         </a>
                                     </p>
@@ -157,11 +157,11 @@
 
                                 <!-- Yogi Vemana University -->
                                 <div class="logo-item">
-                                    <a href="https://www.yvu.edu.in/" target="_blank" rel="noopener noreferrer">
+                                    <a href="institute.php?name=Yogi Vemana University">
                                         <img src="logos/yu.jpg" alt="Yogi Vemana University">
                                     </a>
                                     <p class="institution-name">
-                                        <a href="https://www.yvu.edu.in/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                                        <a href="institute.php?name=Yogi Vemana University" style="color: inherit; text-decoration: none;">
                                             Yogi Vemana University
                                         </a>
                                     </p>

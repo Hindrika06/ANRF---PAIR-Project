@@ -3,6 +3,7 @@ $bodyClass = 'page-institute';
 require_once 'config.php';
 
 $logo_map = [
+    'University of Hyderabad'         => '3.png',
     'Central University of Karnataka' => 'logos/cuk1.jpg',
     'Kannur University'               => 'logos/ku1.jpg',
     'Mahatma Gandhi University'       => 'logos/mg1.jpg',
@@ -19,6 +20,7 @@ $institute_logo  = $logo_map[$institute_name] ?? 'logos/default.jpg';
 
 // 2. Map the university name to its database table prefix
 $prefix_map = [
+    'University of Hyderabad'         => 'uoh_',
     'Central University of Karnataka' => 'cuk_',
     'Kannur University'               => 'kannur_',
     'Mahatma Gandhi University'       => 'mgu_',
@@ -26,7 +28,7 @@ $prefix_map = [
     'Sri Venkateswara University'     => 'svu_',
     'Yogi Vemana University'          => 'yvu_',
 ];
-$prefix = $prefix_map[$institute_name] ?? 'cuk_';
+$prefix = $prefix_map[$institute_name] ?? 'uoh_';
 
 function fetchRows($pdo, $sql, $params = []) {
     $stmt = $pdo->prepare($sql);
@@ -35,10 +37,42 @@ function fetchRows($pdo, $sql, $params = []) {
 }
 
 // 3. Inject the safe prefix into your queries dynamically
-$publications = fetchRows($pdo, "SELECT * FROM {$prefix}publications     ORDER BY created_at DESC");
-$patents      = fetchRows($pdo, "SELECT * FROM {$prefix}patent           ORDER BY created_at DESC");
-$internships  = fetchRows($pdo, "SELECT * FROM {$prefix}internships      ORDER BY created_at DESC");
-$progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports ORDER BY created_at DESC");
+$publications = [];
+$patents      = [];
+$internships  = [];
+$progress     = [];
+
+try {
+    if ($prefix === 'uoh_') {
+        $publications = fetchRows($pdo, "SELECT * FROM uoh_publications     ORDER BY id DESC");
+    } else {
+        $publications = fetchRows($pdo, "SELECT * FROM {$prefix}publications     ORDER BY created_at DESC");
+    }
+} catch (PDOException $e) {}
+
+try {
+    if ($prefix === 'uoh_') {
+        $patents      = fetchRows($pdo, "SELECT * FROM uoh_patent           ORDER BY id DESC");
+    } else {
+        $patents      = fetchRows($pdo, "SELECT * FROM {$prefix}patent           ORDER BY created_at DESC");
+    }
+} catch (PDOException $e) {}
+
+try {
+    if ($prefix === 'uoh_') {
+        $internships  = fetchRows($pdo, "SELECT * FROM uoh_internships      ORDER BY created_at DESC");
+    } else {
+        $internships  = fetchRows($pdo, "SELECT * FROM {$prefix}internships      ORDER BY created_at DESC");
+    }
+} catch (PDOException $e) {}
+
+try {
+    if ($prefix === 'uoh_') {
+        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports ORDER BY created_at DESC");
+    } else {
+        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports ORDER BY created_at DESC");
+    }
+} catch (PDOException $e) {}
 
 $webinars = [];
 $conferences = [];
@@ -46,8 +80,35 @@ try {
     $webinars = fetchRows($pdo, "SELECT * FROM {$prefix}webinars ORDER BY webinar_date DESC");
 } catch (PDOException $e) {}
 try {
-    $conferences = fetchRows($pdo, "SELECT * FROM {$prefix}conferences ORDER BY start_date DESC");
+    if ($prefix === 'uoh_') {
+        $conferences = fetchRows($pdo, "SELECT * FROM uoh_conferences ORDER BY conf_date DESC");
+    } else {
+        $conferences = fetchRows($pdo, "SELECT * FROM {$prefix}conferences ORDER BY start_date DESC");
+    }
 } catch (PDOException $e) {}
+
+// Normalize database fields for UoH compatibility
+if ($prefix === 'uoh_') {
+    foreach ($webinars as &$web) {
+        $web['speaker_name'] = !empty($web['speaker_name']) ? $web['speaker_name'] : ($web['investigator'] ?? '—');
+        $web['affiliation']  = !empty($web['affiliation']) ? $web['affiliation'] : ($web['institute'] ?? '');
+        $web['description']  = !empty($web['description']) ? $web['description'] : ($web['content'] ?? '');
+        $web['taskno']       = $web['taskno'] ?? null;
+        $web['link']         = $web['link'] ?? '';
+    }
+    unset($web);
+
+    foreach ($conferences as &$conf) {
+        $conf['organizer']           = !empty($conf['organizer']) ? $conf['organizer'] : ($conf['organisers'] ?? ($conf['institute'] ?? '—'));
+        $conf['start_date']          = $conf['conf_date'] ?? null;
+        $conf['end_date']            = $conf['conf_date'] ?? null;
+        $conf['location']            = $conf['location'] ?? ($conf['institute'] ?? '—');
+        $conf['website_url']         = $conf['website_url'] ?? ($conf['link'] ?? '');
+        $conf['taskno']              = $conf['taskno'] ?? null;
+        $conf['submission_deadline'] = null;
+    }
+    unset($conf);
+}
 
 $tabs = [
     'progress'     => ['label' => 'Progress', 'count' => count($progress),      'icon' => '📋'],
