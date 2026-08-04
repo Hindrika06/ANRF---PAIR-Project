@@ -84,72 +84,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Title, Speaker Name, and Webinar Date & Time are required fields.';
     } else {
         try {
+            $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
+            $fieldCandidateMap = [
+                'taskno'           => $taskno ?: null,
+                'title'            => $title,
+                'speaker_name'     => $speaker_name,
+                'affiliation'      => $affiliation ?: null,
+                'webinar_date'     => $webinar_date ?: null,
+                'link'             => $link ?: null,
+                'whatsapp_link'    => $whatsapp_link ?: null,
+                'keynote_speaker'  => $keynote_speaker ?: null,
+                'resource_persons' => $resource_persons ?: null,
+                'conveners'        => $conveners ?: null,
+                'official_email'   => $official_email ?: null,
+                'contact_phone'    => $contact_phone ?: null,
+                'image'            => $image ?: null,
+                'description'      => $description ?: null,
+                'publish_status'   => $publish_status
+            ];
+
+            $validPayload = [];
+            foreach ($fieldCandidateMap as $col => $val) {
+                if (isset($existingCols[$col])) {
+                    $validPayload[$col] = $val;
+                }
+            }
+
             if ($edit_id) {
                 // UPDATE RECORD
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        speaker_name = :speaker_name,
-                        affiliation = :affiliation,
-                        webinar_date = :webinar_date,
-                        link = :link,
-                        whatsapp_link = :whatsapp_link,
-                        keynote_speaker = :keynote_speaker,
-                        resource_persons = :resource_persons,
-                        conveners = :conveners,
-                        official_email = :official_email,
-                        contact_phone = :contact_phone,
-                        image = :image,
-                        description = :description,
-                        publish_status = :publish_status
-                    WHERE id = :id
-                ");
-                $stmt->execute([
-                    ':taskno'           => $taskno ?: null,
-                    ':title'            => $title,
-                    ':speaker_name'     => $speaker_name,
-                    ':affiliation'      => $affiliation ?: null,
-                    ':webinar_date'     => $webinar_date ?: null,
-                    ':link'             => $link ?: null,
-                    ':whatsapp_link'    => $whatsapp_link ?: null,
-                    ':keynote_speaker'  => $keynote_speaker ?: null,
-                    ':resource_persons' => $resource_persons ?: null,
-                    ':conveners'        => $conveners ?: null,
-                    ':official_email'   => $official_email ?: null,
-                    ':contact_phone'    => $contact_phone ?: null,
-                    ':image'            => $image ?: null,
-                    ':description'      => $description ?: null,
-                    ':publish_status'   => $publish_status,
-                    ':id'               => $edit_id
-                ]);
+                $setSql = [];
+                $params = [':id' => $edit_id];
+                foreach ($validPayload as $col => $val) {
+                    $setSql[] = "`$col` = :$col";
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
                 exit;
             } else {
                 // INSERT NEW RECORD
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (taskno, title, speaker_name, affiliation, webinar_date, link, whatsapp_link, keynote_speaker, resource_persons, conveners, official_email, contact_phone, image, description, publish_status)
-                    VALUES
-                        (:taskno, :title, :speaker_name, :affiliation, :webinar_date, :link, :whatsapp_link, :keynote_speaker, :resource_persons, :conveners, :official_email, :contact_phone, :image, :description, :publish_status)
-                ");
-                $stmt->execute([
-                    ':taskno'           => $taskno ?: null,
-                    ':title'            => $title,
-                    ':speaker_name'     => $speaker_name,
-                    ':affiliation'      => $affiliation ?: null,
-                    ':webinar_date'     => $webinar_date ?: null,
-                    ':link'             => $link ?: null,
-                    ':whatsapp_link'    => $whatsapp_link ?: null,
-                    ':keynote_speaker'  => $keynote_speaker ?: null,
-                    ':resource_persons' => $resource_persons ?: null,
-                    ':conveners'        => $conveners ?: null,
-                    ':official_email'   => $official_email ?: null,
-                    ':contact_phone'    => $contact_phone ?: null,
-                    ':image'            => $image ?: null,
-                    ':description'      => $description ?: null,
-                    ':publish_status'   => $publish_status
-                ]);
+                $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
+                $valsSql = implode(', ', array_map(function($c) { return ":$c"; }, array_keys($validPayload)));
+                $params = [];
+                foreach ($validPayload as $col => $val) {
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
                 exit;
             }

@@ -90,90 +90,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Title, Organizer, and Start Date are required fields.';
     } else {
         try {
+            $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
+            $fieldCandidateMap = [
+                'taskno'                  => $taskno ?: null,
+                'title'                   => $title,
+                'organizer'               => $organizer ?: null,
+                'organisers'              => $organisers ?: null,
+                'start_date'              => $start_date ?: null,
+                'conf_date'               => $conf_date ?: null,
+                'end_date'                => $end_date ?: null,
+                'location'                => $location ?: null,
+                'submission_deadline'     => $submission_deadline ?: null,
+                'website_url'             => $website_url ?: null,
+                'investigator'            => $investigator ?: null,
+                'convener'                => $convener ?: null,
+                'resource_person'         => $resource_person ?: null,
+                'chief_patron'            => $chief_patron ?: null,
+                'patrons'                 => $patrons ?: null,
+                'organising_committee'    => $organising_committee ?: null,
+                'registration_guidelines' => $registration_guidelines ?: null,
+                'training_schedule'       => $training_schedule ?: null,
+                'image'                   => $image ?: null,
+                'qr_code_image'           => $qr_code_image ?: null,
+                'publish_status'          => $publish_status
+            ];
+
+            $validPayload = [];
+            foreach ($fieldCandidateMap as $col => $val) {
+                if (isset($existingCols[$col])) {
+                    $validPayload[$col] = $val;
+                }
+            }
+
             if ($edit_id) {
                 // UPDATE RECORD
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        organizer = :organizer,
-                        organisers = :organisers,
-                        start_date = :start_date,
-                        conf_date = :conf_date,
-                        end_date = :end_date,
-                        location = :location,
-                        submission_deadline = :submission_deadline,
-                        website_url = :website_url,
-                        investigator = :investigator,
-                        convener = :convener,
-                        resource_person = :resource_person,
-                        chief_patron = :chief_patron,
-                        patrons = :patrons,
-                        organising_committee = :organising_committee,
-                        registration_guidelines = :registration_guidelines,
-                        training_schedule = :training_schedule,
-                        image = :image,
-                        qr_code_image = :qr_code_image,
-                        publish_status = :publish_status
-                    WHERE id = :id
-                ");
-                $stmt->execute([
-                    ':taskno'                  => $taskno ?: null,
-                    ':title'                   => $title,
-                    ':organizer'               => $organizer,
-                    ':organisers'              => $organisers,
-                    ':start_date'              => $start_date ?: null,
-                    ':conf_date'               => $conf_date ?: null,
-                    ':end_date'                => $end_date ?: null,
-                    ':location'                => $location ?: null,
-                    ':submission_deadline'     => $submission_deadline ?: null,
-                    ':website_url'             => $website_url ?: null,
-                    ':investigator'            => $investigator ?: null,
-                    ':convener'                => $convener ?: null,
-                    ':resource_person'         => $resource_person ?: null,
-                    ':chief_patron'            => $chief_patron ?: null,
-                    ':patrons'                 => $patrons ?: null,
-                    ':organising_committee'    => $organising_committee ?: null,
-                    ':registration_guidelines' => $registration_guidelines ?: null,
-                    ':training_schedule'       => $training_schedule ?: null,
-                    ':image'                   => $image ?: null,
-                    ':qr_code_image'           => $qr_code_image ?: null,
-                    ':publish_status'          => $publish_status,
-                    ':id'                      => $edit_id
-                ]);
+                $setSql = [];
+                $params = [':id' => $edit_id];
+                foreach ($validPayload as $col => $val) {
+                    $setSql[] = "`$col` = :$col";
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
                 exit;
             } else {
                 // INSERT NEW RECORD
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (taskno, title, organizer, organisers, start_date, conf_date, end_date, location, submission_deadline, website_url, investigator, convener, resource_person, chief_patron, patrons, organising_committee, registration_guidelines, training_schedule, image, qr_code_image, publish_status)
-                    VALUES
-                        (:taskno, :title, :organizer, :organisers, :start_date, :conf_date, :end_date, :location, :submission_deadline, :website_url, :investigator, :convener, :resource_person, :chief_patron, :patrons, :organising_committee, :registration_guidelines, :training_schedule, :image, :qr_code_image, :publish_status)
-                ");
-                $stmt->execute([
-                    ':taskno'                  => $taskno ?: null,
-                    ':title'                   => $title,
-                    ':organizer'               => $organizer,
-                    ':organisers'              => $organisers,
-                    ':start_date'              => $start_date ?: null,
-                    ':conf_date'               => $conf_date ?: null,
-                    ':end_date'                => $end_date ?: null,
-                    ':location'                => $location ?: null,
-                    ':submission_deadline'     => $submission_deadline ?: null,
-                    ':website_url'             => $website_url ?: null,
-                    ':investigator'            => $investigator ?: null,
-                    ':convener'                => $convener ?: null,
-                    ':resource_person'         => $resource_person ?: null,
-                    ':chief_patron'            => $chief_patron ?: null,
-                    ':patrons'                 => $patrons ?: null,
-                    ':organising_committee'    => $organising_committee ?: null,
-                    ':registration_guidelines' => $registration_guidelines ?: null,
-                    ':training_schedule'       => $training_schedule ?: null,
-                    ':image'                   => $image ?: null,
-                    ':qr_code_image'           => $qr_code_image ?: null,
-                    ':publish_status'          => $publish_status
-                ]);
+                $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
+                $valsSql = implode(', ', array_map(function($c) { return ":$c"; }, array_keys($validPayload)));
+                $params = [];
+                foreach ($validPayload as $col => $val) {
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
                 exit;
             }
@@ -186,7 +156,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 4. FETCH DATA
 $conferences = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY COALESCE(NULLIF(start_date, '0000-00-00'), conf_date, created_at) DESC");
+    $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+    $orderCol = 'created_at';
+    if (in_array('conf_date', $existingCols, true)) {
+        $orderCol = 'conf_date';
+    } elseif (in_array('start_date', $existingCols, true)) {
+        $orderCol = 'start_date';
+    }
+    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY `$orderCol` DESC");
     $conferences = $stmt->fetchAll();
 } catch (PDOException $e) {
     // Suppress error or handle gracefully
