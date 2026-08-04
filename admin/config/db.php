@@ -11,7 +11,7 @@ require_once __DIR__ . '/approval_helper.php';
 
 try {
 
-    $pdo = new ApprovalPDO(
+    $pdo = new PDO(
         "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
         $user,
         $pass

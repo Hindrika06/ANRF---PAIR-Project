@@ -4,6 +4,11 @@ require_once 'role_access.php';
 require_once 'config/db.php';
 
 $is_super = isSuperAdmin();
+if (!$is_super) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 $success_msg = '';

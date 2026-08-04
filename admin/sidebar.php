@@ -433,8 +433,9 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                 </a>
             </li>
 
+            <?php if (isSuperAdmin()): ?>
             <li class="<?= ($currentPage === 'approvals.php') ? 'mm-active' : '' ?>">
-                <a href="approvals.php" style="display: flex; align-items: center;">
+                <a href="<?= $navUrl('approvals.php') ?>" style="display: flex; align-items: center;">
                     <i class="fas fa-check-circle"></i>
                     <span class="nav-text">Approvals</span>
                     <?php if ($__pendingCount > 0): ?>
@@ -444,6 +445,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <?php endif; ?>
                 </a>
             </li>
+            <?php endif; ?>
 
             <!-- KPI Dropdown Group -->
             <li class="nav-group <?= $kpiActive ? 'mm-active' : '' ?>" id="nav-kpi-group">
