@@ -144,8 +144,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 4. FETCH DATA
 $webinars = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY webinar_date DESC");
-    $webinars = $stmt->fetchAll();
+    if ($prefix === 'all') {
+        global $adminAllowedPrefixes;
+        foreach ($adminAllowedPrefixes as $p) {
+            $tbl = "{$p}_webinars";
+            try {
+                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+                if ($check > 0) {
+                    $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                    $orderCol = in_array('webinar_date', $existingCols, true) ? 'webinar_date' : 'created_at';
+                    $stmt = $pdo->query("SELECT *, '$p' AS _inst_prefix FROM `$tbl` ORDER BY `$orderCol` DESC");
+                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    if ($rows) {
+                        $webinars = array_merge($webinars, $rows);
+                    }
+                }
+            } catch (PDOException $e) {}
+        }
+        usort($webinars, function($a, $b) {
+            $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
+            $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
+            return $tB <=> $tA;
+        });
+    } else {
+        $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+        $orderCol = in_array('webinar_date', $existingCols, true) ? 'webinar_date' : 'created_at';
+        $stmt = $pdo->query("SELECT *, '$prefix' AS _inst_prefix FROM `$table` ORDER BY `$orderCol` DESC");
+        $webinars = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 } catch (PDOException $e) {
     // Suppress error or handle gracefully
 }

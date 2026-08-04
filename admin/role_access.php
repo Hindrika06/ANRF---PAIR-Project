@@ -31,24 +31,24 @@ $adminPrefixLogos = [
 function isValidPrefix($prefix)
 {
     global $adminAllowedPrefixes;
-    return in_array($prefix, $adminAllowedPrefixes, true);
+    return $prefix === 'all' || in_array($prefix, $adminAllowedPrefixes, true);
 }
 
 function resolveAdminPrefix()
 {
     global $adminAllowedPrefixes;
 
-    // Super admin: allow ?prefix= from URL for viewing any institute (unchanged behaviour)
+    // Super admin: allow ?prefix= from URL for viewing any institute or 'all' overview
     if (isSuperAdmin()) {
         $req = $_GET['prefix'] ?? null;
-        if ($req && in_array($req, $adminAllowedPrefixes, true)) {
+        if ($req === 'all' || ($req && in_array($req, $adminAllowedPrefixes, true))) {
             $_SESSION['active_prefix'] = $req;
             return $req;
         }
-        if (!empty($_SESSION['active_prefix']) && in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true)) {
+        if (!empty($_SESSION['active_prefix']) && ($_SESSION['active_prefix'] === 'all' || in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true))) {
             return $_SESSION['active_prefix'];
         }
-        return 'uoh'; // Super admin default
+        return 'all'; // Super admin default: All Institutes Hub Overview
     }
 
     // Regular admin: ALWAYS use the institute_prefix stored in session at login.
@@ -75,17 +75,20 @@ function canEditInstitute($prefix)
 function getInstituteLabel($prefix)
 {
     global $adminPrefixLabels;
+    if ($prefix === 'all') return 'ALL';
     return $adminPrefixLabels[$prefix] ?? strtoupper($prefix);
 }
 
 function getInstituteFullName($prefix)
 {
     global $adminPrefixFullNames;
+    if ($prefix === 'all') return 'All Institutes (Hub Overview)';
     return $adminPrefixFullNames[$prefix] ?? getInstituteLabel($prefix);
 }
 
 function getInstituteLogo($prefix)
 {
     global $adminPrefixLogos;
+    if ($prefix === 'all') return 'logo/logo.png';
     return $adminPrefixLogos[$prefix] ?? 'logo/3.png';
 }

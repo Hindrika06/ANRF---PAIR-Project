@@ -156,15 +156,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 4. FETCH DATA
 $conferences = [];
 try {
-    $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
-    $orderCol = 'created_at';
-    if (in_array('conf_date', $existingCols, true)) {
-        $orderCol = 'conf_date';
-    } elseif (in_array('start_date', $existingCols, true)) {
-        $orderCol = 'start_date';
+    if ($prefix === 'all') {
+        global $adminAllowedPrefixes;
+        foreach ($adminAllowedPrefixes as $p) {
+            $tbl = "{$p}_conferences";
+            try {
+                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+                if ($check > 0) {
+                    $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                    $orderCol = 'created_at';
+                    if (in_array('conf_date', $existingCols, true)) {
+                        $orderCol = 'conf_date';
+                    } elseif (in_array('start_date', $existingCols, true)) {
+                        $orderCol = 'start_date';
+                    }
+                    $stmt = $pdo->query("SELECT *, '$p' AS _inst_prefix FROM `$tbl` ORDER BY `$orderCol` DESC");
+                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    if ($rows) {
+                        $conferences = array_merge($conferences, $rows);
+                    }
+                }
+            } catch (PDOException $e) {}
+        }
+        usort($conferences, function($a, $b) {
+            $stA = !empty($a['start_date']) ? $a['start_date'] : ($a['conf_date'] ?? $a['created_at'] ?? '');
+            $stB = !empty($b['start_date']) ? $b['start_date'] : ($b['conf_date'] ?? $b['created_at'] ?? '');
+            return strcmp($stB, $stA);
+        });
+    } else {
+        $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+        $orderCol = 'created_at';
+        if (in_array('conf_date', $existingCols, true)) {
+            $orderCol = 'conf_date';
+        } elseif (in_array('start_date', $existingCols, true)) {
+            $orderCol = 'start_date';
+        }
+        $stmt = $pdo->query("SELECT *, '$prefix' AS _inst_prefix FROM `$table` ORDER BY `$orderCol` DESC");
+        $conferences = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY `$orderCol` DESC");
-    $conferences = $stmt->fetchAll();
 } catch (PDOException $e) {
     // Suppress error or handle gracefully
 }
