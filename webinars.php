@@ -18,9 +18,18 @@ try {
             $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
             if ($check > 0) {
                 $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $hasPublish = in_array('publish_status', $cols, true);
+                $hasApproval = in_array('approval_status', $cols, true);
+                $hasPublish  = in_array('publish_status', $cols, true);
 
-                $whereClause = $hasPublish ? "WHERE publish_status = 1" : "";
+                $whereConditions = [];
+                if ($hasApproval) {
+                    $whereConditions[] = "approval_status = 'Approved'";
+                }
+                if ($hasPublish) {
+                    $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                }
+
+                $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
                 $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows) {

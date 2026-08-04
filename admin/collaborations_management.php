@@ -121,11 +121,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            $is_super = isSuperAdmin();
+            $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
             if ($edit_id) {
                 // Update
                 if ($logoPath) {
-                    $stmt = $pdo->prepare("UPDATE `collaborations` SET partner_name = :partner_name, logo_path = :logo_path, profile_description = :profile_description, collab_type = :collab_type, website_url = :website_url, display_order = :display_order, status = :status WHERE id = :id");
-                    $stmt->execute([
+                    $stmt = $pdo->prepare("UPDATE `collaborations` SET partner_name = :partner_name, logo_path = :logo_path, profile_description = :profile_description, collab_type = :collab_type, website_url = :website_url, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                    $params = [
                         ':partner_name'        => $partner_name,
                         ':logo_path'           => $logoPath,
                         ':profile_description' => $profile_description,
@@ -133,29 +136,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':website_url'         => $website_url,
                         ':display_order'       => $display_order,
                         ':status'              => $status,
+                        ':approval_status'     => $approvalStatus,
                         ':id'                  => $edit_id
-                    ]);
+                    ];
+                    $stmt->execute($params);
                 } else {
-                    $stmt = $pdo->prepare("UPDATE `collaborations` SET partner_name = :partner_name, profile_description = :profile_description, collab_type = :collab_type, website_url = :website_url, display_order = :display_order, status = :status WHERE id = :id");
-                    $stmt->execute([
+                    $stmt = $pdo->prepare("UPDATE `collaborations` SET partner_name = :partner_name, profile_description = :profile_description, collab_type = :collab_type, website_url = :website_url, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                    $params = [
                         ':partner_name'        => $partner_name,
                         ':profile_description' => $profile_description,
                         ':collab_type'         => $collab_type,
                         ':website_url'         => $website_url,
                         ':display_order'       => $display_order,
                         ':status'              => $status,
+                        ':approval_status'     => $approvalStatus,
                         ':id'                  => $edit_id
-                    ]);
+                    ];
+                    $stmt->execute($params);
                 }
-                header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=updated");
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $edit_id, 'UPDATE', $params);
+                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                } else {
+                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=updated");
+                }
                 exit;
             } else {
                 // Insert
                 if (!$logoPath) {
                     throw new RuntimeException("Partner logo is required for new entries.");
                 }
-                $stmt = $pdo->prepare("INSERT INTO `collaborations` (partner_name, logo_path, profile_description, collab_type, website_url, institute_prefix, display_order, status) VALUES (:partner_name, :logo_path, :profile_description, :collab_type, :website_url, :institute_prefix, :display_order, :status)");
-                $stmt->execute([
+                $stmt = $pdo->prepare("INSERT INTO `collaborations` (partner_name, logo_path, profile_description, collab_type, website_url, institute_prefix, display_order, status, approval_status) VALUES (:partner_name, :logo_path, :profile_description, :collab_type, :website_url, :institute_prefix, :display_order, :status, :approval_status)");
+                $params = [
                     ':partner_name'        => $partner_name,
                     ':logo_path'           => $logoPath,
                     ':profile_description' => $profile_description,
@@ -163,9 +176,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':website_url'         => $website_url,
                     ':institute_prefix'    => $prefix,
                     ':display_order'       => $display_order,
-                    ':status'              => $status
-                ]);
-                header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=inserted");
+                    ':status'              => $status,
+                    ':approval_status'     => $approvalStatus
+                ];
+                $stmt->execute($params);
+                $new_id = $pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $new_id, 'CREATE', $params);
+                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                } else {
+                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=inserted");
+                }
                 exit;
             }
         } catch (Exception $e) {
@@ -174,12 +196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch collaborations list (filtered by prefix, or global for super admin)
+// Fetch centralized collaborations list
 $collaborations = [];
 try {
-    $where = isSuperAdmin() ? "1=1" : "(institute_prefix = '$prefix' OR institute_prefix = 'all')";
-    $stmt = $pdo->query("SELECT * FROM `collaborations` WHERE $where ORDER BY display_order ASC, id DESC");
-    $collaborations = $stmt->fetchAll();
+    $collaborations = fetchSingleTableKpiDataset($pdo, 'collaborations', $prefix, isSuperAdmin());
+    usort($collaborations, function($a, $b) {
+        return ($a['display_order'] ?? 10) <=> ($b['display_order'] ?? 10);
+    });
 } catch (PDOException $e) {
     // Ignore error
 }

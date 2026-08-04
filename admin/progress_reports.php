@@ -60,62 +60,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $methodology       = trim($_POST['methodology']       ?? '');
     $summary_progress  = trim($_POST['summary_progress']  ?? '');
     $edit_id           = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super          = isSuperAdmin();
+    $approvalStatus    = $is_super ? 'Approved' : 'Pending';
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
     } else {
-    // MANDATORY CHECKS REMOVED AS REQUESTED
     try {
+        $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
+        $payload = [
+            ':project_title'    => $project_title,
+            ':pi_name'          => $pi_name,
+            ':co_pi_name'       => $co_pi_name,
+            ':task_no'          => $task_no,
+            ':approved_objects' => $approved_objects,
+            ':methodology'      => $methodology,
+            ':summary_progress' => $summary_progress,
+            ':approval_status'  => $approvalStatus
+        ];
+        if (isset($existingCols['work_package_no'])) {
+            $payload[':work_package_no'] = $work_package_no;
+        }
+
         if ($edit_id) {
             // UPDATE RECORD
+            $workSql = isset($existingCols['work_package_no']) ? "work_package_no = :work_package_no, " : "";
             $stmt = $pdo->prepare("
                 UPDATE `$table` SET
                     project_title = :project_title, 
                     pi_name = :pi_name, 
                     co_pi_name = :co_pi_name, 
                     task_no = :task_no, 
-                    work_package_no = :work_package_no, 
+                    {$workSql}
                     approved_objects = :approved_objects, 
                     methodology = :methodology, 
-                    summary_progress = :summary_progress
+                    summary_progress = :summary_progress,
+                    approval_status = :approval_status
                 WHERE id = :id
             ");
-            $stmt->execute([
-                ':project_title'    => $project_title,
-                ':pi_name'          => $pi_name,
-                ':co_pi_name'       => $co_pi_name,
-                ':task_no'          => $task_no,
-                ':work_package_no'  => $work_package_no,
-                ':approved_objects' => $approved_objects,
-                ':methodology'      => $methodology,
-                ':summary_progress' => $summary_progress,
-                ':id'               => $edit_id
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            $payload[':id'] = $edit_id;
+            $stmt->execute($payload);
+
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Progress Reports', $table, $prefix, $edit_id, 'UPDATE', $payload);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            }
             exit;
         } else {
             // INSERT NEW RECORD
+            $workCol = isset($existingCols['work_package_no']) ? "work_package_no, " : "";
+            $workVal = isset($existingCols['work_package_no']) ? ":work_package_no, " : "";
             $stmt = $pdo->prepare("
                 INSERT INTO `$table`
-                    (project_title, pi_name, co_pi_name, task_no, 
-                     work_package_no, approved_objects, methodology, 
-                     summary_progress, created_at)
+                    (project_title, pi_name, co_pi_name, task_no,
+                     {$workCol}approved_objects, methodology,
+                     summary_progress, approval_status, created_at)
                 VALUES
-                    (:project_title, :pi_name, :co_pi_name, :task_no, 
-                     :work_package_no, :approved_objects, :methodology, 
-                     :summary_progress, NOW())
+                    (:project_title, :pi_name, :co_pi_name, :task_no,
+                     {$workVal}:approved_objects, :methodology,
+                     :summary_progress, :approval_status, NOW())
             ");
-            $stmt->execute([
-                ':project_title'    => $project_title,
-                ':pi_name'          => $pi_name,
-                ':co_pi_name'       => $co_pi_name,
-                ':task_no'          => $task_no,
-                ':work_package_no'  => $work_package_no,
-                ':approved_objects' => $approved_objects,
-                ':methodology'      => $methodology,
-                ':summary_progress' => $summary_progress,
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            $stmt->execute($payload);
+            $new_id = $pdo->lastInsertId();
+
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Progress Reports', $table, $prefix, $new_id, 'CREATE', $payload);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            }
             exit;
         }
     } catch (PDOException $e) {
@@ -124,12 +139,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH ALL DATA FOR THE TABLE
+// 4. FETCH CENTRALIZED DATA
 $reports = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
-    $reports = $stmt->fetchAll();
-} catch (PDOException $e) {
+    $reports = fetchCentralizedKpiDataset($pdo, 'progress_reports', $prefix, isSuperAdmin());
+    usort($reports, function($a, $b) {
+        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+    });
+} catch (Exception $e) {
     $error = 'Could not load data records: ' . $e->getMessage();
 }
 

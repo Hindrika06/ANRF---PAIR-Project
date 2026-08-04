@@ -202,20 +202,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                $is_super = isSuperAdmin();
+                $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
                 if ($edit_id) {
                     if ($imagePath) {
-                        $stmt = $pdo->prepare("UPDATE `infrastructure_facilities` SET name = :name, description = :description, equipment_details = :equipment_details, image_path = :image_path, display_order = :display_order, status = :status WHERE id = :id");
-                        $stmt->execute([':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':display_order' => $display_order, ':status' => $status, ':id' => $edit_id]);
+                        $stmt = $pdo->prepare("UPDATE `infrastructure_facilities` SET name = :name, description = :description, equipment_details = :equipment_details, image_path = :image_path, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                        $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus, ':id' => $edit_id];
+                        $stmt->execute($params);
                     } else {
-                        $stmt = $pdo->prepare("UPDATE `infrastructure_facilities` SET name = :name, description = :description, equipment_details = :equipment_details, display_order = :display_order, status = :status WHERE id = :id");
-                        $stmt->execute([':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':display_order' => $display_order, ':status' => $status, ':id' => $edit_id]);
+                        $stmt = $pdo->prepare("UPDATE `infrastructure_facilities` SET name = :name, description = :description, equipment_details = :equipment_details, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                        $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus, ':id' => $edit_id];
+                        $stmt->execute($params);
                     }
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $edit_id, 'UPDATE', $params);
+                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                    } else {
+                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                    }
+                    exit;
                 } else {
-                    $stmt = $pdo->prepare("INSERT INTO `infrastructure_facilities` (name, description, equipment_details, image_path, institute_prefix, display_order, status) VALUES (:name, :description, :equipment_details, :image_path, :institute_prefix, :display_order, :status)");
-                    $stmt->execute([':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':institute_prefix' => $prefix, ':display_order' => $display_order, ':status' => $status]);
+                    $stmt = $pdo->prepare("INSERT INTO `infrastructure_facilities` (name, description, equipment_details, image_path, institute_prefix, display_order, status, approval_status) VALUES (:name, :description, :equipment_details, :image_path, :institute_prefix, :display_order, :status, :approval_status)");
+                    $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':institute_prefix' => $prefix, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus];
+                    $stmt->execute($params);
+                    $new_id = $pdo->lastInsertId();
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $new_id, 'CREATE', $params);
+                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                    } else {
+                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                    }
+                    exit;
                 }
-                header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
-                exit;
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }
@@ -230,9 +251,10 @@ try {
     $stmt = $pdo->query("SELECT * FROM `research_areas` ORDER BY display_order ASC, id DESC");
     $researchAreas = $stmt->fetchAll();
 
-    $where = isSuperAdmin() ? "1=1" : "(institute_prefix = '$prefix' OR institute_prefix = 'all')";
-    $stmt = $pdo->query("SELECT * FROM `infrastructure_facilities` WHERE $where ORDER BY display_order ASC, id DESC");
-    $facilities = $stmt->fetchAll();
+    $facilities = fetchSingleTableKpiDataset($pdo, 'infrastructure_facilities', $prefix, isSuperAdmin());
+    usort($facilities, function($a, $b) {
+        return ($a['display_order'] ?? 10) <=> ($b['display_order'] ?? 10);
+    });
 } catch (PDOException $e) {
     // Ignore error
 }
