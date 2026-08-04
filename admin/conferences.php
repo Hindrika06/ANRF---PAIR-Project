@@ -24,10 +24,10 @@ try {
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `taskno` VARCHAR(50) DEFAULT NULL,
             `title` VARCHAR(255) NOT NULL,
-            `organizer` VARCHAR(255) NOT NULL,
-            `start_date` DATE NOT NULL,
-            `end_date` DATE NOT NULL,
-            `location` VARCHAR(255) NOT NULL,
+            `organizer` VARCHAR(255) DEFAULT NULL,
+            `start_date` DATE DEFAULT NULL,
+            `end_date` DATE DEFAULT NULL,
+            `location` VARCHAR(255) DEFAULT NULL,
             `submission_deadline` DATE DEFAULT NULL,
             `website_url` VARCHAR(1000) DEFAULT NULL,
             `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,67 +61,89 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $taskno              = trim($_POST['taskno']              ?? '');
-    $title               = trim($_POST['title']               ?? '');
-    $organizer           = trim($_POST['organizer']           ?? '');
-    $start_date          = $_POST['start_date']               ?? '';
-    $end_date            = $_POST['end_date']                 ?? '';
-    $location            = trim($_POST['location']            ?? '');
-    $submission_deadline = $_POST['submission_deadline']     ?? '';
-    $website_url         = trim($_POST['website_url']         ?? '');
-    $edit_id             = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $taskno                  = trim($_POST['taskno']                  ?? '');
+    $title                   = trim($_POST['title']                   ?? '');
+    $organizer               = trim($_POST['organizer']               ?? '');
+    $organisers              = $organizer;
+    $start_date              = $_POST['start_date']                   ?? '';
+    $conf_date               = $start_date;
+    $end_date                = $_POST['end_date']                     ?? '';
+    $location                = trim($_POST['location']                ?? '');
+    $submission_deadline     = $_POST['submission_deadline']         ?? '';
+    $website_url             = trim($_POST['website_url']             ?? '');
+    $investigator            = trim($_POST['investigator']            ?? '');
+    $convener                = trim($_POST['convener']                ?? '');
+    $resource_person         = trim($_POST['resource_person']         ?? '');
+    $chief_patron            = trim($_POST['chief_patron']            ?? '');
+    $patrons                 = trim($_POST['patrons']                 ?? '');
+    $organising_committee    = trim($_POST['organising_committee']    ?? '');
+    $registration_guidelines = trim($_POST['registration_guidelines'] ?? '');
+    $training_schedule       = trim($_POST['training_schedule']       ?? '');
+    $image                   = trim($_POST['image']                   ?? '');
+    $qr_code_image           = trim($_POST['qr_code_image']           ?? '');
+    $publish_status          = isset($_POST['publish_status']) ? 1 : 0;
+    $edit_id                 = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
-    } elseif (empty($title) || empty($organizer) || empty($start_date) || empty($end_date) || empty($location)) {
-        $error = 'Title, Organizer, Start/End Dates, and Location/Venue are required fields.';
+    } elseif (empty($title) || (empty($organizer) && empty($organisers)) || (empty($start_date) && empty($conf_date))) {
+        $error = 'Title, Organizer, and Start Date are required fields.';
     } else {
         try {
+            $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
+            $fieldCandidateMap = [
+                'taskno'                  => $taskno ?: null,
+                'title'                   => $title,
+                'organizer'               => $organizer ?: null,
+                'organisers'              => $organisers ?: null,
+                'start_date'              => $start_date ?: null,
+                'conf_date'               => $conf_date ?: null,
+                'end_date'                => $end_date ?: null,
+                'location'                => $location ?: null,
+                'submission_deadline'     => $submission_deadline ?: null,
+                'website_url'             => $website_url ?: null,
+                'investigator'            => $investigator ?: null,
+                'convener'                => $convener ?: null,
+                'resource_person'         => $resource_person ?: null,
+                'chief_patron'            => $chief_patron ?: null,
+                'patrons'                 => $patrons ?: null,
+                'organising_committee'    => $organising_committee ?: null,
+                'registration_guidelines' => $registration_guidelines ?: null,
+                'training_schedule'       => $training_schedule ?: null,
+                'image'                   => $image ?: null,
+                'qr_code_image'           => $qr_code_image ?: null,
+                'publish_status'          => $publish_status
+            ];
+
+            $validPayload = [];
+            foreach ($fieldCandidateMap as $col => $val) {
+                if (isset($existingCols[$col])) {
+                    $validPayload[$col] = $val;
+                }
+            }
+
             if ($edit_id) {
                 // UPDATE RECORD
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        organizer = :organizer,
-                        start_date = :start_date,
-                        end_date = :end_date,
-                        location = :location,
-                        submission_deadline = :submission_deadline,
-                        website_url = :website_url
-                    WHERE id = :id
-                ");
-                $stmt->execute([
-                    ':taskno'              => $taskno ?: null,
-                    ':title'               => $title,
-                    ':organizer'           => $organizer,
-                    ':start_date'          => $start_date,
-                    ':end_date'            => $end_date,
-                    ':location'            => $location,
-                    ':submission_deadline' => $submission_deadline ?: null,
-                    ':website_url'         => $website_url ?: null,
-                    ':id'                  => $edit_id
-                ]);
+                $setSql = [];
+                $params = [':id' => $edit_id];
+                foreach ($validPayload as $col => $val) {
+                    $setSql[] = "`$col` = :$col";
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
                 exit;
             } else {
                 // INSERT NEW RECORD
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (taskno, title, organizer, start_date, end_date, location, submission_deadline, website_url)
-                    VALUES
-                        (:taskno, :title, :organizer, :start_date, :end_date, :location, :submission_deadline, :website_url)
-                ");
-                $stmt->execute([
-                    ':taskno'              => $taskno ?: null,
-                    ':title'               => $title,
-                    ':organizer'           => $organizer,
-                    ':start_date'          => $start_date,
-                    ':end_date'            => $end_date,
-                    ':location'            => $location,
-                    ':submission_deadline' => $submission_deadline ?: null,
-                    ':website_url'         => $website_url ?: null
-                ]);
+                $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
+                $valsSql = implode(', ', array_map(function($c) { return ":$c"; }, array_keys($validPayload)));
+                $params = [];
+                foreach ($validPayload as $col => $val) {
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
+                $stmt->execute($params);
                 header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
                 exit;
             }
@@ -134,7 +156,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 4. FETCH DATA
 $conferences = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY start_date DESC");
+    $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+    $orderCol = 'created_at';
+    if (in_array('conf_date', $existingCols, true)) {
+        $orderCol = 'conf_date';
+    } elseif (in_array('start_date', $existingCols, true)) {
+        $orderCol = 'start_date';
+    }
+    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY `$orderCol` DESC");
     $conferences = $stmt->fetchAll();
 } catch (PDOException $e) {
     // Suppress error or handle gracefully
@@ -144,7 +173,8 @@ $total_records = count($conferences);
 $upcoming_count = 0;
 $current_date = date('Y-m-d');
 foreach ($conferences as $c) {
-    if (!empty($c['start_date']) && $c['start_date'] > $current_date) {
+    $stDate = !empty($c['start_date']) ? $c['start_date'] : ($c['conf_date'] ?? '');
+    if (!empty($stDate) && $stDate > $current_date) {
         $upcoming_count++;
     }
 }
@@ -406,12 +436,23 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                     $rowCounter = 1;
                                     foreach ($conferences as $conf):
                                         // Dynamic schema fallback mapping to handle old vs new database columns defensively
-                                        $organizerVal = htmlspecialchars($conf['organizer'] ?? $conf['organisers'] ?? '');
-                                        $locationVal  = htmlspecialchars($conf['location'] ?? $conf['institute'] ?? '');
-                                        $startDateVal = $conf['start_date'] ?? $conf['conf_date'] ?? '';
-                                        $endDateVal   = $conf['end_date'] ?? $conf['conf_date'] ?? '';
-                                        $websiteVal   = htmlspecialchars($conf['website_url'] ?? '');
-                                        $deadlineVal  = $conf['submission_deadline'] ?? '';
+                                        $organizerVal     = htmlspecialchars($conf['organizer'] ?? $conf['organisers'] ?? '');
+                                        $locationVal      = htmlspecialchars($conf['location'] ?? $conf['institute'] ?? '');
+                                        $startDateVal     = $conf['start_date'] ?? $conf['conf_date'] ?? '';
+                                        $endDateVal       = $conf['end_date'] ?? $conf['conf_date'] ?? '';
+                                        $websiteVal       = htmlspecialchars($conf['website_url'] ?? '');
+                                        $deadlineVal      = $conf['submission_deadline'] ?? '';
+                                        $investigatorVal = htmlspecialchars($conf['investigator'] ?? '');
+                                        $convenerVal      = htmlspecialchars($conf['convener'] ?? '');
+                                        $resourceVal      = htmlspecialchars($conf['resource_person'] ?? '');
+                                        $chiefPatronVal   = htmlspecialchars($conf['chief_patron'] ?? '');
+                                        $patronsVal       = htmlspecialchars($conf['patrons'] ?? '');
+                                        $committeeVal     = htmlspecialchars($conf['organising_committee'] ?? '');
+                                        $regGuidelinesVal = htmlspecialchars($conf['registration_guidelines'] ?? '');
+                                        $scheduleVal      = htmlspecialchars($conf['training_schedule'] ?? '');
+                                        $imageVal         = htmlspecialchars($conf['image'] ?? '');
+                                        $qrVal            = htmlspecialchars($conf['qr_code_image'] ?? '');
+                                        $publishStatus    = (int)($conf['publish_status'] ?? 1);
                                     ?>
                                         <tr>
                                             <td style="text-align: center; vertical-align: middle;">
@@ -427,6 +468,11 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                                 <?php if (!empty($websiteVal)): ?>
                                                     <span class="d-block mt-1">
                                                         <a href="<?= $websiteVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-external-link me-1"></i> Official Website</a>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($convenerVal)): ?>
+                                                    <span class="d-block mt-1 text-muted" style="font-size: 11.5px;">
+                                                        <strong>Convener:</strong> <?= $convenerVal ?>
                                                     </span>
                                                 <?php endif; ?>
                                             </td>
@@ -470,6 +516,17 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                                             data-location="<?= $locationVal ?>"
                                                             data-submission_deadline="<?= $deadlineVal ?>"
                                                             data-website_url="<?= $websiteVal ?>"
+                                                            data-investigator="<?= $investigatorVal ?>"
+                                                            data-convener="<?= $convenerVal ?>"
+                                                            data-resource_person="<?= $resourceVal ?>"
+                                                            data-chief_patron="<?= $chiefPatronVal ?>"
+                                                            data-patrons="<?= $patronsVal ?>"
+                                                            data-organising_committee="<?= $committeeVal ?>"
+                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
+                                                            data-training_schedule="<?= $scheduleVal ?>"
+                                                            data-image="<?= $imageVal ?>"
+                                                            data-qr_code_image="<?= $qrVal ?>"
+                                                            data-publish_status="<?= $publishStatus ?>"
                                                             title="Edit Record">
                                                         <i class="fa fa-pencil"></i>
                                                     </button>
@@ -494,6 +551,17 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                                             data-location="<?= $locationVal ?>"
                                                             data-submission_deadline="<?= $deadlineVal ?>"
                                                             data-website_url="<?= $websiteVal ?>"
+                                                            data-investigator="<?= $investigatorVal ?>"
+                                                            data-convener="<?= $convenerVal ?>"
+                                                            data-resource_person="<?= $resourceVal ?>"
+                                                            data-chief_patron="<?= $chiefPatronVal ?>"
+                                                            data-patrons="<?= $patronsVal ?>"
+                                                            data-organising_committee="<?= $committeeVal ?>"
+                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
+                                                            data-training_schedule="<?= $scheduleVal ?>"
+                                                            data-image="<?= $imageVal ?>"
+                                                            data-qr_code_image="<?= $qrVal ?>"
+                                                            data-publish_status="<?= $publishStatus ?>"
                                                             title="View Details">
                                                         <i class="fa fa-eye"></i>
                                                     </button>
@@ -538,22 +606,29 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Task No</label>
-                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. TASK-2">
+                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. CONF-YVU-2026-01">
                             </div>
-                            <div class="col-md-9 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Conference Title *</label>
                                 <input type="text" name="title" id="modal_title" class="form-control" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Publish Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" name="publish_status" id="modal_publish_status" value="1" checked>
+                                    <label class="form-check-label text-dark font-w600" for="modal_publish_status">Publish immediately</label>
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Hosting/Participating Organization *</label>
-                                <input type="text" name="organizer" id="modal_organizer" class="form-control" placeholder="e.g. IEEE, Osmania University" required>
+                                <input type="text" name="organizer" id="modal_organizer" class="form-control" placeholder="e.g. ANRF-PAIR Project in association with BD Bioscience" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Location/Venue *</label>
-                                <input type="text" name="location" id="modal_location" class="form-control" placeholder="e.g. Hyderabad, India (or Online)" required>
+                                <input type="text" name="location" id="modal_location" class="form-control" placeholder="e.g. Senate Hall, YVU, Kadapa" required>
                             </div>
                         </div>
 
@@ -563,8 +638,8 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                 <input type="date" name="start_date" id="modal_start_date" class="form-control" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">End Date *</label>
-                                <input type="date" name="end_date" id="modal_end_date" class="form-control" required>
+                                <label class="form-label">End Date</label>
+                                <input type="date" name="end_date" id="modal_end_date" class="form-control">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Paper Submission Deadline</label>
@@ -573,9 +648,61 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Convener</label>
+                                <input type="text" name="convener" id="modal_convener" class="form-control" placeholder="e.g. Prof. L. Dakshayani">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Investigator</label>
+                                <input type="text" name="investigator" id="modal_investigator" class="form-control" placeholder="e.g. Prof. L. Dakshayani, Dept. of Genetics">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Resource Person</label>
+                                <input type="text" name="resource_person" id="modal_resource_person" class="form-control" placeholder="e.g. Mr. Karuna Kumar Kondaveeti, BD Bioscience">
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Official Website URL</label>
                                 <input type="url" name="website_url" id="modal_website_url" class="form-control" placeholder="https://conference-website.org">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chief Patron</label>
+                                <input type="text" name="chief_patron" id="modal_chief_patron" class="form-control" placeholder="e.g. Prof. Bellamkonda Raja Shekhar">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Patrons</label>
+                                <input type="text" name="patrons" id="modal_patrons" class="form-control" placeholder="e.g. Prof P. Padma, Prof. T. Srinivas">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Organising Committee</label>
+                                <input type="text" name="organising_committee" id="modal_organising_committee" class="form-control" placeholder="e.g. All ANRF PAIR Investigators">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Poster Image Path</label>
+                                <input type="text" name="image" id="modal_image" class="form-control" placeholder="uploads/events/poster.jpg">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">QR Code Image Path</label>
+                                <input type="text" name="qr_code_image" id="modal_qr_code_image" class="form-control" placeholder="uploads/events/registration_qr.jpg">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Registration Guidelines</label>
+                                <textarea name="registration_guidelines" id="modal_registration_guidelines" rows="3" class="form-control" placeholder="Guidelines for participants..."></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Training Schedule</label>
+                                <textarea name="training_schedule" id="modal_training_schedule" rows="3" class="form-control" placeholder="Detailed training schedule..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -636,6 +763,7 @@ document.addEventListener("DOMContentLoaded", function() {
         addNewBtn.addEventListener('click', function() {
             modalForm.reset();
             document.getElementById('modal_edit_id').value = '';
+            document.getElementById('modal_publish_status').checked = true;
             modalTitle.innerText = "Add Conference";
             modalSubmitBtn.innerText = "Save Records";
             modalSubmitBtn.style.display = "block";
@@ -675,6 +803,20 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_location').value = this.getAttribute('data-location');
             document.getElementById('modal_submission_deadline').value = this.getAttribute('data-submission_deadline');
             document.getElementById('modal_website_url').value = this.getAttribute('data-website_url');
+
+            document.getElementById('modal_convener').value = this.getAttribute('data-convener') || '';
+            document.getElementById('modal_investigator').value = this.getAttribute('data-investigator') || '';
+            document.getElementById('modal_resource_person').value = this.getAttribute('data-resource_person') || '';
+            document.getElementById('modal_chief_patron').value = this.getAttribute('data-chief_patron') || '';
+            document.getElementById('modal_patrons').value = this.getAttribute('data-patrons') || '';
+            document.getElementById('modal_organising_committee').value = this.getAttribute('data-organising_committee') || '';
+            document.getElementById('modal_registration_guidelines').value = this.getAttribute('data-registration_guidelines') || '';
+            document.getElementById('modal_training_schedule').value = this.getAttribute('data-training_schedule') || '';
+            document.getElementById('modal_image').value = this.getAttribute('data-image') || '';
+            document.getElementById('modal_qr_code_image').value = this.getAttribute('data-qr_code_image') || '';
+
+            const pubStatus = this.getAttribute('data-publish_status');
+            document.getElementById('modal_publish_status').checked = (pubStatus != '0');
         });
     });
 
