@@ -149,9 +149,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                 
                 <!-- Pending Approvals Card -->
                 <div class="card mb-4">
-                    <div class="card-header bg-danger text-white py-3 d-flex align-items-center gap-2">
-                        <span style="font-size: 16px;">🔴</span>
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #B71C1C, #C62828) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -207,8 +206,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
 
                 <!-- History Audit Trail Card -->
                 <div class="card">
-                    <div class="card-header bg-dark text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Audit Trail Log (History)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Audit Trail Log (History)</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -266,8 +265,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                      ============================================================ -->
                 
                 <div class="card">
-                    <div class="card-header bg-primary text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">My Approval Requests Status Tracker</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">My Approval Requests Status Tracker</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">

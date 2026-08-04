@@ -527,6 +527,36 @@
     <?php endif; ?>
     <!-- User Profile Dropdown Styles & Scripts -->
     <style>
+        /* --- NOTIFICATION BELL BUTTON STYLES --- */
+        .nav-notification-bell-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #C62828;
+            color: #ffffff !important;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(198, 40, 40, 0.2);
+            padding: 0;
+        }
+
+        .nav-notification-bell-btn i {
+            font-size: 18px;
+            color: #ffffff !important;
+        }
+
+        .nav-notification-bell-btn:hover,
+        .nav-notification-bell-btn:focus {
+            background-color: #b71c1c;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.35);
+        }
+
         /* --- PROFILE DROPDOWN CUSTOM STYLES --- */
         .profile-trigger-btn {
             background: none;
@@ -1026,9 +1056,12 @@
 								</div>
 							</li>
 						
-							
-							
-
+							<!-- Notification Bell Icon (between search bar and profile image) -->
+							<li class="nav-item d-flex align-items-center" style="margin-left: 15px;">
+								<button type="button" class="nav-notification-bell-btn" title="Notifications" aria-label="Notifications">
+									<i class="fas fa-bell"></i>
+								</button>
+							</li>
 							
 							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px; position: relative;">
 								<?php
