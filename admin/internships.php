@@ -49,11 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_days_trained      = trim($_POST['no_days_trained'] ?? '');
     $content              = trim($_POST['content'] ?? '');
     $edit_id              = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super             = isSuperAdmin();
+    $approvalStatus       = $is_super ? 'Approved' : 'Pending';
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
     } else {
     try {
+        $payload = [
+            ':task_no'              => $task_no,
+            ':title'                => $title,
+            ':project_investigator' => $project_investigator,
+            ':no_students_trained'  => (int)$no_students_trained ?: 0,
+            ':students_names'       => $students_names,
+            ':no_days_trained'      => (int)$no_days_trained ?: null,
+            ':content'              => $content,
+            ':approval_status'      => $approvalStatus
+        ];
+
         if ($edit_id) {
             $stmt = $pdo->prepare("
                 UPDATE `$table` SET
@@ -63,40 +76,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     no_students_trained = :no_students_trained, 
                     students_names = :students_names, 
                     no_days_trained = :no_days_trained, 
-                    content = :content
+                    content = :content,
+                    approval_status = :approval_status
                 WHERE id = :id
             ");
-            $stmt->execute([
-                ':task_no'              => $task_no,
-                ':title'                => $title,
-                ':project_investigator' => $project_investigator,
-                ':no_students_trained'  => (int)$no_students_trained ?: 0,
-                ':students_names'       => $students_names,
-                ':no_days_trained'      => (int)$no_days_trained ?: null,
-                ':content'              => $content,
-                ':id'                   => $edit_id
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            $payload[':id'] = $edit_id;
+            $stmt->execute($payload);
+
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $edit_id, 'UPDATE', $payload);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            }
             exit;
         } else {
             $stmt = $pdo->prepare("
                 INSERT INTO `$table`
                     (task_no, title, project_investigator, no_students_trained, 
-                     students_names, no_days_trained, content, created_at)
+                     students_names, no_days_trained, content, approval_status, created_at)
                 VALUES
                     (:task_no, :title, :project_investigator, :no_students_trained, 
-                     :students_names, :no_days_trained, :content, NOW())
+                     :students_names, :no_days_trained, :content, :approval_status, NOW())
             ");
-            $stmt->execute([
-                ':task_no'              => $task_no,
-                ':title'                => $title,
-                ':project_investigator' => $project_investigator,
-                ':no_students_trained'  => (int)$no_students_trained ?: 0,
-                ':students_names'       => $students_names,
-                ':no_days_trained'      => (int)$no_days_trained ?: null,
-                ':content'              => $content,
-            ]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            $stmt->execute($payload);
+            $new_id = $pdo->lastInsertId();
+
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $new_id, 'CREATE', $payload);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            }
             exit;
         }
     } catch (PDOException $e) {
@@ -105,11 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH DATA
+// 4. FETCH CENTRALIZED DATA
 $internships = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
-    $internships = $stmt->fetchAll();
+    $internships = fetchCentralizedKpiDataset($pdo, 'internships', $prefix, isSuperAdmin());
+    usort($internships, function($a, $b) {
+        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+    });
 } catch (PDOException $e) {
     $error = 'Could not load data records: ' . $e->getMessage();
 }

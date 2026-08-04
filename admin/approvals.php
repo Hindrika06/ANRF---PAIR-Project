@@ -31,44 +31,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error_msg = 'This request has already been processed.';
                 } else {
                     if ($action === 'approve') {
-                        // Prepare and execute the deferred query
-                        $pdo->bypass_interceptor = true;
+                        // 1. If deferred query exists, execute it
+                        if (!empty($request['sql_query'])) {
+                            try {
+                                $sql = $request['sql_query'];
+                                $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
+                                $deferredStmt = $pdo->prepare($sql);
+                                $deferredStmt->execute($params);
+                            } catch (Exception $ex) {
+                                // Ignore if record already inserted or query fails
+                            }
+                        }
                         
-                        $sql = $request['sql_query'];
-                        $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
-                        
-                        $deferredStmt = $pdo->prepare($sql);
-                        $deferredStmt->execute($params);
-                        
-                        // Update status to Approved
-                        $update = $pdo->prepare("
-                            UPDATE `approval_requests` 
-                            SET status = 'Approved', approved_by = ?, approved_at = NOW() 
-                            WHERE id = ?
-                        ");
-                        $update->execute([$_SESSION['username'], $request_id]);
-                        
-                        $pdo->bypass_interceptor = false;
-                        $success_msg = 'Request #' . $request_id . ' approved and changes applied successfully.';
+                        // 2. Mark KPI request and target table row as Approved
+                        approveKpiRequest($pdo, $request_id, $_SESSION['username']);
+                        $success_msg = 'Request #' . $request_id . ' approved and changes published successfully.';
                     } elseif ($action === 'reject') {
                         $reason = trim($_POST['rejection_reason'] ?? '');
                         
-                        $pdo->bypass_interceptor = true;
-                        
-                        // Update status to Rejected
-                        $update = $pdo->prepare("
-                            UPDATE `approval_requests` 
-                            SET status = 'Rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? 
-                            WHERE id = ?
-                        ");
-                        $update->execute([$_SESSION['username'], $reason, $request_id]);
-                        
-                        $pdo->bypass_interceptor = false;
+                        // Mark KPI request and target table row as Rejected
+                        rejectKpiRequest($pdo, $request_id, $_SESSION['username'], $reason);
                         $success_msg = 'Request #' . $request_id . ' has been rejected.';
                     }
                 }
             } catch (Exception $e) {
-                $pdo->bypass_interceptor = false;
                 $error_msg = 'Error processing request: ' . $e->getMessage();
             }
         }

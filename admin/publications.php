@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $publication_journal  = trim($_POST['publication_journal'] ?? '');
     $impact_factor        = trim($_POST['impact_factor']       ?? '');
     $edit_id              = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super             = isSuperAdmin();
 
     if ($task_no === '' || $publication_title === '' || $author_name === '' || $publication_journal === '' || $publication_date === '') {
         $error = 'Please fill in all required fields marked with *.';
@@ -56,6 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'You are not allowed to update records for this institute.';
         } else {
         try {
+            $approvalStatus = $is_super ? 'Approved' : 'Pending';
+            $payload = [
+                'task_no'             => $task_no,
+                'publication_title'   => $publication_title,
+                'author_name'         => $author_name,
+                'doi_number'          => $doi_number,
+                'publication_date'    => $publication_date ?: null,
+                'publication_journal' => $publication_journal,
+                'impact_factor'       => $impact_factor !== '' ? (float)$impact_factor : null,
+                'approval_status'     => $approvalStatus
+            ];
+
             if ($edit_id) {
                 $stmt = $pdo->prepare("
                     UPDATE `$table` SET
@@ -65,40 +78,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         doi_number           = :doi_number,
                         publication_date     = :publication_date,
                         publication_journal  = :publication_journal,
-                        impact_factor        = :impact_factor
+                        impact_factor        = :impact_factor,
+                        approval_status      = :approval_status
                     WHERE id = :id
                 ");
-                $stmt->execute([
-                    ':task_no'             => $task_no,
-                    ':publication_title'   => $publication_title,
-                    ':author_name'         => $author_name,
-                    ':doi_number'          => $doi_number,
-                    ':publication_date'    => $publication_date ?: null,
-                    ':publication_journal' => $publication_journal,
-                    ':impact_factor'       => $impact_factor !== '' ? (float)$impact_factor : null,
-                    ':id'                  => $edit_id,
-                ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                $payload['id'] = $edit_id;
+                $stmt->execute($payload);
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Publications', $table, $prefix, $edit_id, 'UPDATE', $payload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                }
                 exit;
             } else {
                 $stmt = $pdo->prepare("
                     INSERT INTO `$table`
                         (task_no, publication_title, author_name, doi_number,
-                         publication_date, publication_journal, impact_factor, created_at)
+                         publication_date, publication_journal, impact_factor, approval_status, created_at)
                     VALUES
                         (:task_no, :publication_title, :author_name, :doi_number,
-                         :publication_date, :publication_journal, :impact_factor, NOW())
+                         :publication_date, :publication_journal, :impact_factor, :approval_status, NOW())
                 ");
-                $stmt->execute([
-                    ':task_no'             => $task_no,
-                    ':publication_title'   => $publication_title,
-                    ':author_name'         => $author_name,
-                    ':doi_number'          => $doi_number,
-                    ':publication_date'    => $publication_date ?: null,
-                    ':publication_journal' => $publication_journal,
-                    ':impact_factor'       => $impact_factor !== '' ? (float)$impact_factor : null,
-                ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                $stmt->execute($payload);
+                $new_id = $pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Publications', $table, $prefix, $new_id, 'CREATE', $payload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                }
                 exit;
             }
         } catch (PDOException $e) {
@@ -108,14 +119,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH ALL RECORDS
+// 4. FETCH ALL CENTRALIZED RECORDS
 $publications  = [];
 $total_records = 0;
 try {
-    $stmt          = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
-    $publications  = $stmt->fetchAll();
+    $publications  = fetchCentralizedKpiDataset($pdo, 'publications', $prefix, isSuperAdmin());
+    usort($publications, function($a, $b) {
+        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+    });
     $total_records = count($publications);
-} catch (PDOException $e) {
+} catch (Exception $e) {
     $error = 'Could not load records: ' . $e->getMessage();
 }
 
@@ -522,12 +535,24 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                     <?php
                                     $sno = 1;
                                     foreach ($publications as $pub):
+                                        $approvalStatus = $pub['approval_status'] ?? 'Approved';
+                                        $instPrefix     = strtoupper($pub['institute_prefix'] ?? $prefix);
                                     ?>
                                         <tr>
                                             <td style="text-align: center;">
                                                 <span class="index-badge-circle"><?= $sno++ ?></span>
                                             </td>
                                             <td>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if ($approvalStatus === 'Approved'): ?>
+                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
+                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
+                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <a href="javascript:void(0);" class="registry-task-link">
                                                     <?= htmlspecialchars($pub['task_no'] ?: 'TASK-UNASSIGNED') ?>
                                                 </a>

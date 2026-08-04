@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $qr_code_image           = trim($_POST['qr_code_image']           ?? '');
     $publish_status          = isset($_POST['publish_status']) ? 1 : 0;
     $edit_id                 = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super                = isSuperAdmin();
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
@@ -112,7 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'training_schedule'       => $training_schedule ?: null,
                 'image'                   => $image ?: null,
                 'qr_code_image'           => $qr_code_image ?: null,
-                'publish_status'          => $publish_status
+                'publish_status'          => $publish_status,
+                'approval_status'         => $is_super ? 'Approved' : 'Pending'
             ];
 
             $validPayload = [];
@@ -132,7 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
                 $stmt->execute($params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                }
                 exit;
             } else {
                 // INSERT NEW RECORD
@@ -144,7 +152,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
                 $stmt->execute($params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                $new_id = $pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $new_id, 'CREATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                }
                 exit;
             }
         } catch (PDOException $e) {
@@ -153,48 +168,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH DATA
+// 4. FETCH CENTRALIZED DATA
 $conferences = [];
 try {
-    if ($prefix === 'all') {
-        global $adminAllowedPrefixes;
-        foreach ($adminAllowedPrefixes as $p) {
-            $tbl = "{$p}_conferences";
-            try {
-                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-                if ($check > 0) {
-                    $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                    $orderCol = 'created_at';
-                    if (in_array('conf_date', $existingCols, true)) {
-                        $orderCol = 'conf_date';
-                    } elseif (in_array('start_date', $existingCols, true)) {
-                        $orderCol = 'start_date';
-                    }
-                    $stmt = $pdo->query("SELECT *, '$p' AS _inst_prefix FROM `$tbl` ORDER BY `$orderCol` DESC");
-                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    if ($rows) {
-                        $conferences = array_merge($conferences, $rows);
-                    }
-                }
-            } catch (PDOException $e) {}
-        }
-        usort($conferences, function($a, $b) {
-            $stA = !empty($a['start_date']) ? $a['start_date'] : ($a['conf_date'] ?? $a['created_at'] ?? '');
-            $stB = !empty($b['start_date']) ? $b['start_date'] : ($b['conf_date'] ?? $b['created_at'] ?? '');
-            return strcmp($stB, $stA);
-        });
-    } else {
-        $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
-        $orderCol = 'created_at';
-        if (in_array('conf_date', $existingCols, true)) {
-            $orderCol = 'conf_date';
-        } elseif (in_array('start_date', $existingCols, true)) {
-            $orderCol = 'start_date';
-        }
-        $stmt = $pdo->query("SELECT *, '$prefix' AS _inst_prefix FROM `$table` ORDER BY `$orderCol` DESC");
-        $conferences = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-} catch (PDOException $e) {
+    $conferences = fetchCentralizedKpiDataset($pdo, 'conferences', $prefix, isSuperAdmin());
+    usort($conferences, function($a, $b) {
+        $dateA = !empty($a['conf_date']) ? $a['conf_date'] : ($a['start_date'] ?? '');
+        $dateB = !empty($b['conf_date']) ? $b['conf_date'] : ($b['start_date'] ?? '');
+        $tA = !empty($dateA) ? strtotime($dateA) : 0;
+        $tB = !empty($dateB) ? strtotime($dateB) : 0;
+        return $tB <=> $tA;
+    });
+} catch (Exception $e) {
     // Suppress error or handle gracefully
 }
 
@@ -478,16 +463,28 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                         $patronsVal       = htmlspecialchars($conf['patrons'] ?? '');
                                         $committeeVal     = htmlspecialchars($conf['organising_committee'] ?? '');
                                         $regGuidelinesVal = htmlspecialchars($conf['registration_guidelines'] ?? '');
-                                        $scheduleVal      = htmlspecialchars($conf['training_schedule'] ?? '');
+                                         $scheduleVal      = htmlspecialchars($conf['training_schedule'] ?? '');
                                         $imageVal         = htmlspecialchars($conf['image'] ?? '');
                                         $qrVal            = htmlspecialchars($conf['qr_code_image'] ?? '');
                                         $publishStatus    = (int)($conf['publish_status'] ?? 1);
+                                        $approvalStatus   = $conf['approval_status'] ?? 'Approved';
+                                        $instPrefix       = strtoupper($conf['institute_prefix'] ?? $prefix);
                                     ?>
                                         <tr>
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
                                             <td style="vertical-align: middle;">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if ($approvalStatus === 'Approved'): ?>
+                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
+                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
+                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <span class="registry-task-link">
                                                     <?= htmlspecialchars($conf['taskno'] ?: 'TASK-UNASSIGNED') ?>
                                                 </span>

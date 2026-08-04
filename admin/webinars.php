@@ -77,18 +77,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description      = trim($_POST['description']      ?? '');
     $publish_status   = isset($_POST['publish_status']) ? 1 : 0;
     $edit_id          = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super         = isSuperAdmin();
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
-    } elseif (empty($title) || empty($speaker_name) || empty($webinar_date)) {
-        $error = 'Title, Speaker Name, and Webinar Date & Time are required fields.';
+    } elseif (empty($title) || empty($webinar_date)) {
+        $error = 'Title and Webinar Date & Time are required fields.';
     } else {
         try {
             $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
             $fieldCandidateMap = [
                 'taskno'           => $taskno ?: null,
                 'title'            => $title,
-                'speaker_name'     => $speaker_name,
+                'speaker_name'     => $speaker_name ?: null,
                 'affiliation'      => $affiliation ?: null,
                 'webinar_date'     => $webinar_date ?: null,
                 'link'             => $link ?: null,
@@ -100,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'contact_phone'    => $contact_phone ?: null,
                 'image'            => $image ?: null,
                 'description'      => $description ?: null,
-                'publish_status'   => $publish_status
+                'publish_status'   => $publish_status,
+                'approval_status'  => $is_super ? 'Approved' : 'Pending'
             ];
 
             $validPayload = [];
@@ -120,7 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
                 $stmt->execute($params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                }
                 exit;
             } else {
                 // INSERT NEW RECORD
@@ -132,7 +140,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
                 $stmt->execute($params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                $new_id = $pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $new_id, 'CREATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                }
                 exit;
             }
         } catch (PDOException $e) {
@@ -141,38 +156,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH DATA
+// 4. FETCH CENTRALIZED DATA
 $webinars = [];
 try {
-    if ($prefix === 'all') {
-        global $adminAllowedPrefixes;
-        foreach ($adminAllowedPrefixes as $p) {
-            $tbl = "{$p}_webinars";
-            try {
-                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-                if ($check > 0) {
-                    $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                    $orderCol = in_array('webinar_date', $existingCols, true) ? 'webinar_date' : 'created_at';
-                    $stmt = $pdo->query("SELECT *, '$p' AS _inst_prefix FROM `$tbl` ORDER BY `$orderCol` DESC");
-                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    if ($rows) {
-                        $webinars = array_merge($webinars, $rows);
-                    }
-                }
-            } catch (PDOException $e) {}
-        }
-        usort($webinars, function($a, $b) {
-            $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
-            $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
-            return $tB <=> $tA;
-        });
-    } else {
-        $existingCols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
-        $orderCol = in_array('webinar_date', $existingCols, true) ? 'webinar_date' : 'created_at';
-        $stmt = $pdo->query("SELECT *, '$prefix' AS _inst_prefix FROM `$table` ORDER BY `$orderCol` DESC");
-        $webinars = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-} catch (PDOException $e) {
+    $webinars = fetchCentralizedKpiDataset($pdo, 'webinars', $prefix, isSuperAdmin());
+    usort($webinars, function($a, $b) {
+        $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
+        $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
+        return $tB <=> $tA;
+    });
+} catch (Exception $e) {
     // Suppress error or handle gracefully
 }
 
@@ -461,14 +454,26 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                         $convenersVal   = htmlspecialchars($webinar['conveners'] ?? '');
                                         $emailVal       = htmlspecialchars($webinar['official_email'] ?? '');
                                         $phoneVal       = htmlspecialchars($webinar['contact_phone'] ?? '');
-                                        $imageVal       = htmlspecialchars($webinar['image'] ?? '');
+                                         $imageVal       = htmlspecialchars($webinar['image'] ?? '');
                                         $publishStatus  = (int)($webinar['publish_status'] ?? 1);
+                                        $approvalStatus = $webinar['approval_status'] ?? 'Approved';
+                                        $instPrefix     = strtoupper($webinar['institute_prefix'] ?? $prefix);
                                     ?>
                                         <tr>
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
                                             <td style="vertical-align: middle;">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if ($approvalStatus === 'Approved'): ?>
+                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
+                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
+                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <span class="registry-task-link">
                                                     <?= htmlspecialchars($webinar['taskno'] ?: 'TASK-UNASSIGNED') ?>
                                                 </span>

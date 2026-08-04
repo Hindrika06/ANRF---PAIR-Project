@@ -27,9 +27,6 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
                     class="form-select institute-select-dropdown"
                     onchange="window.location.href = window.location.pathname + '?prefix=' + this.value;"
                 >
-                    <option value="all" <?= ($__bannerPrefix === 'all') ? 'selected' : '' ?>>
-                        🌐 All Institutes (Hub Overview)
-                    </option>
                     <?php
                     global $adminAllowedPrefixes;
                     foreach ($adminAllowedPrefixes as $pref): ?>
