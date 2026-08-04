@@ -3148,16 +3148,11 @@ label.error:before {
   position: relative;
 }
 #page-footer h4:after {
-  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=20);
-  opacity: 0.2;
-  background-color: #fff;
-  bottom: -15px;
-  content: "";
-  height: 2px;
-  left: 0;
-  width: 30px;
-  position: absolute;
-  z-index: 0;
+  display: none !important;
+  content: none !important;
+  border: none !important;
+  height: 0 !important;
+  width: 0 !important;
 }
 #page-footer ul {
   color: #fff;

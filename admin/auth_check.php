@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Timeout duration in seconds (2 minutes for testing)
-$timeout_duration = 120;
+// Timeout duration in seconds (30 minutes)
+$timeout_duration = 1800;
 
 // Check if user is logged in
 if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {

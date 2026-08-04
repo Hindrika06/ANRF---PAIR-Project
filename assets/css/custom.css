@@ -756,6 +756,17 @@
     margin-top: 5px;       /* was 10px */
 }
 
+/* Remove thin decorative horizontal underline below footer headings */
+#page-footer h4::after,
+#page-footer h4::before {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
 /* Address / contact block — tighter line-height */
 #page-footer #footer-content address {
     line-height: 1.8;
