@@ -25,7 +25,7 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
                 <select
                     id="institute-switcher"
                     class="form-select institute-select-dropdown"
-                    onchange="window.location.href = window.location.pathname + '?prefix=' + this.value;"
+                    onchange="if (typeof updateTabTitleAndFavicon === 'function') updateTabTitleAndFavicon(this.value); window.location.href = window.location.pathname + '?prefix=' + this.value;"
                 >
                     <?php
                     global $adminAllowedPrefixes;
