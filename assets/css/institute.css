@@ -79,19 +79,25 @@
        
 
         .inst-logo-wrap {
-            width: 120px;
-            height: 120px;
+            height: 85px;
+            width: auto;
+            min-width: 80px;
+            max-width: 320px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow: visible !important;
         }
 
         .inst-logo-wrap img {
-            width: 120%;
-            height: 150%;
+            max-width: 100%;
+            max-height: 85px;
+            width: auto;
+            height: auto;
             object-fit: contain;
+            object-position: center;
+            display: block;
         }
 
         .inst-meta { 
@@ -107,14 +113,21 @@
             margin-bottom: 4px;
         }
 
+        .inst-meta h2::after,
+        .inst-meta h2::before {
+            display: none !important;
+            content: none !important;
+        }
+
         .inst-meta p {
             font-size: 13.5px;
             color: var(--text-muted);
             font-weight: 500;
+            text-decoration: none !important;
         }
 
+
         .inst-switch { 
-            margin-left: auto;
             position: relative;
             z-index: 15;
             min-width: 280px;
@@ -540,8 +553,13 @@
             }
             
             .inst-logo-wrap { 
-                width: 80px;
-                height: 80px;
+                height: 75px;
+                width: auto;
+                max-width: 100%;
+            }
+            
+            .inst-logo-wrap img {
+                max-height: 75px;
             }
             
             .inst-meta {
@@ -700,8 +718,13 @@
             }
 
             .inst-logo-wrap { 
-                width: 90px;
-                height: 90px;
+                height: 65px;
+                width: auto;
+                max-width: 100%;
+            }
+            
+            .inst-logo-wrap img {
+                max-height: 65px;
             }
 
             .inst-meta h2 { 
@@ -971,8 +994,13 @@
             }
 
             .inst-logo-wrap { 
-                width: 80px;
-                height: 80px;
+                height: 60px;
+                width: auto;
+                max-width: 100%;
+            }
+            
+            .inst-logo-wrap img {
+                max-height: 60px;
             }
 
             .inst-meta h2 { 

@@ -1,6 +1,8 @@
 <?php
 $bodyClass = 'page-institute';
 require_once 'config.php';
+require_once __DIR__ . '/admin/config/approval_helper.php';
+
 
 $logo_map = [
     'University of Hyderabad'         => '3.png',
@@ -77,38 +79,50 @@ try {
 $webinars = [];
 $conferences = [];
 try {
-    $webinars = fetchRows($pdo, "SELECT * FROM {$prefix}webinars ORDER BY webinar_date DESC");
-} catch (PDOException $e) {}
+    $webinars = fetchPublicCentralizedKpiDataset($pdo, 'webinars');
+    if (!empty($webinars)) {
+        usort($webinars, function($a, $b) {
+            $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
+            $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
+            return $tB <=> $tA;
+        });
+    }
+} catch (Exception $e) {}
+
 try {
-    if ($prefix === 'uoh_') {
-        $conferences = fetchRows($pdo, "SELECT * FROM uoh_conferences ORDER BY conf_date DESC");
-    } else {
-        $conferences = fetchRows($pdo, "SELECT * FROM {$prefix}conferences ORDER BY start_date DESC");
+    $conferences = fetchPublicCentralizedKpiDataset($pdo, 'conferences');
+    if (!empty($conferences)) {
+        usort($conferences, function($a, $b) {
+            $dateA = !empty($a['conf_date']) ? $a['conf_date'] : ($a['start_date'] ?? '');
+            $dateB = !empty($b['conf_date']) ? $b['conf_date'] : ($b['start_date'] ?? '');
+            $tA = !empty($dateA) ? strtotime($dateA) : 0;
+            $tB = !empty($dateB) ? strtotime($dateB) : 0;
+            return $tB <=> $tA;
+        });
     }
-} catch (PDOException $e) {}
+} catch (Exception $e) {}
 
-// Normalize database fields for UoH compatibility
-if ($prefix === 'uoh_') {
-    foreach ($webinars as &$web) {
-        $web['speaker_name'] = !empty($web['speaker_name']) ? $web['speaker_name'] : ($web['investigator'] ?? '—');
-        $web['affiliation']  = !empty($web['affiliation']) ? $web['affiliation'] : ($web['institute'] ?? '');
-        $web['description']  = !empty($web['description']) ? $web['description'] : ($web['content'] ?? '');
-        $web['taskno']       = $web['taskno'] ?? null;
-        $web['link']         = $web['link'] ?? '';
-    }
-    unset($web);
-
-    foreach ($conferences as &$conf) {
-        $conf['organizer']           = !empty($conf['organizer']) ? $conf['organizer'] : ($conf['organisers'] ?? ($conf['institute'] ?? '—'));
-        $conf['start_date']          = $conf['conf_date'] ?? null;
-        $conf['end_date']            = $conf['conf_date'] ?? null;
-        $conf['location']            = $conf['location'] ?? ($conf['institute'] ?? '—');
-        $conf['website_url']         = $conf['website_url'] ?? ($conf['link'] ?? '');
-        $conf['taskno']              = $conf['taskno'] ?? null;
-        $conf['submission_deadline'] = null;
-    }
-    unset($conf);
+// Normalize database fields across all institutes for rendering compatibility
+foreach ($webinars as &$web) {
+    $web['speaker_name'] = !empty($web['speaker_name']) ? $web['speaker_name'] : ($web['investigator'] ?? '—');
+    $web['affiliation']  = !empty($web['affiliation']) ? $web['affiliation'] : ($web['institute'] ?? '');
+    $web['description']  = !empty($web['description']) ? $web['description'] : ($web['content'] ?? '');
+    $web['taskno']       = $web['taskno'] ?? null;
+    $web['link']         = $web['link'] ?? '';
 }
+unset($web);
+
+foreach ($conferences as &$conf) {
+    $conf['organizer']           = !empty($conf['organizer']) ? $conf['organizer'] : ($conf['organisers'] ?? ($conf['institute'] ?? '—'));
+    $conf['start_date']          = !empty($conf['start_date']) ? $conf['start_date'] : ($conf['conf_date'] ?? null);
+    $conf['end_date']            = !empty($conf['end_date']) ? $conf['end_date'] : ($conf['conf_date'] ?? null);
+    $conf['location']            = !empty($conf['location']) ? $conf['location'] : ($conf['institute'] ?? '—');
+    $conf['website_url']         = !empty($conf['website_url']) ? $conf['website_url'] : ($conf['link'] ?? '');
+    $conf['taskno']              = $conf['taskno'] ?? null;
+    $conf['submission_deadline'] = $conf['submission_deadline'] ?? null;
+}
+unset($conf);
+
 
 $tabs = [
     'progress'     => ['label' => 'Progress', 'count' => count($progress),      'icon' => '📋'],

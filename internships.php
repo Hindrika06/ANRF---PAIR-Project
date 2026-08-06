@@ -243,7 +243,20 @@ try {
     box-shadow: none !important;
 }
 
+.itr-hero-title::after,
+.itr-hero-title::before,
+.itr-sh-title::after,
+.itr-sh-title::before {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    border: none !important;
+}
+
 .itr-hero-subtitle {
+
     font-size: 15.5px;
     color: var(--anrf-slate);
     line-height: 1.6;

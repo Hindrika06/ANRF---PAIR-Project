@@ -844,7 +844,15 @@ h6::after, h6::before,
 .anrf-intro-text h3::after, .anrf-intro-text h3::before,
 header h1::after, header h2::after, header h3::after, header h4::after,
 .title::after, .title::before,
-.heading-line, .title-line, .heading-divider, .section-divider {
+.heading-line, .title-line, .heading-divider, .section-divider,
+.no-theme-underline::after,
+.no-theme-underline::before,
+h1.no-theme-underline::after,
+h1.no-theme-underline::before,
+h2.no-theme-underline::after,
+h2.no-theme-underline::before,
+h3.no-theme-underline::after,
+h3.no-theme-underline::before {
     display: none !important;
     content: none !important;
     border: none !important;

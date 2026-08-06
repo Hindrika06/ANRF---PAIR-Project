@@ -273,14 +273,6 @@
                         <span>pairdirecorate@uohyd.ac.in</span>
                     </a>
                 </li>
-                <li>
-                    <a href="tel:914023134546">
-                        <span class="topbar-icon-badge">
-                            <i class="fa fa-phone" aria-hidden="true"></i>
-                        </span>
-                        <span>040 2313 2309</span>
-                    </a>
-                </li>
             </ul>
             <ul class="topbar-right">
                 <li class="topbar-login">

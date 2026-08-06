@@ -209,7 +209,6 @@ function renderTeamCard($m) {
                             <address>
                                 <strong>PAIR Directorate</strong><br>
                                 University of Hyderabad<br>
-                                <abbr title="Phone">P:</abbr> 914023134546<br>
                                 <abbr title="Email">E:</abbr> <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
                             </address>
                         </div>
