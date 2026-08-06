@@ -252,7 +252,7 @@ if ($album_id) {
                                             </a>
                                             <div class="ms-2">
                                                 <button class="btn btn-warning btn-xs" onclick="openEditAlbumModal(<?= htmlspecialchars(json_encode($al)) ?>)"><i class="fa fa-pencil"></i></button>
-                                                <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&action=delete_album&id=<?= $al['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Deleting this album will permanently delete all its photos! Continue?');"><i class="fa fa-trash"></i></a>
+                                                <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&action=delete_album&id=<?= $al['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Album?', message: 'Deleting this album will permanently delete all its photos! Continue?', confirmText: 'Delete Album', onConfirm: function() { window.location.href = targetUrl; } });"><i class="fa fa-trash"></i></a>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -309,7 +309,7 @@ if ($album_id) {
                                                     <div class="p-2" style="font-size: 11px;">
                                                         <span class="text-truncate d-block text-muted"><?= htmlspecialchars($p['caption'] ?: '(No Caption)') ?></span>
                                                     </div>
-                                                    <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&album_id=<?= $album_id ?>&action=delete_photo&photo_id=<?= $p['id'] ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="return confirm('Are you sure you want to delete this photo?');">
+                                                    <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&album_id=<?= $album_id ?>&action=delete_photo&photo_id=<?= $p['id'] ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Photo?', message: 'Are you sure you want to delete this photo?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                         <i class="fa fa-trash"></i>
                                                     </a>
                                                 </div>

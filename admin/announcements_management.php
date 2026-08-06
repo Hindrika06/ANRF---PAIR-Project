@@ -170,7 +170,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($a)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="announcements_management.php?action=delete&id=<?= $a['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this ticker?');">
+                                            <a href="announcements_management.php?action=delete&id=<?= $a['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Ticker?', message: 'Are you sure you want to delete this ticker?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

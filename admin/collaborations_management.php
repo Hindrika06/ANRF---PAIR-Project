@@ -330,7 +330,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="collaborations_management.php?prefix=<?= $prefix ?>&action=delete&id=<?= $c['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this collaboration?');">
+                                            <a href="collaborations_management.php?prefix=<?= $prefix ?>&action=delete&id=<?= $c['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

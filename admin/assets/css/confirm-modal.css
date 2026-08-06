@@ -1,0 +1,246 @@
+/* ==========================================================================
+   ANRF-PAIR Admin Portal — Reusable Confirmation Modal CSS
+   Strict Color Palette:
+     - Red: #bc2121
+     - Blue: #0d2c54
+     - Green: #28a745
+     - White: #ffffff
+   ========================================================================== */
+
+/* Dark Backdrop Overlay */
+.anrf-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(13, 44, 84, 0.65);
+    z-index: 10500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    box-sizing: border-box;
+}
+
+.anrf-modal-backdrop.anrf-modal-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal Card Dialog */
+.anrf-modal-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(13, 44, 84, 0.25), 0 4px 16px rgba(13, 44, 84, 0.12);
+    width: 100%;
+    max-width: 440px;
+    padding: 32px 28px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.anrf-modal-backdrop.anrf-modal-active .anrf-modal-card {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Close Button (top-right X) */
+.anrf-modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #0d2c54;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 50%;
+    transition: opacity 0.15s ease;
+}
+
+.anrf-modal-close-btn:hover {
+    opacity: 0.7;
+}
+
+/* Circular Icon Base */
+.anrf-modal-icon-container {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+}
+
+/* Green Circular Approval Icon */
+.anrf-modal-icon-container.anrf-icon-approve {
+    background-color: #ffffff;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.anrf-modal-icon-container.anrf-icon-approve svg {
+    width: 32px;
+    height: 32px;
+    stroke: #28a745;
+    stroke-width: 2.5;
+}
+
+/* Red Circular Reject Icon */
+.anrf-modal-icon-container.anrf-icon-reject {
+    background-color: #ffffff;
+    border-color: #bc2121;
+    color: #bc2121;
+}
+
+.anrf-modal-icon-container.anrf-icon-reject svg {
+    width: 32px;
+    height: 32px;
+    stroke: #bc2121;
+    stroke-width: 2.5;
+}
+
+/* Modal Title */
+.anrf-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0d2c54;
+    margin: 0 0 10px 0;
+    line-height: 1.3;
+}
+
+/* Modal Message */
+.anrf-modal-message {
+    font-size: 14px;
+    color: #0d2c54;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+    white-space: pre-line;
+    opacity: 0.85;
+}
+
+/* Textarea for Rejection Reason */
+.anrf-modal-textarea-group {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.anrf-modal-textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px 14px;
+    border: 2px solid #0d2c54;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #0d2c54;
+    background-color: #ffffff;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.anrf-modal-textarea:focus {
+    border-color: #bc2121;
+}
+
+.anrf-modal-textarea::placeholder {
+    color: #0d2c54;
+    opacity: 0.5;
+}
+
+/* Button Group */
+.anrf-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+.anrf-modal-btn {
+    flex: 1;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    text-decoration: none;
+    outline: none;
+}
+
+/* Cancel Button: Outline button */
+.anrf-modal-btn-cancel {
+    background-color: #ffffff;
+    border-color: #0d2c54;
+    color: #0d2c54;
+}
+
+.anrf-modal-btn-cancel:hover {
+    background-color: #0d2c54;
+    color: #ffffff;
+}
+
+/* Approve Button: Green filled button */
+.anrf-modal-btn-approve {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #ffffff;
+}
+
+.anrf-modal-btn-approve:hover {
+    opacity: 0.9;
+}
+
+/* Reject Button: Red filled button */
+.anrf-modal-btn-reject {
+    background-color: #bc2121;
+    border-color: #bc2121;
+    color: #ffffff;
+}
+
+.anrf-modal-btn-reject:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+/* Disabled State for Reject Button */
+.anrf-modal-btn-reject:disabled {
+    background-color: #ffffff;
+    border-color: #bc2121;
+    color: #bc2121;
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* Responsive Styles */
+@media (max-width: 480px) {
+    .anrf-modal-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+
+    .anrf-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .anrf-modal-btn {
+        width: 100%;
+    }
+}

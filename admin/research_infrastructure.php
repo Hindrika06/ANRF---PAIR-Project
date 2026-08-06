@@ -397,7 +397,7 @@ try {
                                                 <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <a href="research_infrastructure.php?action=delete&type=research&id=<?= $r['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this research area?');">
+                                                <a href="research_infrastructure.php?action=delete&type=research&id=<?= $r['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                     <i class="fa fa-trash"></i>
                                                 </a>
                                             <?php else: ?>
@@ -472,7 +472,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="research_infrastructure.php?prefix=<?= $prefix ?>&action=delete&type=facility&id=<?= $f['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this facility?');">
+                                            <a href="research_infrastructure.php?prefix=<?= $prefix ?>&action=delete&type=facility&id=<?= $f['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

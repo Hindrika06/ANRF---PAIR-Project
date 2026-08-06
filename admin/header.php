@@ -23,6 +23,12 @@ $__activeInstContext = getActiveInstituteContext();
 	<link id="dynamic-favicon-icon" rel="icon" type="image/png" href="<?= htmlspecialchars($__activeInstContext['favicon']) ?>">
 	<link href="vendor/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link href="assets/css/confirm-modal.css?v=<?= filemtime(__DIR__ . '/assets/css/confirm-modal.css') ?>" rel="stylesheet">
+
+
+
+
+
 
 	<script>
 	window.INSTITUTE_TAB_DATA = {
