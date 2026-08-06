@@ -35,8 +35,6 @@ $bodyClass = 'page-sub-page page-contact'; include 'header.php';?>
                                     <br><br>
                                     <span>Gachibowli, Hyderabad – 500046, India</span>
                                     <br>
-                                    <abbr title="Telephone">Telephone:</abbr> 914023134546
-                                    <br>
                                     <abbr title="Email">Email:</abbr> <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
                                 </address>
                                 <div class="icons">

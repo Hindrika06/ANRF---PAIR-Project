@@ -826,3 +826,21 @@
         padding: 10px 0;
     }
 }
+
+/* Global reset for decorative heading divider underlines */
+.no-theme-underline::after,
+.no-theme-underline::before,
+h1.no-theme-underline::after,
+h1.no-theme-underline::before,
+h2.no-theme-underline::after,
+h2.no-theme-underline::before,
+h3.no-theme-underline::after,
+h3.no-theme-underline::before {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    border: none !important;
+}
+

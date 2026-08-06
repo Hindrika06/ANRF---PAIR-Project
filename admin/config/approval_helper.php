@@ -101,8 +101,8 @@ function fetchCentralizedKpiDataset($pdo, $moduleSuffix, $userPrefix, $isSuper =
     foreach ($prefixes as $p) {
         $tbl = "{$p}_{$moduleSuffix}";
         try {
-            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($check === 0) continue;
+            $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$tableCheck || count($tableCheck->fetchAll()) === 0) continue;
 
             $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
             $hasApprovalStatus = in_array('approval_status', $cols, true);
@@ -147,8 +147,8 @@ function fetchCentralizedKpiDataset($pdo, $moduleSuffix, $userPrefix, $isSuper =
  */
 function fetchSingleTableKpiDataset($pdo, $tableName, $userPrefix, $isSuper = false) {
     try {
-        $check = $pdo->query("SHOW TABLES LIKE '$tableName'")->rowCount();
-        if ($check === 0) return [];
+        $tableCheck = $pdo->query("SHOW TABLES LIKE '$tableName'");
+        if (!$tableCheck || count($tableCheck->fetchAll()) === 0) return [];
 
         $cols = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
         $hasApprovalStatus = in_array('approval_status', $cols, true);
@@ -177,4 +177,45 @@ function fetchSingleTableKpiDataset($pdo, $tableName, $userPrefix, $isSuper = fa
     } catch (Exception $e) {
         return [];
     }
+}
+
+/**
+ * Fetches Public Centralized KPI Data:
+ * - Returns all approved & published records across all specified institute tables.
+ * - Enforces approval_status = 'Approved' AND (publish_status = 1 OR publish_status IS NULL)
+ */
+function fetchPublicCentralizedKpiDataset($pdo, $moduleSuffix) {
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $combined = [];
+
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_{$moduleSuffix}";
+        try {
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check === 0) continue;
+
+            $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+            $hasApproval = in_array('approval_status', $cols, true);
+            $hasPublish  = in_array('publish_status', $cols, true);
+
+            $whereConditions = [];
+            if ($hasApproval) {
+                $whereConditions[] = "approval_status = 'Approved'";
+            }
+            if ($hasPublish) {
+                $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+            }
+
+            $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+            $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($rows) {
+                $combined = array_merge($combined, $rows);
+            }
+        } catch (Exception $e) {
+            // Ignore single table errors
+        }
+    }
+
+    return $combined;
 }

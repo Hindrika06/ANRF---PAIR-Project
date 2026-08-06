@@ -56,10 +56,12 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 ***********************************-->
 <!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
+    <?php if ($__isSuper): ?>
     <a href="<?= $navUrl('publications.php') ?>" class="brand-logo">
-        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">
-        <span class="brand-institute-name" style="font-weight: 700 !important; font-family: 'Poppins', sans-serif !important;"><?= htmlspecialchars($__brandName) ?></span>
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img">
+        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
     </a>
+    <?php endif; ?>
     <div class="nav-control">
         <div class="hamburger">
             <span class="line"></span><span class="line"></span><span class="line"></span>
@@ -72,31 +74,68 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 
 <style>
 /* --- Global & Header Updates --- */
+.nav-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px 0 16px !important;
+    height: 70px !important;
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+    z-index: 999 !important;
+}
 .brand-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 100%;
-    overflow: hidden;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    text-decoration: none !important;
 }
 .logo-img {
-    max-height: 45px;
-    width: auto;
-    flex-shrink: 0;
-    object-fit: contain;
+    height: 38px !important;
+    max-height: 40px !important;
+    width: auto !important;
+    max-width: 42px !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+    border-radius: 4px;
+    background: #ffffff;
+    padding: 2px;
     transition: transform 0.3s ease;
 }
 .logo-img:hover {
     transform: scale(1.03);
 }
 .brand-institute-name {
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #000000;
-    white-space: normal;
-    overflow: visible;
-    word-break: break-word;
+    font-family: 'Poppins', 'Nunito Sans', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    line-height: 1.25 !important;
+    color: #0f172a !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.nav-header .nav-control {
+    flex-shrink: 0 !important;
+    margin-left: 6px !important;
+}
+.menu-toggle .brand-institute-name,
+[data-sidebar-style="mini"] .brand-institute-name {
+    display: none !important;
 }
 
 /* --- Sidebar Base --- */
@@ -491,12 +530,14 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                             <span class="nav-text">Progress Reports</span>
                         </a>
                     </li>
+                    <?php if (isSuperAdmin()): ?>
                     <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
                         <a href="<?= $navUrl('collaborations_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Collaborations</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
                         <a href="<?= $navUrl('research_infrastructure.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-flask" style="font-size:0.95rem;"></i>

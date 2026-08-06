@@ -48,7 +48,6 @@
                             <strong>ANRF–PAIR Project Office</strong><br>
                             IDC Building,<br> University of Hyderabad<br>
                             Gachibowli, Hyderabad <br>Pincode– 500046, India<br>
-                            <abbr title="Telephone">Tel:</abbr> 914023134546<br>
                             <abbr title="Email">Email:</abbr>
                             <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
                         </address>

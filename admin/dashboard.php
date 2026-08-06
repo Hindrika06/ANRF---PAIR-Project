@@ -11,12 +11,14 @@ if (!isValidPrefix($prefix)) {
 require_once 'config/db.php';
 
 // Function to safely query counts
-function getTableCount($pdo, $tableName, $whereClause = "") {
-    try {
-        $sql = "SELECT COUNT(*) FROM `$tableName`" . ($whereClause ? " WHERE $whereClause" : "");
-        return (int)$pdo->query($sql)->fetchColumn();
-    } catch (PDOException $e) {
-        return 0;
+if (!function_exists('getTableCount')) {
+    function getTableCount($pdo, $tableName, $whereClause = "") {
+        try {
+            $sql = "SELECT COUNT(*) FROM `$tableName`" . ($whereClause ? " WHERE $whereClause" : "");
+            return (int)$pdo->query($sql)->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
     }
 }
 

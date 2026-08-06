@@ -97,7 +97,18 @@ function patentStatusClass($status) {
         text-decoration: none !important;
     }
 
+    .pr-section__title::after,
+    .pr-section__title::before {
+        display: none !important;
+        content: none !important;
+        background: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        border: none !important;
+    }
+
     .pr-section__subtitle {
+
         font-size: 15.5px;
         color: var(--text-grey);
         line-height: 1.6;
