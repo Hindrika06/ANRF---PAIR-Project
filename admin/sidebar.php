@@ -55,7 +55,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     Nav header start
 ***********************************-->
 <!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
-<div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
+<div class="nav-header" style="background-color: #ffffff; box-shadow: none; z-index: 999;">
     <?php if ($__isSuper): ?>
     <a href="<?= $navUrl('publications.php') ?>" class="brand-logo">
         <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img">
@@ -82,9 +82,28 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     height: 70px !important;
     box-sizing: border-box !important;
     background-color: #ffffff !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
     z-index: 999 !important;
 }
+
+/* --- Remove All Sidebar & Nav-Header Shadows --- */
+.dlabnav,
+.custom-sidebar,
+.deznav,
+.nav-header,
+[data-sidebar-style],
+.dlabnav::before, .dlabnav::after,
+.custom-sidebar::before, .custom-sidebar::after,
+.deznav::before, .deznav::after,
+.nav-header::before, .nav-header::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
 .brand-logo {
     display: flex !important;
     align-items: center !important;
@@ -141,7 +160,9 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 /* --- Sidebar Base --- */
 .custom-sidebar {
     background: #7a0e0e;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
 }
 .custom-sidebar ul.metismenu {
     padding: 15px 10px;

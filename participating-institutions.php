@@ -358,15 +358,13 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
                     </div>
                 </section>
             </div>
-
-         
         </div>
     </div>
 </div>
 
 
- <style
- >/* Ticker Wrapper — clips overflow and fades edges */
+ <style>
+/* Ticker Wrapper — clips overflow and fades edges */
 .logos-ticker-wrapper {
     overflow: hidden;
     position: relative;
