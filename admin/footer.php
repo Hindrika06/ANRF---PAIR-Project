@@ -6,6 +6,8 @@
  *
  * Usage: <?php include 'footer.php'; ?>
  */
+include_once __DIR__ . '/includes/confirm_modal.php';
 ?>
+<script src="assets/js/confirm-modal.js?v=<?= filemtime(__DIR__ . '/assets/js/confirm-modal.js') ?>"></script>
 </body>
 </html>

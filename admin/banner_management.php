@@ -230,7 +230,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($b)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="banner_management.php?action=delete&id=<?= $b['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this slide?');">
+                                            <a href="banner_management.php?action=delete&id=<?= $b['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Slide?', message: 'Are you sure you want to delete this slide?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>
