@@ -27,6 +27,15 @@ $adminPrefixLogos = [
     'uoh' => 'logo/3.png',
     'yvu' => '../logos/yu.jpg',
 ];
+$adminPrefixFavicons = [
+    'cuk' => 'uploads/institutes/cuk_logo.png',
+    'kannur' => 'uploads/institutes/kannur_logo.png',
+    'mgu' => 'uploads/institutes/mgu_logo.png',
+    'ou' => 'uploads/institutes/ou_logo.png',
+    'svu' => 'uploads/institutes/svu_logo.png',
+    'uoh' => 'uploads/institutes/uoh_logo.png',
+    'yvu' => 'uploads/institutes/yvu_logo.png',
+];
 
 function isValidPrefix($prefix)
 {
@@ -89,3 +98,22 @@ function getInstituteLogo($prefix)
     global $adminPrefixLogos;
     return $adminPrefixLogos[$prefix] ?? 'logo/3.png';
 }
+
+function getInstituteFavicon($prefix)
+{
+    global $adminPrefixFavicons;
+    return $adminPrefixFavicons[$prefix] ?? 'uploads/institutes/uoh_logo.png';
+}
+
+function getActiveInstituteContext()
+{
+    $prefix = resolveAdminPrefix();
+    $name = getInstituteFullName($prefix);
+    $favicon = getInstituteFavicon($prefix);
+    return [
+        'prefix' => $prefix,
+        'name' => $name,
+        'favicon' => $favicon,
+    ];
+}
+
