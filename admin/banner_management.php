@@ -156,7 +156,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Homepage Banner Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

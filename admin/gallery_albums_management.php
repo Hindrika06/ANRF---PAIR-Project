@@ -196,7 +196,6 @@ if ($album_id) {
     }
 }
 
-$pageTitle = "Gallery Albums CMS | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

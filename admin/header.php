@@ -1,36 +1,73 @@
+<?php
+if (!isset($GLOBALS['__role_access_loaded'])) {
+    require_once __DIR__ . '/role_access.php';
+    $GLOBALS['__role_access_loaded'] = true;
+}
+$__activeInstContext = getActiveInstituteContext();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <!-- PAGE TITLE HERE -->
-	<title>Management And Administration Website Templates | Fillow : Fillow Saas Admin Bootstrap 5 Template - Empowering Your Administration Work  | Dexignlabs</title>
-
+	<!-- DYNAMIC PAGE TITLE & FAVICON BASED ON ACTIVE INSTITUTE -->
+	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name'] . ' | ANRF-PAIR Admin Portal') ?></title>
 
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="author" content="Dexignlabs">
+	<meta name="author" content="ANRF-PAIR Project">
 	<meta name="robots" content="index, follow">
-
-	<meta name="keywords" content="	admin, admin dashboard, admin template, analytics, bootstrap, bootstrap5, bootstrap 5 admin template, modern, responsive admin dashboard, sales dashboard, sass, ui kit, web app, Fillow SaaS, User Interface (UI), User Experience (UX), Dashboard Design, SaaS Application, Web Application, Data Visualization, Analytics, Customization, Responsive Design, Bootstrap Framework, Charts and Graphs, Data Management, Reporting, Dark Mode, Mobile-Friendly, Dashboard Components, Integrations, Analytics Dashboard, API Integration, User Authentication">
-
-
-	<meta name="description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-
-	<meta property="og:title" content="Fillow : Fillow Saas Admin Bootstrap 5 Template | Dexignlabs">
-	<meta property="og:description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-	<meta property="og:image" content="https://fillow.dexignlab.com/xhtml/social-image.png">
-	<meta name="format-detection" content="telephone=no">
-
-	<meta name="twitter:title" content="Fillow : Fillow Saas Admin Bootstrap 5 Template | Dexignlabs">
-	<meta name="twitter:description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-	<meta name="twitter:image" content="https://fillow.dexignlab.com/xhtml/social-image.png">
-	<meta name="twitter:card" content="summary_large_image">
 
 	<!-- MOBILE SPECIFIC -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+	<!-- DYNAMIC FAVICON -->
+	<link id="dynamic-favicon" rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($__activeInstContext['favicon']) ?>">
+	<link id="dynamic-favicon-icon" rel="icon" type="image/png" href="<?= htmlspecialchars($__activeInstContext['favicon']) ?>">
 	<link href="vendor/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+
+	<script>
+	window.INSTITUTE_TAB_DATA = {
+		'cuk':    { name: 'Central University of Karnataka', favicon: 'uploads/institutes/cuk_logo.png' },
+		'kannur': { name: 'Kannur University',               favicon: 'uploads/institutes/kannur_logo.png' },
+		'mgu':    { name: 'Mahatma Gandhi University',       favicon: 'uploads/institutes/mgu_logo.png' },
+		'ou':     { name: 'Osmania University',              favicon: 'uploads/institutes/ou_logo.png' },
+		'svu':    { name: 'Sri Venkateswara University',     favicon: 'uploads/institutes/svu_logo.png' },
+		'uoh':    { name: 'University of Hyderabad',         favicon: 'uploads/institutes/uoh_logo.png' },
+		'yvu':    { name: 'Yogi Vemana University',          favicon: 'uploads/institutes/yvu_logo.png' }
+	};
+
+	function updateTabTitleAndFavicon(prefix) {
+		var data = window.INSTITUTE_TAB_DATA[prefix];
+		if (!data) return;
+
+		// 1. Immediately update document title
+		var fullTitle = data.name + ' | ANRF-PAIR Admin Portal';
+		document.title = fullTitle;
+		var titleElem = document.getElementById('dynamic-title');
+		if (titleElem) titleElem.textContent = fullTitle;
+
+		// 2. Immediately update favicon link tags
+		['dynamic-favicon', 'dynamic-favicon-icon'].forEach(function(id) {
+			var link = document.getElementById(id);
+			if (link) {
+				link.href = data.favicon;
+			}
+		});
+		var allFavicons = document.querySelectorAll("link[rel*='icon']");
+		allFavicons.forEach(function(link) {
+			link.href = data.favicon;
+		});
+	}
+
+	document.addEventListener('DOMContentLoaded', function() {
+		var switcher = document.getElementById('institute-switcher');
+		if (switcher) {
+			switcher.addEventListener('change', function() {
+				updateTabTitleAndFavicon(this.value);
+			});
+		}
+	});
+	</script>
+
 	
     <?php if (!isSuperAdmin()): ?>
     <style>
@@ -527,6 +564,36 @@
     <?php endif; ?>
     <!-- User Profile Dropdown Styles & Scripts -->
     <style>
+        /* --- NOTIFICATION BELL BUTTON STYLES --- */
+        .nav-notification-bell-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #C62828;
+            color: #ffffff !important;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(198, 40, 40, 0.2);
+            padding: 0;
+        }
+
+        .nav-notification-bell-btn i {
+            font-size: 18px;
+            color: #ffffff !important;
+        }
+
+        .nav-notification-bell-btn:hover,
+        .nav-notification-bell-btn:focus {
+            background-color: #b71c1c;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.35);
+        }
+
         /* --- PROFILE DROPDOWN CUSTOM STYLES --- */
         .profile-trigger-btn {
             background: none;
@@ -1026,9 +1093,12 @@
 								</div>
 							</li>
 						
-							
-							
-
+							<!-- Notification Bell Icon (between search bar and profile image) -->
+							<li class="nav-item d-flex align-items-center" style="margin-left: 15px;">
+								<button type="button" class="nav-notification-bell-btn" title="Notifications" aria-label="Notifications">
+									<i class="fas fa-bell"></i>
+								</button>
+							</li>
 							
 							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px; position: relative;">
 								<?php

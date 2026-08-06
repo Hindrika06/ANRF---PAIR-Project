@@ -94,7 +94,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Announcements Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

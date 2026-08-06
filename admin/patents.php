@@ -99,6 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $patentFile = $uploadFile('patent_file');
 
+        $is_super = isSuperAdmin();
+        $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
         if ($edit_id) {
             // UPDATE EXISTING PATENT RECORD
             $query = "UPDATE `$table` SET 
@@ -114,7 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         grant_date = :grant_date, 
                         status = :status, 
                         technology_area = :technology_area, 
-                        abstract = :abstract";
+                        abstract = :abstract,
+                        approval_status = :approval_status";
 
             $params = [
                 ':task_no'          => $task_no,
@@ -130,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':status'           => $status,
                 ':technology_area'  => $technology_area,
                 ':abstract'         => $abstract,
+                ':approval_status'  => $approvalStatus,
                 ':id'               => $edit_id
             ];
 
@@ -142,7 +147,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare($query);
             $stmt->execute($params);
 
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $edit_id, 'UPDATE', $params);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+            }
             exit;
         } else {
             // INSERT NEW PATENT RECORD
@@ -153,15 +163,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      application_no, patent_no, country,
                      filing_date, publication_date, grant_date,
                      status, technology_area, abstract,
-                     patent_file, created_at)
+                     patent_file, approval_status, created_at)
                 VALUES
                     (:task_no, :patent_id, :patent_title, :inventor_name, :co_inventors,
                      :application_no, :patent_no, :country,
                      :filing_date, :publication_date, :grant_date,
                      :status, :technology_area, :abstract,
-                     :patent_file, NOW())
+                     :patent_file, :approval_status, NOW())
             ");
-            $stmt->execute([
+            $params = [
                 ':task_no'          => $task_no,
                 ':patent_id'        => $final_id,
                 ':patent_title'     => $patent_title,
@@ -177,9 +187,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':technology_area'  => $technology_area,
                 ':abstract'         => $abstract,
                 ':patent_file'      => $patentFile,
-            ]);
+                ':approval_status'  => $approvalStatus
+            ];
+            $stmt->execute($params);
+            $new_id = $pdo->lastInsertId();
 
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            if (!$is_super) {
+                submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $new_id, 'CREATE', $params);
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+            } else {
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+            }
             exit;
         }
     } catch (RuntimeException $e) {
@@ -190,12 +208,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH ALL RECORDS FOR TABLE PRESENTATION
+// 4. FETCH ALL CENTRALIZED RECORDS FOR TABLE PRESENTATION
 $patents = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
-    $patents = $stmt->fetchAll();
-} catch (PDOException $e) {
+    $patents = fetchCentralizedKpiDataset($pdo, 'patent', $prefix, isSuperAdmin());
+    usort($patents, function($a, $b) {
+        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+    });
+} catch (Exception $e) {
     $error = 'Could not load data records: ' . $e->getMessage();
 }
 

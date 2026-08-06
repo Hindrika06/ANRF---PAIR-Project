@@ -1,11 +1,20 @@
 <?php
 if (!isset($GLOBALS['__role_access_loaded'])) { require_once 'role_access.php'; $GLOBALS['__role_access_loaded'] = true; }
 $__isSuper = isSuperAdmin();
-$__brandPrefix = $__isSuper ? 'uoh' : resolveAdminPrefix();
+$__activePrefix = resolveAdminPrefix();
+$__brandPrefix = $__isSuper ? 'uoh' : $__activePrefix;
 $__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPrefix);
 $__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
+
+// Helper to preserve active institute prefix for Super Admin links
+$navUrl = function($targetPage) use ($__isSuper, $__activePrefix) {
+    if ($__isSuper && !empty($__activePrefix)) {
+        return $targetPage . '?prefix=' . urlencode($__activePrefix);
+    }
+    return $targetPage;
+};
 
 $__pendingCount = 0;
 try {
@@ -46,11 +55,13 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     Nav header start
 ***********************************-->
 <!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
-<div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
-    <a href="publications.php" class="brand-logo">
-        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">
-        <span class="brand-institute-name" style="font-weight: 700 !important; font-family: 'Poppins', sans-serif !important;"><?= htmlspecialchars($__brandName) ?></span>
+<div class="nav-header" style="background-color: #ffffff; box-shadow: none; z-index: 999;">
+    <?php if ($__isSuper): ?>
+    <a href="<?= $navUrl('publications.php') ?>" class="brand-logo">
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img">
+        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
     </a>
+    <?php endif; ?>
     <div class="nav-control">
         <div class="hamburger">
             <span class="line"></span><span class="line"></span><span class="line"></span>
@@ -63,37 +74,95 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 
 <style>
 /* --- Global & Header Updates --- */
+.nav-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px 0 16px !important;
+    height: 70px !important;
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    z-index: 999 !important;
+}
+
+/* --- Remove All Sidebar & Nav-Header Shadows --- */
+.dlabnav,
+.custom-sidebar,
+.deznav,
+.nav-header,
+[data-sidebar-style],
+.dlabnav::before, .dlabnav::after,
+.custom-sidebar::before, .custom-sidebar::after,
+.deznav::before, .deznav::after,
+.nav-header::before, .nav-header::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
 .brand-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 100%;
-    overflow: hidden;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    text-decoration: none !important;
 }
 .logo-img {
-    max-height: 45px;
-    width: auto;
-    flex-shrink: 0;
-    object-fit: contain;
+    height: 38px !important;
+    max-height: 40px !important;
+    width: auto !important;
+    max-width: 42px !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+    border-radius: 4px;
+    background: #ffffff;
+    padding: 2px;
     transition: transform 0.3s ease;
 }
 .logo-img:hover {
     transform: scale(1.03);
 }
 .brand-institute-name {
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #000000;
-    white-space: normal;
-    overflow: visible;
-    word-break: break-word;
+    font-family: 'Poppins', 'Nunito Sans', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    line-height: 1.25 !important;
+    color: #0f172a !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.nav-header .nav-control {
+    flex-shrink: 0 !important;
+    margin-left: 6px !important;
+}
+.menu-toggle .brand-institute-name,
+[data-sidebar-style="mini"] .brand-institute-name {
+    display: none !important;
 }
 
 /* --- Sidebar Base --- */
 .custom-sidebar {
     background: #7a0e0e;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
 }
 .custom-sidebar ul.metismenu {
     padding: 15px 10px;
@@ -418,14 +487,15 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
         <!-- Main Navigation Links -->
         <ul class="metismenu" id="menu" style="flex: 1;">
             <li class="<?= ($currentPage === 'dashboard.php') ? 'mm-active' : '' ?>">
-                <a href="dashboard.php">
+                <a href="<?= $navUrl('dashboard.php') ?>">
                     <i class="fas fa-th-large"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
 
+            <?php if (isSuperAdmin()): ?>
             <li class="<?= ($currentPage === 'approvals.php') ? 'mm-active' : '' ?>">
-                <a href="approvals.php" style="display: flex; align-items: center;">
+                <a href="<?= $navUrl('approvals.php') ?>" style="display: flex; align-items: center;">
                     <i class="fas fa-check-circle"></i>
                     <span class="nav-text">Approvals</span>
                     <?php if ($__pendingCount > 0): ?>
@@ -435,6 +505,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <?php endif; ?>
                 </a>
             </li>
+            <?php endif; ?>
 
             <!-- KPI Dropdown Group -->
             <li class="nav-group <?= $kpiActive ? 'mm-active' : '' ?>" id="nav-kpi-group">
@@ -445,55 +516,57 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                 </a>
                 <ul class="nav-group-sub mm-collapse <?= $kpiActive ? 'mm-show' : '' ?>" id="kpi-sub" style="list-style:none; padding: 4px 0 4px 20px;">
                     <li class="<?= ($currentPage === 'publications.php') ? 'mm-active' : '' ?>">
-                        <a href="publications.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('publications.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-book-open" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Publications</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'patents.php') ? 'mm-active' : '' ?>">
-                        <a href="patents.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('patents.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-certificate" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Patents</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'conferences.php') ? 'mm-active' : '' ?>">
-                        <a href="conferences.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('conferences.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-users" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Conferences</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'webinars.php') ? 'mm-active' : '' ?>">
-                        <a href="webinars.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('webinars.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-video" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Webinars</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'internships.php') ? 'mm-active' : '' ?>">
-                        <a href="internships.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('internships.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-user-graduate" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Internships</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'progress_reports.php') ? 'mm-active' : '' ?>">
-                        <a href="progress_reports.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('progress_reports.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-chart-line" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Progress Reports</span>
                         </a>
                     </li>
+                    <?php if (isSuperAdmin()): ?>
                     <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
-                        <a href="collaborations_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('collaborations_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Collaborations</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
-                        <a href="research_infrastructure.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('research_infrastructure.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-flask" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Research &amp; Infrastructure</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'sheets.php') ? 'mm-active' : '' ?>">
-                        <a href="sheets.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('sheets.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-file-excel" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Sheets</span>
                         </a>
@@ -512,43 +585,43 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                 </a>
                 <ul class="nav-group-sub mm-collapse <?= $pagesActive ? 'mm-show' : '' ?>" id="pages-sub" style="list-style:none; padding: 4px 0 4px 20px;">
                     <li class="<?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
-                        <a href="gallery_albums_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('gallery_albums_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-images" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Gallery Albums</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'gallery.php') ? 'mm-active' : '' ?>">
-                        <a href="gallery.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('gallery.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-link" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Drive Event Links</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'event_calendar.php') ? 'mm-active' : '' ?>">
-                        <a href="event_calendar.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('event_calendar.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-calendar-alt" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Event Calendar</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'banner_management.php') ? 'mm-active' : '' ?>">
-                        <a href="banner_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('banner_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-image" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Homepage Banners</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'announcements_management.php') ? 'mm-active' : '' ?>">
-                        <a href="announcements_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('announcements_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-bullhorn" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Scrolling Ticker</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'team_management.php') ? 'mm-active' : '' ?>">
-                        <a href="team_management.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('team_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-user-cog" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Team Management</span>
                         </a>
                     </li>
                     <li class="<?= ($currentPage === 'manage_admins.php') ? 'mm-active' : '' ?>">
-                        <a href="manage_admins.php" style="padding: 9px 14px !important; font-size: 13px;">
+                        <a href="<?= $navUrl('manage_admins.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
                             <i class="fas fa-users-cog" style="font-size:0.95rem;"></i>
                             <span class="nav-text">Manage Admins</span>
                         </a>

@@ -11,12 +11,14 @@ if (!isValidPrefix($prefix)) {
 require_once 'config/db.php';
 
 // Function to safely query counts
-function getTableCount($pdo, $tableName, $whereClause = "") {
-    try {
-        $sql = "SELECT COUNT(*) FROM `$tableName`" . ($whereClause ? " WHERE $whereClause" : "");
-        return (int)$pdo->query($sql)->fetchColumn();
-    } catch (PDOException $e) {
-        return 0;
+if (!function_exists('getTableCount')) {
+    function getTableCount($pdo, $tableName, $whereClause = "") {
+        try {
+            $sql = "SELECT COUNT(*) FROM `$tableName`" . ($whereClause ? " WHERE $whereClause" : "");
+            return (int)$pdo->query($sql)->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
     }
 }
 
@@ -42,8 +44,6 @@ $countAnnouncements   = getTableCount($pdo, "announcements", "is_active = 1");
 $countCollaborations  = getTableCount($pdo, "collaborations", "status = 'Active'");
 $countResearch        = getTableCount($pdo, "research_areas", "status = 'Active'");
 $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status = 'Active'");
-
-$pageTitle = "Dashboard | ANRF-PAIR Portal";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -416,5 +416,11 @@ $pageTitle = "Dashboard | ANRF-PAIR Portal";
         </div>
     </div>
 </div>
+
+<!-- Template Scripts for Sidebar & MetisMenu Dropdowns -->
+<script src="vendor/global/global.min.js"></script>
+<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
+<script src="js/custom.min.js"></script>
+<script src="js/dlabnav-init.js"></script>
 
 <?php include 'footer.php'; ?>

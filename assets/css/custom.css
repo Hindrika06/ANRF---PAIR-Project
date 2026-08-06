@@ -756,6 +756,17 @@
     margin-top: 5px;       /* was 10px */
 }
 
+/* Remove thin decorative horizontal underline below footer headings */
+#page-footer h4::after,
+#page-footer h4::before {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
 /* Address / contact block — tighter line-height */
 #page-footer #footer-content address {
     line-height: 1.8;
@@ -814,4 +825,44 @@
     #page-footer #footer-top {
         padding: 10px 0;
     }
+}
+
+/* ============================================================
+   GLOBAL REMOVAL OF DECORATIVE GRAY HEADINGS DIVIDERS & LINES
+   ============================================================ */
+h1::after, h1::before,
+h2::after, h2::before,
+h3::after, h3::before,
+h4::after, h4::before,
+h5::after, h5::before,
+h6::after, h6::before,
+.section-title::after, .section-title::before,
+.section-head::after, .section-head::before,
+.page-title::after, .page-title::before,
+.anrf-intro-heading-row h4::after, .anrf-intro-heading-row h4::before,
+.anrf-intro-heading-row h2::after, .anrf-intro-heading-row h2::before,
+.anrf-intro-text h3::after, .anrf-intro-text h3::before,
+header h1::after, header h2::after, header h3::after, header h4::after,
+.title::after, .title::before,
+.heading-line, .title-line, .heading-divider, .section-divider,
+.no-theme-underline::after,
+.no-theme-underline::before,
+h1.no-theme-underline::after,
+h1.no-theme-underline::before,
+h2.no-theme-underline::after,
+h2.no-theme-underline::before,
+h3.no-theme-underline::after,
+h3.no-theme-underline::before {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.section-title, .section-head, .page-title,
+.anrf-intro-heading-row h4, .anrf-intro-text h3 {
+    border-bottom: none !important;
 }

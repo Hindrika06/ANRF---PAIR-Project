@@ -11142,7 +11142,7 @@ label {
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   transition: all .2s ease;
-  box-shadow: 0rem 0.9375rem 1.875rem 0rem rgba(0, 0, 0, 0.02); }
+  box-shadow: none; }
   .dlabnav .dlabnav-scroll {
     position: relative;
     height: 100%;

@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['active_prefix']    = $row['institute_prefix'];
                 $_SESSION['LAST_ACTIVITY']    = time();
 
-                header("Location: admin/publications.php");
+                header("Location: admin/dashboard.php");
                 exit();
             } elseif ($password === $row['password']) {
                 // Migrate plain-text password to hash on first login
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['active_prefix']    = $row['institute_prefix'];
                 $_SESSION['LAST_ACTIVITY']    = time();
 
-                header("Location: admin/publications.php");
+                header("Location: admin/dashboard.php");
                 exit();
             } else {
                 $error = "Invalid password!";
@@ -198,7 +198,7 @@ $pageTitle = "Login | ANRF–PAIR Project";
         <?php endif; ?>
 
         <?php if (isset($_GET['timeout']) && $_GET['timeout'] === '1'): ?>
-            <div class="alert-custom">Your session has expired due to 2 minutes of inactivity. Please log in again.</div>
+            <div class="alert-custom">Your session has expired due to 30 minutes of inactivity. Please log in again.</div>
         <?php endif; ?>
 
         <?php if (isset($_GET['registered']) && $_GET['registered'] === '1'): ?>

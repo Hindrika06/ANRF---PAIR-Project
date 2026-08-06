@@ -4,6 +4,11 @@ require_once 'role_access.php';
 require_once 'config/db.php';
 
 $is_super = isSuperAdmin();
+if (!$is_super) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 $success_msg = '';
@@ -31,44 +36,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error_msg = 'This request has already been processed.';
                 } else {
                     if ($action === 'approve') {
-                        // Prepare and execute the deferred query
-                        $pdo->bypass_interceptor = true;
+                        // 1. If deferred query exists, execute it
+                        if (!empty($request['sql_query'])) {
+                            try {
+                                $sql = $request['sql_query'];
+                                $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
+                                $deferredStmt = $pdo->prepare($sql);
+                                $deferredStmt->execute($params);
+                            } catch (Exception $ex) {
+                                // Ignore if record already inserted or query fails
+                            }
+                        }
                         
-                        $sql = $request['sql_query'];
-                        $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
-                        
-                        $deferredStmt = $pdo->prepare($sql);
-                        $deferredStmt->execute($params);
-                        
-                        // Update status to Approved
-                        $update = $pdo->prepare("
-                            UPDATE `approval_requests` 
-                            SET status = 'Approved', approved_by = ?, approved_at = NOW() 
-                            WHERE id = ?
-                        ");
-                        $update->execute([$_SESSION['username'], $request_id]);
-                        
-                        $pdo->bypass_interceptor = false;
-                        $success_msg = 'Request #' . $request_id . ' approved and changes applied successfully.';
+                        // 2. Mark KPI request and target table row as Approved
+                        approveKpiRequest($pdo, $request_id, $_SESSION['username']);
+                        $success_msg = 'Request #' . $request_id . ' approved and changes published successfully.';
                     } elseif ($action === 'reject') {
                         $reason = trim($_POST['rejection_reason'] ?? '');
                         
-                        $pdo->bypass_interceptor = true;
-                        
-                        // Update status to Rejected
-                        $update = $pdo->prepare("
-                            UPDATE `approval_requests` 
-                            SET status = 'Rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ? 
-                            WHERE id = ?
-                        ");
-                        $update->execute([$_SESSION['username'], $reason, $request_id]);
-                        
-                        $pdo->bypass_interceptor = false;
+                        // Mark KPI request and target table row as Rejected
+                        rejectKpiRequest($pdo, $request_id, $_SESSION['username'], $reason);
                         $success_msg = 'Request #' . $request_id . ' has been rejected.';
                     }
                 }
             } catch (Exception $e) {
-                $pdo->bypass_interceptor = false;
                 $error_msg = 'Error processing request: ' . $e->getMessage();
             }
         }
@@ -107,7 +98,6 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
     $indexedRequests[$r['id']] = $r;
 }
 
-$pageTitle = "Approvals & Change Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -149,9 +139,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                 
                 <!-- Pending Approvals Card -->
                 <div class="card mb-4">
-                    <div class="card-header bg-danger text-white py-3 d-flex align-items-center gap-2">
-                        <span style="font-size: 16px;">🔴</span>
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #B71C1C, #C62828) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -207,8 +196,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
 
                 <!-- History Audit Trail Card -->
                 <div class="card">
-                    <div class="card-header bg-dark text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Audit Trail Log (History)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Audit Trail Log (History)</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -266,8 +255,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                      ============================================================ -->
                 
                 <div class="card">
-                    <div class="card-header bg-primary text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">My Approval Requests Status Tracker</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">My Approval Requests Status Tracker</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
