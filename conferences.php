@@ -136,15 +136,18 @@ try {
         width: 340px;
         min-width: 340px;
         min-height: 240px;
-        background: #f3f4f6;
+        background: #f8fafc;
         position: relative;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .conf-card-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
     }
 
@@ -311,7 +314,7 @@ try {
         .conf-card-image {
             width: 100%;
             min-width: unset;
-            height: 240px;
+            height: 320px;
         }
 
         .conf-card-body {
