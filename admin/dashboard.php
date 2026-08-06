@@ -44,8 +44,6 @@ $countAnnouncements   = getTableCount($pdo, "announcements", "is_active = 1");
 $countCollaborations  = getTableCount($pdo, "collaborations", "status = 'Active'");
 $countResearch        = getTableCount($pdo, "research_areas", "status = 'Active'");
 $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status = 'Active'");
-
-$pageTitle = "Dashboard | ANRF-PAIR Portal";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

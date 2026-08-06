@@ -192,7 +192,6 @@ foreach ($conferences as $c) {
         $upcoming_count++;
     }
 }
-$pageTitle = "Conferences Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

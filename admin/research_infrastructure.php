@@ -259,7 +259,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

@@ -9,7 +9,7 @@ $__activeInstContext = getActiveInstituteContext();
 <html lang="en">
 <head>
 	<!-- DYNAMIC PAGE TITLE & FAVICON BASED ON ACTIVE INSTITUTE -->
-	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name']) ?></title>
+	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name'] . ' | ANRF-PAIR Admin Portal') ?></title>
 
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -40,9 +40,10 @@ $__activeInstContext = getActiveInstituteContext();
 		if (!data) return;
 
 		// 1. Immediately update document title
-		document.title = data.name;
+		var fullTitle = data.name + ' | ANRF-PAIR Admin Portal';
+		document.title = fullTitle;
 		var titleElem = document.getElementById('dynamic-title');
-		if (titleElem) titleElem.textContent = data.name;
+		if (titleElem) titleElem.textContent = fullTitle;
 
 		// 2. Immediately update favicon link tags
 		['dynamic-favicon', 'dynamic-favicon-icon'].forEach(function(id) {

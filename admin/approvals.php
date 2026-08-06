@@ -98,7 +98,6 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
     $indexedRequests[$r['id']] = $r;
 }
 
-$pageTitle = "Approvals & Change Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

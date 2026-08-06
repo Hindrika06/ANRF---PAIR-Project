@@ -177,7 +177,6 @@ foreach ($webinars as $w) {
         $upcoming_count++;
     }
 }
-$pageTitle = "Webinars Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>

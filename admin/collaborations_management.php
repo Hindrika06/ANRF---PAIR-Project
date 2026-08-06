@@ -233,7 +233,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Collaborations Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
