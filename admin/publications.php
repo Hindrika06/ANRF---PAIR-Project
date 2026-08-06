@@ -205,7 +205,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
     .index-badge-circle {
         width: 22px;
         height: 22px;
-        background-color: #b93c3c;
+        background-color: #bc2121;
         color: #ffffff;
         border-radius: 50%;
         display: inline-flex;
@@ -218,7 +218,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
     .registry-task-link {
         font-size: 12px;
         font-weight: 700;
-        color: #024283;
+        color: #bc2121;
         text-decoration: none;
         display: inline-block;
         margin-bottom: 2px;
@@ -241,7 +241,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
         display: inline-block;
         font-size: 9px;
         font-weight: 600;
-        color: #b93c3c;
+        color: #bc2121;
         background-color: #fdf2f2;
         padding: 2px 8px;
         border-radius: 20px;
@@ -337,16 +337,19 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
         color: #024283;
     }
 
-    /* ──── UNIFIED KPI CARD COLOR (#bc2121) ──── */
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 0 !important;
-        padding: 22px 24px;
-        color: #ffffff;
-        border: none;
-        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%) !important;
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+        border-radius: 8px !important;
+        padding: 20px 20px !important;
+        color: #ffffff !important;
+        border: none !important;
         position: relative;
         overflow: hidden;
+        min-height: 130px;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .kpi-widget-card::after {
@@ -355,7 +358,13 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
     }
     .kpi-widget-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 14px 32px rgba(37, 99, 235, 0.5);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: #1E88C7 !important;
+        box-shadow: 0 6px 18px rgba(30, 136, 199, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -416,8 +425,6 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
     }
 </style>
 
-\
-
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
@@ -449,7 +456,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 
             <div class="row mb-4">
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-book-open"></i></div>
                             <span class="kpi-title-text">Total Publications</span>
@@ -461,7 +468,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-pen"></i></div>
                             <span class="kpi-title-text">Authors</span>
@@ -473,7 +480,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-newspaper"></i></div>
                             <span class="kpi-title-text">Journals</span>
@@ -485,7 +492,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-chart-line"></i></div>
                             <span class="kpi-title-text">Avg Impact Factor</span>

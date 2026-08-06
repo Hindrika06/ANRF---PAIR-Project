@@ -238,7 +238,7 @@ $total_unique_tasks   = count($unique_tasks);
     .registry-task-link {
         font-size: 12px;
         font-weight: 700;
-        color: #024283;
+        color: #bc2121;
         text-decoration: none;
         display: inline-block;
         margin-bottom: 2px;
@@ -310,14 +310,25 @@ $total_unique_tasks   = count($unique_tasks);
         color: #024283;
     }
 
-    /* ──── UNIFIED RED KPI STYLES (#bc2121) ──── */
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 10px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #024283 !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: rgba(255, 99, 138, 0.77) !important;
+        box-shadow: 0 6px 18px rgba(255, 117, 152, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -410,7 +421,7 @@ $total_unique_tasks   = count($unique_tasks);
             <!-- KPI STATS CARDS -->
             <div class="row mb-4">
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-file-lines"></i></div>
                             <span class="kpi-title-text">Total Reports</span>
@@ -422,7 +433,7 @@ $total_unique_tasks   = count($unique_tasks);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-2">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-check"></i></div>
                             <span class="kpi-title-text">Principal Investigators</span>
@@ -434,7 +445,7 @@ $total_unique_tasks   = count($unique_tasks);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-users-gear"></i></div>
                             <span class="kpi-title-text">Co-Investigators</span>
@@ -446,7 +457,7 @@ $total_unique_tasks   = count($unique_tasks);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-tasks"></i></div>
                             <span class="kpi-title-text">Active Tasks</span>

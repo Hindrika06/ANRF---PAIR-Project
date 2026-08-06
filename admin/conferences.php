@@ -291,14 +291,25 @@ foreach ($conferences as $c) {
     }
     .btn-action-delete-red:hover {
         background-color: #fca5a5 !important;
-    }
+    }    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 20px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 8px 24px rgba(14, 116, 144, 0.3);
-        background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: #7E57C2 !important;
+        box-shadow: 0 6px 18px rgba(126, 87, 194, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -353,7 +364,7 @@ foreach ($conferences as $c) {
 
             <div class="page-titles">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Events Management</a></li>
+                    <li class="breadcrumb-item"><a href="#">IPR Management</a></li>
                     <li class="breadcrumb-item active">Conferences Dashboard</li>
                 </ol>
             </div>
@@ -377,7 +388,7 @@ foreach ($conferences as $c) {
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-hotel"></i></div>
                             <span class="kpi-title-text">Total Conferences</span>
@@ -389,7 +400,7 @@ foreach ($conferences as $c) {
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-clock"></i></div>
                             <span class="kpi-title-text">Upcoming Conferences</span>
@@ -401,7 +412,7 @@ foreach ($conferences as $c) {
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-earth-americas"></i></div>
                             <span class="kpi-title-text">Active Institute</span>
@@ -417,7 +428,7 @@ foreach ($conferences as $c) {
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
-                        <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
+                        <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-hotel me-2"></i>CONFERENCES CMS MANAGEMENT
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>

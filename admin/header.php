@@ -401,7 +401,7 @@ $__activeInstContext = getActiveInstituteContext();
             box-shadow: 0 4px 20px rgba(2, 66, 131, 0.04) !important;
         }
         .header .dashboard_bar {
-            color: #024283 !important;
+            color: #bc2121 !important;
             font-weight: 700 !important;
         }
         .input-group.search-area .form-control {
@@ -426,7 +426,7 @@ $__activeInstContext = getActiveInstituteContext();
 
         /* ── 3. Table Headers & Rows: sapphire gradient & soft blue hover ── */
         body.theme-super-admin .table-theme-sapphire thead th {
-            background: #024283 !important;
+            background: #bc2121 !important;
             color: #ffffff !important;
             border-bottom: none !important;
             letter-spacing: 0.6px !important;
@@ -440,20 +440,37 @@ $__activeInstContext = getActiveInstituteContext();
         }
 
         /* ── 4. Titles, Badges & Links ── */
-        .card-title, .registry-task-link {
-            color: #024283 !important;
+        .card-title, .registry-task-link, h4.card-title {
+            color: #bc2121 !important;
+        }
+        .page-titles .breadcrumb li a,
+        .page-titles .breadcrumb li.active,
+        .page-titles .breadcrumb li.active a,
+        .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item::before,
+        .breadcrumb-item.active,
+        .breadcrumb-item a,
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #bc2121 !important;
         }
         .registry-task-link:hover {
-            color: #1e40af !important;
+            color: #991b1b !important;
         }
         .index-badge-circle {
-            background-color: #024283 !important;
-            box-shadow: 0 2px 5px rgba(2, 66, 131, 0.25) !important;
+            background-color: #bc2121 !important;
+            box-shadow: 0 2px 5px rgba(188, 33, 33, 0.25) !important;
         }
         .registry-tag-pill {
-            color: #024283 !important;
-            background-color: #eff6ff !important;
-            border: 1px solid rgba(2, 66, 131, 0.15) !important;
+            color: #bc2121 !important;
+            background-color: #fdf2f2 !important;
+            border: 1px solid rgba(188, 33, 33, 0.15) !important;
+        }
+
+        /* ── 4b. Form Toggle Switch Green (#09BD3C) ── */
+        .form-check-input:checked,
+        .form-switch .form-check-input:checked,
+        input[type="checkbox"].form-check-input:checked {
+            background-color: #09BD3C !important;
+            border-color: #09BD3C !important;
         }
 
         /* ── 5. Pagination ── */

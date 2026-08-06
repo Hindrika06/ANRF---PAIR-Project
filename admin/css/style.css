@@ -21155,16 +21155,16 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
       margin-top: 0;
       margin-bottom: 0; }
       .page-titles .breadcrumb li a {
-        color: #828690; }
+        color: #bc2121; }
         @media only screen and (max-width: 35.9375rem) {
           .page-titles .breadcrumb li a {
             font-size: 0.75rem; } }
       .page-titles .breadcrumb li.active {
-        color: var(--primary); }
+        color: #bc2121; }
         .page-titles .breadcrumb li.active a {
-          color: #FFA7D7; }
+          color: #bc2121; }
     .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item:before {
-      color: var(--primary); }
+      color: #bc2121; }
       @media only screen and (max-width: 35.9375rem) {
         .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item:before {
           font-size: 11px;

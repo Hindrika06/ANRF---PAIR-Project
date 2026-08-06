@@ -216,20 +216,21 @@ foreach ($webinars as $w) {
         vertical-align: middle;
     }
     .index-badge-circle {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: #f1f5f9;
-        color: #475569;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 11px;
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
     }
     .registry-task-link {
         font-weight: 700;
-        color: #024283 !important;
+        color: #bc2121 !important;
         display: block;
         font-size: 11.5px;
         margin-bottom: 3px;
@@ -277,13 +278,25 @@ foreach ($webinars as $w) {
     .btn-action-delete-red:hover {
         background-color: #fca5a5 !important;
     }
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #ff8902da, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 20px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-        background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%) !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: #F0932B !important;
+        box-shadow: 0 6px 18px rgba(240, 147, 43, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -371,7 +384,7 @@ foreach ($webinars as $w) {
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-video"></i></div>
                             <span class="kpi-title-text">Total Webinars</span>
@@ -383,7 +396,7 @@ foreach ($webinars as $w) {
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
                             <span class="kpi-title-text">Upcoming Webinars</span>
@@ -395,7 +408,7 @@ foreach ($webinars as $w) {
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-graduation-cap"></i></div>
                             <span class="kpi-title-text">Active Institute</span>
@@ -462,33 +475,41 @@ foreach ($webinars as $w) {
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
-                                            <td style="vertical-align: middle;">
-                                                <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
-                                                    <?php if ($approvalStatus === 'Approved'): ?>
-                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
-                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
-                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
-                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
-                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <span class="registry-task-link">
-                                                    <?= htmlspecialchars($webinar['taskno'] ?: 'TASK-UNASSIGNED') ?>
-                                                </span>
-                                                <span class="registry-main-title">
-                                                    <?= htmlspecialchars($webinar['title']) ?>
-                                                </span>
-                                                <?php if (!empty($linkVal)): ?>
-                                                    <span class="d-block mt-1">
-                                                        <a href="<?= $linkVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-link me-1"></i> Join / Recording URL</a>
-                                                    </span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($whatsappVal)): ?>
-                                                    <span class="d-block mt-1">
-                                                        <a href="<?= $whatsappVal ?>" target="_blank" class="text-success" style="font-size: 12px;"><i class="fa fa-whatsapp me-1"></i> WhatsApp Group Link</a>
-                                                    </span>
-                                                <?php endif; ?>
+                                            <td style="vertical-align: middle; padding: 12px 16px;">
+                                                 <!-- Header Badge Pill Row -->
+                                                 <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                                     <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 8px;">
+                                                         <i class="fa-solid fa-building me-1" style="font-size: 9px;"></i><?= htmlspecialchars($instPrefix) ?>
+                                                     </span>
+                                                     <?php if ($approvalStatus === 'Approved'): ?>
+                                                         <span class="badge" style="background-color: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; border: 1px solid #bbf7d0; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>
+                                                     <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                         <span class="badge" style="background-color: #fef3c7; color: #b45309; font-size: 10px; font-weight: 700; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-clock me-1"></i>Pending Approval</span>
+                                                     <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                         <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-size: 10px; font-weight: 700; border: 1px solid #fca5a5; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>
+                                                     <?php endif; ?>
+                                                 </div>
+
+                                                 <!-- Webinar Title -->
+                                                 <h6 class="mb-2" style="font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.4;">
+                                                     <?= htmlspecialchars($webinar['title']) ?>
+                                                 </h6>
+
+                                                 <!-- Interactive Link Pills (Horizontal Alignment) -->
+                                                 <?php if (!empty($linkVal) || !empty($whatsappVal)): ?>
+                                                 <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                                     <?php if (!empty($linkVal)): ?>
+                                                         <a href="<?= $linkVal ?>" target="_blank" class="btn btn-xs" style="background-color: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; text-decoration: none; border: 1px solid #bae6fd; transition: all 0.2s ease;">
+                                                             <i class="fa fa-link me-1"></i> Join / Recording URL
+                                                         </a>
+                                                     <?php endif; ?>
+                                                     <?php if (!empty($whatsappVal)): ?>
+                                                         <a href="<?= $whatsappVal ?>" target="_blank" class="btn btn-xs" style="background-color: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; text-decoration: none; border: 1px solid #bbf7d0; transition: all 0.2s ease;">
+                                                             <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp Group
+                                                         </a>
+                                                     <?php endif; ?>
+                                                 </div>
+                                                 <?php endif; ?>
                                             </td>
                                             <td style="vertical-align: middle;">
                                                 <span class="registry-meta-text font-w600 text-dark">

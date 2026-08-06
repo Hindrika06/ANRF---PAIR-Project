@@ -287,7 +287,7 @@ $total_inventors = count($unique_inventors);
     .index-badge-circle {
         width: 22px;
         height: 22px;
-        background-color: #b93c3c;
+        background-color: #bc2121;
         color: #ffffff;
         border-radius: 50%;
         display: inline-flex;
@@ -300,7 +300,7 @@ $total_inventors = count($unique_inventors);
     .registry-task-link {
         font-size: 12px;
         font-weight: 700;
-        color: #024283;
+        color: #bc2121;
         text-decoration: none;
         display: inline-block;
         margin-bottom: 2px;
@@ -433,13 +433,34 @@ $total_inventors = count($unique_inventors);
         color: #024283;
     }
 
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 0 !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #7c3aed !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1 {
+        background-color: #1E88C7 !important;
+        box-shadow: 0 6px 18px rgba(30, 136, 199, 0.25) !important;
+    }
+    .kpi-color-2 {
+        background-color: #00897B !important;
+        box-shadow: 0 6px 18px rgba(0, 137, 123, 0.25) !important;
+    }
+    .kpi-color-3 {
+        background-color: #F0932B !important;
+        box-shadow: 0 6px 18px rgba(240, 147, 43, 0.25) !important;
+    }
+    .kpi-color-4 {
+        background-color: #7E57C2 !important;
+        box-shadow: 0 6px 18px rgba(126, 87, 194, 0.25) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -518,7 +539,7 @@ $total_inventors = count($unique_inventors);
             <div class="page-titles">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#">IPR Management</a></li>
-                    <li class="breadcrumb-item active">Patent Dashboard</li>
+                    <li class="breadcrumb-item active">Patents Directory</li>
                 </ol>
             </div>
 
@@ -540,7 +561,7 @@ $total_inventors = count($unique_inventors);
 
             <div class="row mb-4">
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-2">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-certificate"></i></div>
                             <span class="kpi-title-text">Total Patents</span>
@@ -552,7 +573,7 @@ $total_inventors = count($unique_inventors);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-2">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
                             <span class="kpi-title-text">Granted</span>
@@ -564,7 +585,7 @@ $total_inventors = count($unique_inventors);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-2">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-hourglass-half"></i></div>
                             <span class="kpi-title-text">Pending / Filed</span>
@@ -576,7 +597,7 @@ $total_inventors = count($unique_inventors);
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-2">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-pen"></i></div>
                             <span class="kpi-title-text">Inventors</span>
@@ -592,7 +613,7 @@ $total_inventors = count($unique_inventors);
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
-                        <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
+                        <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-certificate me-2"></i>REGISTERED PATENTS LIST
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
