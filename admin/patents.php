@@ -425,12 +425,12 @@ $total_inventors = count($unique_inventors);
     }
 
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121!important;
+        border-color: #bc2121 !important;
         color: #ffffff !important;
     }
     .pagination-theme-sapphire .page-link {
-        color: #024283;
+        color: #bc2121;
     }
 
     /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
