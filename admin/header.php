@@ -481,13 +481,13 @@ $__activeInstContext = getActiveInstituteContext();
 
         /* ── 5. Pagination ── */
         .pagination-theme-sapphire .page-item.active .page-link {
-            background-color: #024283 !important;
-            border-color: #024283 !important;
+            background-color: #bc2121 !important;
+            border-color: #bc2121 !important;
             color: #fff !important;
-            box-shadow: 0 2px 6px rgba(2, 66, 131, 0.3) !important;
+            box-shadow: 0 2px 6px rgba(188, 33, 33, 0.3) !important;
         }
         .pagination-theme-sapphire .page-link {
-            color: #024283 !important;
+            color: #bc2121 !important;
         }
 
         /* ── 6. KPI Cards: Beautiful Gradient & Glassy Shine ── */

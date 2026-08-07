@@ -294,12 +294,12 @@ include 'loader.php';
         color: #64748b !important;
     }
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #ffffff !important;
     }
     .pagination-theme-sapphire .page-link {
-        color: #024283;
+        color: #bc2121;
     }
     /* Unified KPI widgets style */
     .kpi-widget-card {

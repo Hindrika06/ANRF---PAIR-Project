@@ -24,7 +24,7 @@ $adminPrefixLogos = [
     'mgu' => '../logos/mg1.jpg',
     'ou' => '../logos/ou1.jpg',
     'svu' => '../logos/gan1.jpg',
-    'uoh' => 'logo/3.png',
+    'uoh' => '../3.png',
     'yvu' => '../logos/yu.jpg',
 ];
 $adminPrefixFavicons = [
@@ -96,7 +96,7 @@ function getInstituteFullName($prefix)
 function getInstituteLogo($prefix)
 {
     global $adminPrefixLogos;
-    return $adminPrefixLogos[$prefix] ?? 'logo/3.png';
+    return $adminPrefixLogos[$prefix] ?? '../3.png';
 }
 
 function getInstituteFavicon($prefix)

@@ -2,9 +2,9 @@
 if (!isset($GLOBALS['__role_access_loaded'])) { require_once 'role_access.php'; $GLOBALS['__role_access_loaded'] = true; }
 $__isSuper = isSuperAdmin();
 $__activePrefix = resolveAdminPrefix();
-$__brandPrefix = $__isSuper ? 'uoh' : $__activePrefix;
-$__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPrefix);
-$__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
+$__brandPrefix = $__activePrefix;
+$__brandName = getInstituteFullName($__brandPrefix);
+$__brandLogo = getInstituteLogo($__brandPrefix);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 
@@ -54,14 +54,11 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 <!--**********************************
     Nav header start
 ***********************************-->
-<!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
+<!-- Logo reflects specific logged-in institute with full clarity -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: none; z-index: 999;">
-    <?php if ($__isSuper): ?>
-    <a href="<?= $navUrl('publications.php') ?>" class="brand-logo">
+    <a href="<?= $navUrl('publications.php') ?>" class="brand-logo" title="<?= htmlspecialchars($__brandName) ?>">
         <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img">
-        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
     </a>
-    <?php endif; ?>
     <div class="nav-control">
         <div class="hamburger">
             <span class="line"></span><span class="line"></span><span class="line"></span>
@@ -73,6 +70,20 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 ***********************************-->
 
 <style>
+/* --- Active Pagination Background --- */
+.page-item.active .page-link,
+.pagination-theme-sapphire .page-item.active .page-link,
+.pagination .page-item.active .page-link {
+    background-color: #bc2121 !important;
+    border-color: #bc2121 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(188, 33, 33, 0.3) !important;
+}
+.pagination-theme-sapphire .page-link,
+.pagination .page-link {
+    color: #bc2121 !important;
+}
+
 /* --- Global & Header Updates --- */
 .nav-header {
     display: flex !important;
@@ -107,29 +118,29 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 .brand-logo {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    justify-content: center !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;
-    padding: 0 !important;
+    padding: 4px 6px !important;
     margin: 0 !important;
     height: 100% !important;
     text-decoration: none !important;
 }
 .logo-img {
-    height: 38px !important;
-    max-height: 40px !important;
+    height: 52px !important;
+    max-height: 58px !important;
     width: auto !important;
-    max-width: 42px !important;
+    max-width: 100% !important;
     flex-shrink: 0 !important;
     object-fit: contain !important;
-    border-radius: 4px;
-    background: #ffffff;
-    padding: 2px;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
     transition: transform 0.3s ease;
 }
 .logo-img:hover {
-    transform: scale(1.03);
+    transform: scale(1.02);
 }
 .brand-institute-name {
     font-family: 'Poppins', 'Nunito Sans', sans-serif !important;

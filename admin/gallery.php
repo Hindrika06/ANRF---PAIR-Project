@@ -280,11 +280,11 @@ $total_categories   = count($categories_count);
 
     /* Pagination */
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #fff !important;
     }
-    .pagination-theme-sapphire .page-link { color: #024283; }
+    .pagination-theme-sapphire .page-link { color: #bc2121; }
 
     /* KPI cards – teal-green theme */
     .kpi-widget-card {
