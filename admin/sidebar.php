@@ -718,12 +718,14 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                         </a>
                     </li>
                     <?php endif; ?>
+                    <?php if (isSuperAdmin()): ?>
                     <li class="kpi-sub-link kpi-sub-item-research <?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
                         <a href="<?= $navUrl('research_infrastructure.php') ?>">
                             <i class="fas fa-flask"></i>
                             <span class="nav-text">Research &amp; Infrastructure</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li class="kpi-sub-link kpi-sub-item-patents <?= ($currentPage === 'sheets.php') ? 'mm-active' : '' ?>">
                         <a href="<?= $navUrl('sheets.php') ?>">
                             <i class="fas fa-file-excel"></i>

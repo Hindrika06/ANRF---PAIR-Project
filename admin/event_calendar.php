@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage event calendar
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $is_super = isSuperAdmin();
 $user_prefix = $_SESSION['institute_prefix'];
 

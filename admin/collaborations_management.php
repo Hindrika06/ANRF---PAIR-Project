@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage collaborations
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {

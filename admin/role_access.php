@@ -43,13 +43,26 @@ function isValidPrefix($prefix)
     return in_array($prefix, $adminAllowedPrefixes, true);
 }
 
-function resolveAdminPrefix()
+/**
+ * Architecture & Session Security Note:
+ * Standard PHP session cookies (PHPSESSID) are scoped to the browser profile/domain.
+ * When logging into a different account in Tab 2 of the same browser, PHP updates
+ * the server session tied to PHPSESSID.
+ *
+ * To enforce strict role and institute boundary security:
+ * 1. isSuperAdmin() checks the authenticated user's session role ('super_admin').
+ * 2. Regular Institute Admins ('admin') are locked strictly to $_SESSION['institute_prefix'].
+ *    Any URL parameter like ?prefix=uoh is explicitly ignored for Institute Admins.
+ * 3. Super Admins ('super_admin') can switch active institute view using ?prefix= parameter.
+ * 4. Super-admin-only modules enforce server-side auth guards (if (!isSuperAdmin()) header("Location: dashboard.php"); exit();).
+ */
+function resolveAdminPrefix($requestedPrefix = null)
 {
     global $adminAllowedPrefixes;
 
-    // Super admin: allow ?prefix= from URL for viewing any institute (unchanged behaviour)
+    // Super admin: allow ?prefix= from URL or argument for viewing any institute
     if (isSuperAdmin()) {
-        $req = $_GET['prefix'] ?? null;
+        $req = $requestedPrefix ?? $_GET['prefix'] ?? null;
         if ($req && in_array($req, $adminAllowedPrefixes, true)) {
             $_SESSION['active_prefix'] = $req;
             return $req;
@@ -61,7 +74,7 @@ function resolveAdminPrefix()
     }
 
     // Regular admin: ALWAYS use the institute_prefix stored in session at login.
-    // The ?prefix= URL parameter is ignored — institute is locked to the account.
+    // The ?prefix= URL parameter or requested argument is strictly ignored — institute is locked to the account.
     if (!empty($_SESSION['institute_prefix']) && in_array($_SESSION['institute_prefix'], $adminAllowedPrefixes, true)) {
         $_SESSION['active_prefix'] = $_SESSION['institute_prefix'];
         return $_SESSION['institute_prefix'];

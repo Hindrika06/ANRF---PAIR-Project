@@ -4,7 +4,8 @@ require_once 'config/db.php';
 require_once 'role_access.php';
 
 if (!isSuperAdmin()) {
-    die('Only the super admin can manage other admin accounts.');
+    header("Location: dashboard.php");
+    exit();
 }
 
 $message = '';
