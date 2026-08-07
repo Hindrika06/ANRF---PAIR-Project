@@ -327,8 +327,9 @@ $total_unique_tasks   = count($unique_tasks);
     .kpi-color-2,
     .kpi-color-3,
     .kpi-color-4 {
-        background-color: rgba(255, 99, 138, 0.77) !important;
-        box-shadow: 0 6px 18px rgba(255, 117, 152, 0.3) !important;
+        background: #0e7490 !important;
+        background-color: #0e7490 !important;
+        box-shadow: 0 6px 18px rgba(14, 116, 144, 0.35) !important;
     }
     .kpi-card-body {
         display: flex;

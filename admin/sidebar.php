@@ -334,9 +334,9 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 }
 
 .kpi-sub-item-webinars {
-    --kpi-sub-color: #F0932B;
-    --kpi-sub-hover-bg: rgba(240, 147, 43, 0.15);
-    --kpi-sub-active-bg: rgba(240, 147, 43, 0.22);
+    --kpi-sub-color: #831843;
+    --kpi-sub-hover-bg: rgba(131, 24, 67, 0.15);
+    --kpi-sub-active-bg: rgba(131, 24, 67, 0.22);
 }
 
 .kpi-sub-item-internships {
@@ -346,9 +346,9 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 }
 
 .kpi-sub-item-reports {
-    --kpi-sub-color: rgba(255, 117, 152, 0.9);
-    --kpi-sub-hover-bg: rgba(255, 117, 152, 0.15);
-    --kpi-sub-active-bg: rgba(255, 117, 152, 0.22);
+    --kpi-sub-color: #0e7490;
+    --kpi-sub-hover-bg: rgba(14, 116, 144, 0.15);
+    --kpi-sub-active-bg: rgba(14, 116, 144, 0.22);
 }
 
 .kpi-sub-item-research {

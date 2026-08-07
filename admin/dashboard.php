@@ -246,9 +246,9 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
     }
 
     .kpi-webinars {
-        --kpi-accent: #F0932B;
-        --kpi-icon-bg: rgba(240, 147, 43, 0.12);
-        --kpi-glow: rgba(240, 147, 43, 0.15);
+        --kpi-accent: #831843;
+        --kpi-icon-bg: rgba(131, 24, 67, 0.12);
+        --kpi-glow: rgba(131, 24, 67, 0.15);
     }
 
     .kpi-internships {
@@ -258,9 +258,9 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
     }
 
     .kpi-reports {
-        --kpi-accent: rgba(255, 117, 152, 0.77);
-        --kpi-icon-bg: rgba(255, 117, 152, 0.12);
-        --kpi-glow: rgba(255, 117, 152, 0.15);
+        --kpi-accent: #0e7490;
+        --kpi-icon-bg: rgba(14, 116, 144, 0.12);
+        --kpi-glow: rgba(14, 116, 144, 0.15);
     }
 
     .kpi-gallery {

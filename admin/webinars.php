@@ -295,8 +295,9 @@ foreach ($webinars as $w) {
     .kpi-color-2,
     .kpi-color-3,
     .kpi-color-4 {
-        background-color: #F0932B !important;
-        box-shadow: 0 6px 18px rgba(240, 147, 43, 0.3) !important;
+        background: #831843 !important;
+        background-color: #831843 !important;
+        box-shadow: 0 6px 18px rgba(131, 24, 67, 0.25) !important;
     }
     .kpi-card-body {
         display: flex;

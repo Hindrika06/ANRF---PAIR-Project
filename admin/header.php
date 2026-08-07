@@ -537,9 +537,9 @@ $__activeInstContext = getActiveInstituteContext();
             echo 'body.theme-super-admin .kpi-widget-card { background: #b71c1c !important; box-shadow: 0 6px 20px rgba(183, 28, 28, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(183, 28, 28, 0.35) !important; }';
         } elseif ($currentPage === 'progress_reports.php') {
-            // Solid PURPLE color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: #5b21b6 !important; box-shadow: 0 6px 20px rgba(124, 58, 237, 0.25) !important; }';
-            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(124, 58, 237, 0.35) !important; }';
+            // Solid Deep Cyan color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #0e7490 !important; box-shadow: 0 6px 20px rgba(14, 116, 144, 0.25) !important; }';
+            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(14, 116, 144, 0.35) !important; }';
         } elseif ($currentPage === 'patents.php') {
             // Solid VIOLET/PURPLE color identity
             echo 'body.theme-super-admin .kpi-widget-card { background: #6d28d9 !important; box-shadow: 0 6px 20px rgba(109, 40, 217, 0.25) !important; }';
@@ -549,9 +549,9 @@ $__activeInstContext = getActiveInstituteContext();
             echo 'body.theme-super-admin .kpi-widget-card { background: #15803d !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(21, 128, 61, 0.35) !important; }';
         } elseif ($currentPage === 'webinars.php') {
-            // Solid ROSE/PINK color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: #be185d !important; box-shadow: 0 6px 20px rgba(190, 24, 93, 0.25) !important; }';
-            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(190, 24, 93, 0.35) !important; }';
+            // Solid Dark Mulberry color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #831843 !important; box-shadow: 0 6px 20px rgba(131, 24, 67, 0.25) !important; }';
+            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(131, 24, 67, 0.35) !important; }';
         } elseif ($currentPage === 'internships.php') {
             // Solid INDIGO color identity
             echo 'body.theme-super-admin .kpi-widget-card { background: #3730a3 !important; box-shadow: 0 6px 20px rgba(55, 48, 163, 0.25) !important; }';
