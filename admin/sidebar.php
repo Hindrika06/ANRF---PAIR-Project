@@ -54,10 +54,13 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 <!--**********************************
     Nav header start
 ***********************************-->
-<!-- Logo reflects specific logged-in institute with full clarity -->
+<!-- Logo reflects specific logged-in institute with full clarity and full name -->
 <div class="nav-header" style="background-color: #ffffff; box-shadow: none; z-index: 999;">
     <a href="<?= $navUrl('publications.php') ?>" class="brand-logo" title="<?= htmlspecialchars($__brandName) ?>">
-        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img">
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img <?= ($__brandPrefix === 'uoh') ? 'logo-img-banner' : 'logo-img-emblem' ?>">
+        <?php if ($__brandPrefix !== 'uoh'): ?>
+        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
+        <?php endif; ?>
     </a>
     <div class="nav-control">
         <div class="hamburger">
@@ -118,18 +121,20 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 .brand-logo {
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;
-    padding: 4px 6px !important;
+    padding: 2px 0 !important;
     margin: 0 !important;
     height: 100% !important;
     text-decoration: none !important;
 }
-.logo-img {
-    height: 52px !important;
-    max-height: 58px !important;
+
+.logo-img-banner {
+    height: 48px !important;
+    max-height: 52px !important;
     width: auto !important;
     max-width: 100% !important;
     flex-shrink: 0 !important;
@@ -139,29 +144,48 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     padding: 0 !important;
     transition: transform 0.3s ease;
 }
-.logo-img:hover {
-    transform: scale(1.02);
+
+.logo-img-emblem {
+    height: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-height: 42px !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    padding: 0 !important;
+    transition: transform 0.3s ease;
 }
+
 .brand-institute-name {
-    font-family: 'Poppins', 'Nunito Sans', sans-serif !important;
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-weight: 700 !important;
-    font-size: 11.5px !important;
+    font-size: 14px !important;
     line-height: 1.25 !important;
     color: #0f172a !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
     white-space: normal !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    display: inline-block !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    letter-spacing: -0.2px !important;
 }
 .nav-header .nav-control {
     flex-shrink: 0 !important;
     margin-left: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+}
+.nav-header .hamburger {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-top: -3px !important; /* Optically levels the hamburger icon with Manage Dashboard title */
 }
 .menu-toggle .brand-institute-name,
 [data-sidebar-style="mini"] .brand-institute-name {

@@ -585,8 +585,27 @@ $__activeInstContext = getActiveInstituteContext();
         }
     </style>
     <?php endif; ?>
-    <!-- User Profile Dropdown Styles & Scripts -->
+    <!-- User Profile Dropdown & Header Layout Styles -->
     <style>
+        /* --- HEADER LEFT & TITLE VERTICAL ALIGNMENT --- */
+        .header-left {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+        }
+
+        .dashboard_bar {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+            font-family: 'Poppins', 'Inter', -apple-system, sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 18px !important;
+            line-height: 1 !important;
+            color: #bc2121 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         /* --- NOTIFICATION BELL BUTTON STYLES --- */
         .nav-notification-bell-btn {
             width: 40px;
