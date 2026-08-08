@@ -115,8 +115,8 @@ try {
                                         $organisersVal  = !empty($row['organisers']) ? $row['organisers'] : '';
 
                                         $displayDesc = $descriptionVal;
-                                        if (mb_strlen($displayDesc) > 280) {
-                                            $displayDesc = mb_substr($displayDesc, 0, 275) . '...';
+                                        if (mb_strlen($displayDesc) > 180) {
+                                            $displayDesc = mb_substr($displayDesc, 0, 175) . '...';
                                         }
                                     ?>
                                         <article class="webinar-card"
@@ -168,29 +168,14 @@ try {
                                                     <p class="webinar-description"><?= nl2br(htmlspecialchars($displayDesc)) ?></p>
                                                 <?php endif; ?>
 
-                                                <div class="webinar-footer-details">
-                                                    <?php if (!empty($organisersVal)): ?>
+                                                <?php if (!empty($organisersVal)): ?>
+                                                    <div class="webinar-footer-details" style="margin-top: auto;">
                                                         <div class="webinar-tag">
                                                             <span class="tag-label">Organized by</span>
                                                             <span class="tag-value"><?= htmlspecialchars($organisersVal) ?></span>
                                                         </div>
-                                                    <?php endif; ?>
-
-                                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                                        <?php if (!empty($whatsappVal)): ?>
-                                                            <a href="<?= htmlspecialchars($whatsappVal) ?>" target="_blank" class="webinar-btn btn-whatsapp">
-                                                                <i class="fa fa-whatsapp"></i> WhatsApp Group
-                                                            </a>
-                                                        <?php endif; ?>
-
-                                                        <?php if (!empty($linkVal)): ?>
-                                                            <a href="<?= htmlspecialchars($linkVal) ?>" target="_blank" class="webinar-btn <?= $isUpcoming ? 'btn-join' : 'btn-recording' ?>">
-                                                                <i class="fa <?= $isUpcoming ? 'fa-video-camera' : 'fa-play-circle' ?>"></i>
-                                                                <?= $isUpcoming ? 'Register / Join' : 'View Recording' ?>
-                                                            </a>
-                                                        <?php endif; ?>
                                                     </div>
-                                                </div>
+                                                <?php endif; ?>
                                             </div>
 
                                             <!-- Card Image Thumbnail -->
