@@ -1,5 +1,14 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
+// Multi-Tab Server-Side Session Isolation Logic
+$requestedTabToken = $_REQUEST['tab_token'] ?? $_SERVER['HTTP_X_TAB_TOKEN'] ?? null;
+
+if (!empty($requestedTabToken) && preg_match('/^[a-f0-9]{64}$/i', $requestedTabToken)) {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    session_id($requestedTabToken);
+    session_start();
+} elseif (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
@@ -7,9 +16,35 @@ if (session_status() === PHP_SESSION_NONE) {
 $timeout_duration = 1800;
 
 // Check if user is logged in
-if (!isset($_SESSION['username']) || !isset($_SESSION['institute_prefix'])) {
+if (!isset($_SESSION['username'])) {
     header("Location: ../login.php");
     exit();
+}
+
+// Session validation: reload user role and institute prefix from DB if missing
+if (empty($_SESSION['role']) || empty($_SESSION['institute_prefix']) || empty($_SESSION['user_id'])) {
+    try {
+        require_once __DIR__ . '/config/db.php';
+        $stmt = $pdo->prepare("SELECT id, institute_prefix, role FROM users WHERE username = ?");
+        $stmt->execute([$_SESSION['username']]);
+        $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($userRow && !empty($userRow['role']) && !empty($userRow['institute_prefix'])) {
+            $_SESSION['user_id']          = $userRow['id'];
+            $_SESSION['institute_prefix'] = $userRow['institute_prefix'];
+            $_SESSION['role']             = $userRow['role'];
+        } else {
+            session_unset();
+            session_destroy();
+            header("Location: ../login.php");
+            exit();
+        }
+    } catch (Exception $e) {
+        // If DB lookup fails while session role is missing, treat session as invalid and redirect
+        session_unset();
+        session_destroy();
+        header("Location: ../login.php");
+        exit();
+    }
 }
 
 // Check for inactivity

@@ -201,7 +201,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                 <!-- History Audit Trail Card -->
                 <div class="card">
                     <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
-                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Audit Trail Log (History)</h4>
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Approved Logs</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">

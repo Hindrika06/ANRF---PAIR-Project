@@ -1172,7 +1172,8 @@ $__activeInstContext = getActiveInstituteContext();
 									</div>
 									<div class="dropdown-divider-custom"></div>
 									<!-- Bottom Section (Logout Action) -->
-									<a href="logout.php" class="dropdown-item-custom logout-item" role="menuitem">
+								<?php $logoutUrl = (isset($navUrl) && is_callable($navUrl)) ? $navUrl('logout.php') : 'logout.php'; ?>
+									<a href="<?= $logoutUrl ?>" class="dropdown-item-custom logout-item" role="menuitem">
 										<i class="fas fa-sign-out-alt"></i>
 										<span>Logout</span>
 									</a>

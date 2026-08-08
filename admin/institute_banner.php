@@ -22,10 +22,11 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
         <span class="institute-banner-label">🛡️ Super Admin — Switch Institute</span>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 5px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 250px;">
+                <?php $__tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? ''; ?>
                 <select
                     id="institute-switcher"
                     class="form-select institute-select-dropdown"
-                    onchange="if (typeof updateTabTitleAndFavicon === 'function') updateTabTitleAndFavicon(this.value); window.location.href = window.location.pathname + '?prefix=' + this.value;"
+                    onchange="if (typeof updateTabTitleAndFavicon === 'function') updateTabTitleAndFavicon(this.value); window.location.href = window.location.pathname + '?prefix=' + this.value + '<?= !empty($__tabToken) ? '&tab_token=' . urlencode($__tabToken) : '' ?>';"
                 >
                     <?php
                     global $adminAllowedPrefixes;

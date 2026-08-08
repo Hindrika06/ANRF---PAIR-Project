@@ -60,7 +60,7 @@ function resolveAdminPrefix($requestedPrefix = null)
 {
     global $adminAllowedPrefixes;
 
-    // Super admin: allow ?prefix= from URL or argument for viewing any institute
+    // 1. Super Admin: allow ?prefix= from URL or argument to change/view active institute
     if (isSuperAdmin()) {
         $req = $requestedPrefix ?? $_GET['prefix'] ?? null;
         if ($req && in_array($req, $adminAllowedPrefixes, true)) {
@@ -70,23 +70,27 @@ function resolveAdminPrefix($requestedPrefix = null)
         if (!empty($_SESSION['active_prefix']) && in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true)) {
             return $_SESSION['active_prefix'];
         }
-        return 'uoh'; // Super admin default
+        // Fallback default for Super Admin if active_prefix is not set yet
+        $defaultPrefix = (!empty($_SESSION['institute_prefix']) && in_array($_SESSION['institute_prefix'], $adminAllowedPrefixes, true))
+            ? $_SESSION['institute_prefix']
+            : 'uoh';
+        $_SESSION['active_prefix'] = $defaultPrefix;
+        return $defaultPrefix;
     }
 
-    // Regular admin: ALWAYS use the institute_prefix stored in session at login.
+    // 2. Regular Institute Admin: ALWAYS locked to $_SESSION['institute_prefix'] assigned at login.
     // The ?prefix= URL parameter or requested argument is strictly ignored — institute is locked to the account.
-    if (!empty($_SESSION['institute_prefix']) && in_array($_SESSION['institute_prefix'], $adminAllowedPrefixes, true)) {
-        $_SESSION['active_prefix'] = $_SESSION['institute_prefix'];
-        return $_SESSION['institute_prefix'];
+    $instPrefix = $_SESSION['institute_prefix'] ?? $adminAllowedPrefixes[0];
+    if (!in_array($instPrefix, $adminAllowedPrefixes, true)) {
+        $instPrefix = $adminAllowedPrefixes[0];
     }
-
-    return $adminAllowedPrefixes[0];
+    $_SESSION['active_prefix'] = $instPrefix;
+    return $instPrefix;
 }
 
 function isSuperAdmin()
 {
-    $role = $_SESSION['role'] ?? 'admin';
-    return $role === 'super_admin';
+    return (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
 }
 
 function canEditInstitute($prefix)

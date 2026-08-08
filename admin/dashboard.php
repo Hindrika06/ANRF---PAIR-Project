@@ -397,7 +397,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
             
             <div class="kpi-grid">
                 <!-- 1. Publications (#1E88C7) -->
-                <a href="publications.php?prefix=<?= $prefix ?>" class="kpi-card kpi-publications">
+                <a href="<?= $navUrl('publications.php') ?>" class="kpi-card kpi-publications">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E88C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -419,7 +419,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 2. Patents (#00897B) -->
-                <a href="patents.php?prefix=<?= $prefix ?>" class="kpi-card kpi-patents">
+                <a href="<?= $navUrl('patents.php') ?>" class="kpi-card kpi-patents">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -442,7 +442,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 3. Conferences (#7E57C2) -->
-                <a href="conferences.php?prefix=<?= $prefix ?>" class="kpi-card kpi-conferences">
+                <a href="<?= $navUrl('conferences.php') ?>" class="kpi-card kpi-conferences">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7E57C2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -467,7 +467,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 4. Webinars (#F0932B) -->
-                <a href="webinars.php?prefix=<?= $prefix ?>" class="kpi-card kpi-webinars">
+                <a href="<?= $navUrl('webinars.php') ?>" class="kpi-card kpi-webinars">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F0932B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -490,7 +490,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 5. Internships (#1E88C7) -->
-                <a href="internships.php?prefix=<?= $prefix ?>" class="kpi-card kpi-internships">
+                <a href="<?= $navUrl('internships.php') ?>" class="kpi-card kpi-internships">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E88C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -513,7 +513,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 6. Progress Reports (#FF8FAB) -->
-                <a href="progress_reports.php?prefix=<?= $prefix ?>" class="kpi-card kpi-reports">
+                <a href="<?= $navUrl('progress_reports.php') ?>" class="kpi-card kpi-reports">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF8FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -536,7 +536,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 7. Gallery & Albums (#F0932B) -->
-                <a href="gallery.php?prefix=<?= $prefix ?>" class="kpi-card kpi-gallery">
+                <a href="<?= $navUrl('gallery.php') ?>" class="kpi-card kpi-gallery">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F0932B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -560,7 +560,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
 
                 <!-- 8. Calendar Events (#7E57C2) -->
-                <a href="event_calendar.php" class="kpi-card kpi-calendar">
+                <a href="<?= $navUrl('event_calendar.php') ?>" class="kpi-card kpi-calendar">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7E57C2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -594,7 +594,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
             
             <div class="kpi-grid">
                 <?php if ($is_super): ?>
-                <a href="banner_management.php" class="kpi-card kpi-banners">
+                <a href="<?= $navUrl('banner_management.php') ?>" class="kpi-card kpi-banners">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7E57C2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -617,7 +617,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                     </div>
                 </a>
 
-                <a href="announcements_management.php" class="kpi-card kpi-tickers">
+                <a href="<?= $navUrl('announcements_management.php') ?>" class="kpi-card kpi-tickers">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -640,7 +640,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                     </div>
                 </a>
 
-                <a href="team_management.php" class="kpi-card kpi-team">
+                <a href="<?= $navUrl('team_management.php') ?>" class="kpi-card kpi-team">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F0932B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -665,7 +665,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </a>
                 <?php endif; ?>
 
-                <a href="collaborations_management.php" class="kpi-card kpi-collabs">
+                <a href="<?= $navUrl('collaborations_management.php') ?>" class="kpi-card kpi-collabs">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E88C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -689,7 +689,8 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                     </div>
                 </a>
 
-                <a href="research_infrastructure.php" class="kpi-card kpi-research">
+                <?php if ($is_super): ?>
+                <a href="<?= $navUrl('research_infrastructure.php') ?>" class="kpi-card kpi-research">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -712,7 +713,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                     </div>
                 </a>
 
-                <a href="research_infrastructure.php?tab=infrastructure" class="kpi-card kpi-facilities">
+                <a href="<?= $navUrl('research_infrastructure.php?tab=infrastructure') ?>" class="kpi-card kpi-facilities">
                     <div class="kpi-card-header">
                         <div class="kpi-icon-container">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00897B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -737,6 +738,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                         <div class="kpi-title">Facilities</div>
                     </div>
                 </a>
+                <?php endif; ?>
             </div>
 
         </div>
