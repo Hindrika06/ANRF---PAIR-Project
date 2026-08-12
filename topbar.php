@@ -266,6 +266,14 @@
         <div class="topbar-inner">
             <ul class="topbar-left">
                 <li>
+                    <a href="tel:04023132316">
+                        <span class="topbar-icon-badge">
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                        </span>
+                        <span>040-23132316</span>
+                    </a>
+                </li>
+                <li>
                     <a href="mailto:pairdirecorate@uohyd.ac.in">
                         <span class="topbar-icon-badge">
                             <i class="fa fa-envelope" aria-hidden="true"></i>

@@ -9,9 +9,47 @@ $reports = [];
 $hasData = false;
 
 try {
-    $stmt = $pdo->query("SELECT * FROM uoh_progress_reports ORDER BY created_at DESC, id DESC");
-    $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $hasData = !empty($reports);
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $reports  = [];
+
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_progress_reports";
+        try {
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check > 0) {
+                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $hasApproval = in_array('approval_status', $cols, true);
+                $hasPublish  = in_array('publish_status', $cols, true);
+
+                $whereConditions = [];
+                if ($hasApproval) {
+                    $whereConditions[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
+                }
+                if ($hasPublish) {
+                    $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                }
+
+                $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+                $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                    $reports = array_merge($reports, $rows);
+                }
+            }
+        } catch (Exception $e) {}
+    }
+
+    if (!empty($reports)) {
+        usort($reports, function($a, $b) {
+            $tA = !empty($a['created_at']) ? strtotime($a['created_at']) : 0;
+            $tB = !empty($b['created_at']) ? strtotime($b['created_at']) : 0;
+            if ($tA === $tB) {
+                return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+            }
+            return $tB <=> $tA;
+        });
+        $hasData = true;
+    }
 } catch (PDOException $e) {
     echo "<div class='container' style='margin-top:20px;'><div class='alert alert-danger'>Database Error: " . htmlspecialchars($e->getMessage()) . "</div></div>";
 }

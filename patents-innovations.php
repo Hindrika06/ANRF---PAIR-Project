@@ -7,8 +7,41 @@ $patents = [];
 $error   = '';
 
 try {
-    $stmt = $pdo->query("SELECT * FROM uoh_patent ORDER BY id DESC");
-    $patents = $stmt->fetchAll();
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $patents  = [];
+
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_patent";
+        try {
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check > 0) {
+                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $hasApproval = in_array('approval_status', $cols, true);
+                $hasPublish  = in_array('publish_status', $cols, true);
+
+                $whereConditions = [];
+                if ($hasApproval) {
+                    $whereConditions[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
+                }
+                if ($hasPublish) {
+                    $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                }
+
+                $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+                $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                    $patents = array_merge($patents, $rows);
+                }
+            }
+        } catch (Exception $e) {}
+    }
+
+    if (!empty($patents)) {
+        usort($patents, function($a, $b) {
+            return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+        });
+    }
 } catch (PDOException $e) {
     $error = 'Could not load patent records: ' . $e->getMessage();
 }

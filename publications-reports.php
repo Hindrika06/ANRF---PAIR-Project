@@ -36,11 +36,45 @@ include 'header.php';
                                     <ul class="pub-list">
                                         <?php
                                         try {
-                                            // Selects everything from your correct table 'publications', sorted by ID descending
-                                            $stmt = $pdo->query("SELECT * FROM uoh_publications ORDER BY id DESC");
+                                            $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+                                            $publications = [];
+                                            
+                                            foreach ($prefixes as $p) {
+                                                $tbl = "{$p}_publications";
+                                                try {
+                                                    $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+                                                    if ($check > 0) {
+                                                        $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                                                        $hasApproval = in_array('approval_status', $cols, true);
+                                                        $hasPublish  = in_array('publish_status', $cols, true);
+
+                                                        $whereConditions = [];
+                                                        if ($hasApproval) {
+                                                            $whereConditions[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
+                                                        }
+                                                        if ($hasPublish) {
+                                                            $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                                                        }
+
+                                                        $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+                                                        $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                                                        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                                        if ($rows) {
+                                                            $publications = array_merge($publications, $rows);
+                                                        }
+                                                    }
+                                                } catch (Exception $e) {}
+                                            }
+
+                                            if (!empty($publications)) {
+                                                usort($publications, function($a, $b) {
+                                                    return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
+                                                });
+                                            }
+
                                             $hasData = false;
                                             
-                                            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                            foreach ($publications as $row) {
                                                 $hasData = true;
                                                 
                                                 echo "<li>";
