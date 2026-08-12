@@ -42,7 +42,8 @@ try {
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete collaborations for this institute.';
     } else {
         try {
@@ -56,7 +57,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `collaborations` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=deleted");
+            $redirectParams = $_GET;
+            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
+            $redirectParams['success_msg'] = 'deleted';
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
             exit;
         } catch (PDOException $e) {
             $error = 'Failed to delete collaboration: ' . $e->getMessage();
@@ -336,7 +340,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="collaborations_management.php?prefix=<?= $prefix ?>&action=delete&id=<?= $c['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                            <a href="<?= $navUrl('collaborations_management.php?action=delete&id=' . $c['id'] . '&record_prefix=' . urlencode($c['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

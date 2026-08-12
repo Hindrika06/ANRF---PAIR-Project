@@ -18,17 +18,22 @@ $error   = '';
 
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
-    try {
-        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-        exit;
-    } catch (PDOException $e) {
-        $error = 'Failed to delete record: ' . $e->getMessage();
-    }
+        try {
+            $deleteTable = "{$deletePrefix}_publications";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            $redirectParams = $_GET;
+            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
+            $redirectParams['success_msg'] = 'deleted';
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
+            exit;
+        } catch (PDOException $e) {
+            $error = 'Failed to delete record: ' . $e->getMessage();
+        }
     }
 }
 
@@ -613,6 +618,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $pub['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($pub['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
@@ -865,7 +871,14 @@ document.addEventListener("DOMContentLoaded", function () {
     deleteTriggers.forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            modalDeleteExecutionLink.setAttribute('href', '?action=delete&id=' + this.dataset.id);
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', this.dataset.id);
+            const recordPrefix = this.dataset.recordPrefix || this.dataset.prefix;
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });
     });

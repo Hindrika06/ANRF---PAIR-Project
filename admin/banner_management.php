@@ -43,7 +43,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
         $stmt = $pdo->prepare("DELETE FROM `homepage_banners` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: banner_management.php?success_msg=deleted");
+        $redirectParams = $_GET;
+        unset($redirectParams['action'], $redirectParams['id']);
+        $redirectParams['success_msg'] = 'deleted';
+        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
         exit;
     } catch (PDOException $e) {
         $error = 'Failed to delete banner: ' . $e->getMessage();
@@ -230,7 +233,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($b)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="banner_management.php?action=delete&id=<?= $b['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Slide?', message: 'Are you sure you want to delete this slide?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                            <a href="<?= $navUrl('banner_management.php?action=delete&id=' . $b['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Slide?', message: 'Are you sure you want to delete this slide?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

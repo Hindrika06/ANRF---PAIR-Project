@@ -33,7 +33,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: event_calendar.php?success_msg=deleted");
+            $redirectParams = $_GET;
+            unset($redirectParams['action'], $redirectParams['id']);
+            $redirectParams['success_msg'] = 'deleted';
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
             exit;
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
@@ -968,7 +971,10 @@ include 'loader.php';
     }
 
     function confirmDelete(id) {
-        modalDeleteExecutionLink.href = 'event_calendar.php?action=delete&id=' + id;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('action', 'delete');
+        urlParams.set('id', id);
+        modalDeleteExecutionLink.href = 'event_calendar.php?' + urlParams.toString();
         bootstrapDeleteInstance.show();
     }
     <?php endif; ?>

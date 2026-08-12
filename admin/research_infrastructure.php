@@ -73,14 +73,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `research_areas` WHERE id = ?");
                 $stmt->execute([$id]);
-                header("Location: research_infrastructure.php?tab=research&success_msg=deleted");
+                $redirectParams = $_GET;
+                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type']);
+                $redirectParams['tab'] = 'research';
+                $redirectParams['success_msg'] = 'deleted';
+                header("Location: research_infrastructure.php?" . http_build_query($redirectParams));
                 exit;
             } catch (PDOException $e) {
                 $error = 'Failed to delete research area: ' . $e->getMessage();
             }
         }
     } elseif ($type === 'facility') {
-        if (!canEditInstitute($prefix)) {
+        $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+        if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
             $error = 'You are not allowed to delete facilities for this institute.';
         } else {
             try {
@@ -94,7 +99,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `infrastructure_facilities` WHERE id = ?");
                 $stmt->execute([$id]);
-                header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=deleted");
+                $redirectParams = $_GET;
+                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type'], $redirectParams['record_prefix']);
+                $redirectParams['tab'] = 'infrastructure';
+                $redirectParams['success_msg'] = 'deleted';
+                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
                 exit;
             } catch (PDOException $e) {
                 $error = 'Failed to delete facility: ' . $e->getMessage();
@@ -403,7 +412,7 @@ try {
                                                 <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <a href="research_infrastructure.php?action=delete&type=research&id=<?= $r['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                     <i class="fa fa-trash"></i>
                                                 </a>
                                             <?php else: ?>
@@ -478,7 +487,7 @@ try {
                                             <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="research_infrastructure.php?prefix=<?= $prefix ?>&action=delete&type=facility&id=<?= $f['id'] ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                            <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

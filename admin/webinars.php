@@ -40,13 +40,18 @@ try {
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
         try {
-            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $deleteTable = "{$deletePrefix}_webinars";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
+            $redirectParams = $_GET;
+            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
+            $redirectParams['success_msg'] = 'deleted';
+            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
             exit;
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
@@ -561,6 +566,7 @@ foreach ($webinars as $w) {
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $webinar['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($webinar['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                          <i class="fa fa-trash"></i>
                                                     </button>
@@ -841,7 +847,14 @@ document.addEventListener("DOMContentLoaded", function() {
         triggerBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const recordId = this.getAttribute('data-id');
-            modalDeleteExecutionLink.setAttribute('href', '?action=delete&id=' + recordId);
+            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', recordId);
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });
     });
