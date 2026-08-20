@@ -65,11 +65,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET[
 
         $stmt = $pdo->prepare("DELETE FROM `gallery_albums` WHERE id = ?");
         $stmt->execute([$del_id]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['id']);
-        $redirectParams['success_msg'] = 'album_deleted';
-        header("Location: gallery_albums_management.php?" . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'album_deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete album: ' . $e->getMessage();
     }
@@ -88,11 +84,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET[
 
         $stmt = $pdo->prepare("DELETE FROM `gallery_photos` WHERE id = ?");
         $stmt->execute([$del_photo_id]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['photo_id']);
-        $redirectParams['success_msg'] = 'photo_deleted';
-        header("Location: gallery_albums_management.php?" . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'photo_deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete photo: ' . $e->getMessage();
     }
@@ -117,13 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
             if ($edit_album_id) {
                 $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
                 $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
-                header("Location: gallery_albums_management.php?prefix=" . $prefix . "&success_msg=album_updated");
+                adminRedirect(['success_msg' => 'album_updated']);
             } else {
                 $stmt = $pdo->prepare("INSERT INTO `gallery_albums` (album_name, album_date, description, institute_prefix) VALUES (:name, :date, :desc, :prefix)");
                 $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':prefix' => $prefix]);
-                header("Location: gallery_albums_management.php?prefix=" . $prefix . "&success_msg=album_created");
+                adminRedirect(['success_msg' => 'album_created']);
             }
-            exit;
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
         }
@@ -175,8 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
                 }
             }
 
-            header("Location: gallery_albums_management.php?prefix=" . $prefix . "&album_id=" . $album_id . "&success_msg=uploaded_" . $uploadedCount);
-            exit;
+            adminRedirect(['album_id' => $album_id, 'success_msg' => 'uploaded_' . $uploadedCount]);
         } catch (Exception $e) {
             $error = $e->getMessage();
         }

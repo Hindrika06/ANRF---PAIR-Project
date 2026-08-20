@@ -48,11 +48,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $deleteTable = "{$deletePrefix}_conferences";
             $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -142,11 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // INSERT NEW RECORD
                 $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
@@ -161,11 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $new_id, 'CREATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -542,73 +536,50 @@ foreach ($conferences as $c) {
                                                 </div>
                                             </td>
                                             <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <?php if (canEditInstitute($prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#conferenceModal"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
-                                                            data-organizer="<?= $organizerVal ?>"
-                                                            data-start_date="<?= $startDateVal ?>"
-                                                            data-end_date="<?= $endDateVal ?>"
-                                                            data-location="<?= $locationVal ?>"
-                                                            data-submission_deadline="<?= $deadlineVal ?>"
-                                                            data-website_url="<?= $websiteVal ?>"
-                                                            data-investigator="<?= $investigatorVal ?>"
-                                                            data-convener="<?= $convenerVal ?>"
-                                                            data-resource_person="<?= $resourceVal ?>"
-                                                            data-chief_patron="<?= $chiefPatronVal ?>"
-                                                            data-patrons="<?= $patronsVal ?>"
-                                                            data-organising_committee="<?= $committeeVal ?>"
-                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
-                                                            data-training_schedule="<?= $scheduleVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-qr_code_image="<?= $qrVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="Edit Record">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            data-record-prefix="<?= htmlspecialchars($conf['institute_prefix'] ?? $prefix) ?>"
-                                                            title="Delete Record">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#conferenceModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
-                                                            data-organizer="<?= $organizerVal ?>"
-                                                            data-start_date="<?= $startDateVal ?>"
-                                                            data-end_date="<?= $endDateVal ?>"
-                                                            data-location="<?= $locationVal ?>"
-                                                            data-submission_deadline="<?= $deadlineVal ?>"
-                                                            data-website_url="<?= $websiteVal ?>"
-                                                            data-investigator="<?= $investigatorVal ?>"
-                                                            data-convener="<?= $convenerVal ?>"
-                                                            data-resource_person="<?= $resourceVal ?>"
-                                                            data-chief_patron="<?= $chiefPatronVal ?>"
-                                                            data-patrons="<?= $patronsVal ?>"
-                                                            data-organising_committee="<?= $committeeVal ?>"
-                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
-                                                            data-training_schedule="<?= $scheduleVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-qr_code_image="<?= $qrVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                 <div class="d-flex justify-content-center gap-1">
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                             data-record="<?= htmlspecialchars(json_encode($conf), ENT_QUOTES, 'UTF-8') ?>"
+                                                             title="View Details">
+                                                         <i class="fa fa-eye"></i>
+                                                     </button>
+                                                     <?php if (canEditInstitute($prefix)): ?>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#conferenceModal"
+                                                             data-id="<?= $conf['id'] ?>"
+                                                             data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
+                                                             data-title="<?= htmlspecialchars($conf['title']) ?>"
+                                                             data-organizer="<?= $organizerVal ?>"
+                                                             data-start_date="<?= $startDateVal ?>"
+                                                             data-end_date="<?= $endDateVal ?>"
+                                                             data-location="<?= $locationVal ?>"
+                                                             data-submission_deadline="<?= $deadlineVal ?>"
+                                                             data-website_url="<?= $websiteVal ?>"
+                                                             data-investigator="<?= $investigatorVal ?>"
+                                                             data-convener="<?= $convenerVal ?>"
+                                                             data-resource_person="<?= $resourceVal ?>"
+                                                             data-chief_patron="<?= $chiefPatronVal ?>"
+                                                             data-patrons="<?= $patronsVal ?>"
+                                                             data-organising_committee="<?= $committeeVal ?>"
+                                                             data-registration_guidelines="<?= $regGuidelinesVal ?>"
+                                                             data-training_schedule="<?= $scheduleVal ?>"
+                                                             data-image="<?= $imageVal ?>"
+                                                             data-qr_code_image="<?= $qrVal ?>"
+                                                             data-publish_status="<?= $publishStatus ?>"
+                                                             title="Edit Record">
+                                                         <i class="fa fa-pencil"></i>
+                                                     </button>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
+                                                             data-id="<?= $conf['id'] ?>"
+                                                             data-record-prefix="<?= htmlspecialchars($conf['institute_prefix'] ?? $prefix) ?>"
+                                                             title="Delete Record">
+                                                         <i class="fa fa-trash"></i>
+                                                     </button>
+                                                     <?php endif; ?>
+                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -776,6 +747,8 @@ foreach ($conferences as $c) {
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
             <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
@@ -791,6 +764,47 @@ foreach ($conferences as $c) {
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Conference Details',
+                recordTitle: rec.title || 'Untitled Conference',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                publishStatus: rec.publish_status,
+                fields: [
+                    { label: 'Task Number', value: rec.taskno, icon: 'fa-solid fa-list-check' },
+                    { label: 'Conference Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-users-rectangle' },
+                    { label: 'Organizer / Host', value: rec.organizer || rec.organisers, icon: 'fa-solid fa-sitemap' },
+                    { label: 'Location / Venue', value: rec.location, icon: 'fa-solid fa-location-dot' },
+                    { label: 'Start Date', value: (rec.start_date || rec.conf_date) ? formatDate(rec.start_date || rec.conf_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'End Date', value: rec.end_date ? formatDate(rec.end_date) : null, icon: 'fa-solid fa-calendar-check' },
+                    { label: 'Submission Deadline', value: rec.submission_deadline ? formatDate(rec.submission_deadline) : null, icon: 'fa-solid fa-clock-rotate-left' },
+                    { label: 'Website Link', value: rec.website_url, type: 'link', icon: 'fa-solid fa-globe' },
+                    { label: 'Principal Investigator', value: rec.investigator, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Convener', value: rec.convener, icon: 'fa-solid fa-user-pen' },
+                    { label: 'Resource Person', value: rec.resource_person, icon: 'fa-solid fa-chalkboard-user' },
+                    { label: 'Chief Patron', value: rec.chief_patron, icon: 'fa-solid fa-crown' },
+                    { label: 'Patrons', value: rec.patrons, icon: 'fa-solid fa-user-shield' },
+                    { label: 'Organising Committee', value: rec.organising_committee, icon: 'fa-solid fa-users' },
+                    { label: 'Registration Guidelines', value: rec.registration_guidelines, type: 'longtext', icon: 'fa-solid fa-clipboard-list' },
+                    { label: 'Training Schedule', value: rec.training_schedule, type: 'longtext', icon: 'fa-solid fa-calendar-week' },
+                    { label: 'Conference Poster / Image', value: rec.image, type: 'image', icon: 'fa-solid fa-image' },
+                    { label: 'QR Code Image', value: rec.qr_code_image, type: 'image', icon: 'fa-solid fa-qrcode' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('conferenceModalLabel');

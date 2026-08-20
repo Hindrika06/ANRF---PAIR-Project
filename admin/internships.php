@@ -27,11 +27,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $deleteTable = "{$deletePrefix}_internships";
             $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -90,11 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $edit_id, 'UPDATE', $payload);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                adminRedirect(['success_msg' => 'updated']);
             }
-            exit;
         } else {
             $stmt = $pdo->prepare("
                 INSERT INTO `$table`
@@ -109,11 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $new_id, 'CREATE', $payload);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                adminRedirect(['success_msg' => 'inserted']);
             }
-            exit;
         }
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
@@ -569,6 +563,12 @@ $total_pis = count($unique_investigators);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -591,23 +591,6 @@ $total_pis = count($unique_investigators);
                                                             data-record-prefix="<?= htmlspecialchars($item['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#internshipModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $item['id'] ?>"
-                                                            data-task="<?= htmlspecialchars($item['task_no'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($item['title']) ?>"
-                                                            data-pi="<?= htmlspecialchars($item['project_investigator']) ?>"
-                                                            data-trained="<?= (int)$item['no_students_trained'] ?>"
-                                                            data-days="<?= $item['no_days_trained'] ?? '' ?>"
-                                                            data-names="<?= htmlspecialchars($item['students_names'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($item['content'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -719,6 +702,8 @@ $total_pis = count($unique_investigators);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
             <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
@@ -734,6 +719,36 @@ $total_pis = count($unique_investigators);
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Internship / Training Details',
+                recordTitle: rec.title || 'Untitled Internship Program',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                fields: [
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Program Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-graduation-cap' },
+                    { label: 'Project Investigator / Mentor', value: rec.project_investigator, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Students Trained', value: (rec.no_students_trained !== null && rec.no_students_trained !== undefined) ? `${rec.no_students_trained} Students` : null, icon: 'fa-solid fa-user-group' },
+                    { label: 'Duration in Days', value: rec.no_days_trained ? `${rec.no_days_trained} Days` : null, icon: 'fa-solid fa-hourglass-half' },
+                    { label: 'Trained Students List', value: rec.students_names, type: 'longtext', icon: 'fa-solid fa-users-line' },
+                    { label: 'Program Details / Content', value: rec.content, type: 'longtext', icon: 'fa-solid fa-file-lines' },
+                    { label: 'Submission Date', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('internshipModalLabel');

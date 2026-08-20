@@ -43,11 +43,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
         $stmt = $pdo->prepare("DELETE FROM `homepage_banners` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['id']);
-        $redirectParams['success_msg'] = 'deleted';
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete banner: ' . $e->getMessage();
     }
@@ -128,8 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id'            => $edit_id
                 ]);
             }
-            header("Location: banner_management.php?success_msg=updated");
-            exit;
+            adminRedirect(['success_msg' => 'updated']);
         } else {
             // Insert New Banner
             if (!$imagePath) {
@@ -142,8 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':display_order' => $display_order,
                 ':status'        => $status
             ]);
-            header("Location: banner_management.php?success_msg=inserted");
-            exit;
+            adminRedirect(['success_msg' => 'inserted']);
         }
     } catch (Exception $e) {
         $error = $e->getMessage();

@@ -26,11 +26,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
         $stmt = $pdo->prepare("DELETE FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['id']);
-        $redirectParams['success_msg'] = 'deleted';
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
     }
@@ -144,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':id'             => $edit_id
                     ]);
                 }
-                header("Location: team_management.php?success_msg=updated");
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 // Insert
                 $stmt = $pdo->prepare("INSERT INTO `team` (full_name, designation, department, university, profile_image, biography, email, phone, linkedin, google_scholar, orcid, research_area, display_order, status) VALUES (:full_name, :designation, :department, :university, :profile_image, :biography, :email, :phone, :linkedin, :google_scholar, :orcid, :research_area, :display_order, :status)");
@@ -164,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':display_order'  => $display_order,
                     ':status'         => $status
                 ]);
-                header("Location: team_management.php?success_msg=added");
+                adminRedirect(['success_msg' => 'added']);
             }
             exit;
         } catch (Exception $e) {

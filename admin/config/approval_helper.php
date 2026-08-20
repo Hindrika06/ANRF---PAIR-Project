@@ -90,56 +90,47 @@
 
     /**
      * Fetches Centralized KPI Data:
-     * - Returns ALL approved records across all specified institute tables.
-     * - If current user is an Institute Admin, ALSO includes their OWN pending or rejected records.
-     * - If current user is Hub Admin ($isSuper = true), fetches all records across all tables.
+     * - If $userPrefix === 'all' (Super Admin only): returns records across all 7 institute tables.
+     * - Otherwise: returns ONLY records belonging strictly to the requested $userPrefix institute table.
      */
     function fetchCentralizedKpiDataset($pdo, $moduleSuffix, $userPrefix, $isSuper = false) {
         $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-        $combined = [];
 
-        foreach ($prefixes as $p) {
-            $tbl = "{$p}_{$moduleSuffix}";
-            try {
-                $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
-                if (!$tableCheck || count($tableCheck->fetchAll()) === 0) continue;
-
-                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $hasApprovalStatus = in_array('approval_status', $cols, true);
-                $hasPublishStatus  = in_array('publish_status', $cols, true);
-
-                if ($isSuper) {
-                    // Hub Admin: sees all records across all tables
+        // 1. Super Admin viewing All Institutes combined view
+        if ($isSuper && $userPrefix === 'all') {
+            $combined = [];
+            foreach ($prefixes as $p) {
+                $tbl = "{$p}_{$moduleSuffix}";
+                try {
+                    $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
+                    if (!$tableCheck || count($tableCheck->fetchAll()) === 0) continue;
                     $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl`");
                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    if ($rows) $combined = array_merge($combined, $rows);
-                } else {
-                    // Institute Admin:
-                    // 1) All APPROVED records from any institute
-                    // 2) OWN records (where prefix matches $userPrefix) regardless of approval status (Pending/Rejected)
-                    if ($hasApprovalStatus) {
-                        if ($p === $userPrefix) {
-                            // Own institute: fetch everything
-                            $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl`");
-                        } else {
-                            // Other institutes: fetch only Approved
-                            $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` WHERE approval_status = 'Approved'");
-                        }
-                    } else {
-                        // Fallback if column not present yet
-                        $where = ($hasPublishStatus && $p !== $userPrefix) ? "WHERE publish_status = 1" : "";
-                        $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $where");
+                    if ($rows) {
+                        $combined = array_merge($combined, $rows);
                     }
-
-                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    if ($rows) $combined = array_merge($combined, $rows);
+                } catch (Exception $e) {
+                    // Ignore single table errors
                 }
-            } catch (Exception $e) {
-                // Ignore single table errors
             }
+            return $combined;
         }
 
-        return $combined;
+        // 2. Single Institute View (For both Institute Admin and Super Admin viewing a specific institute)
+        if (!in_array($userPrefix, $prefixes, true)) {
+            return [];
+        }
+
+        $tbl = "{$userPrefix}_{$moduleSuffix}";
+        try {
+            $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$tableCheck || count($tableCheck->fetchAll()) === 0) return [];
+
+            $stmt = $pdo->query("SELECT *, '$userPrefix' AS institute_prefix FROM `$tbl`");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
     /**

@@ -73,12 +73,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `research_areas` WHERE id = ?");
                 $stmt->execute([$id]);
-                $redirectParams = $_GET;
-                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type']);
-                $redirectParams['tab'] = 'research';
-                $redirectParams['success_msg'] = 'deleted';
-                header("Location: research_infrastructure.php?" . http_build_query($redirectParams));
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete research area: ' . $e->getMessage();
             }
@@ -99,12 +94,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `infrastructure_facilities` WHERE id = ?");
                 $stmt->execute([$id]);
-                $redirectParams = $_GET;
-                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type'], $redirectParams['record_prefix']);
-                $redirectParams['tab'] = 'infrastructure';
-                $redirectParams['success_msg'] = 'deleted';
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-                exit;
+                adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete facility: ' . $e->getMessage();
             }
@@ -173,8 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("INSERT INTO `research_areas` (title, description, image_path, display_order, status) VALUES (:title, :description, :image_path, :display_order, :status)");
                     $stmt->execute([':title' => $title, ':description' => $description, ':image_path' => $imagePath, ':display_order' => $display_order, ':status' => $status]);
                 }
-                header("Location: research_infrastructure.php?tab=research&success_msg=saved");
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'saved']);
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }
@@ -233,11 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $edit_id, 'UPDATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `infrastructure_facilities` (name, description, equipment_details, image_path, institute_prefix, display_order, status, approval_status) VALUES (:name, :description, :equipment_details, :image_path, :institute_prefix, :display_order, :status, :approval_status)");
                     $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':institute_prefix' => $prefix, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus];
@@ -246,11 +234,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $new_id, 'CREATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 }
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
@@ -408,15 +395,16 @@ try {
                                             </span>
                                         </td>
                                         <td class="text-center">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-research-btn" data-record="<?= htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
                                             <?php if (isSuperAdmin()): ?>
-                                                <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)">
+                                                <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)" title="Edit Record">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                     <i class="fa fa-trash"></i>
                                                 </a>
-                                            <?php else: ?>
-                                                <span class="text-muted" style="font-size:11px;">View Only</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -484,12 +472,17 @@ try {
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-facility-btn" data-record="<?= htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <?php if (canEditInstitute($f['institute_prefix'] ?? $prefix)): ?>
+                                            <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)" title="Edit Record">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                            <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -687,6 +680,54 @@ try {
             bsModal.show();
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const viewResBtns = document.querySelectorAll('.view-research-btn');
+        viewResBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const imgUrl = rec.image_path ? ('../' + rec.image_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Research Area Details',
+                    recordTitle: rec.title || 'Untitled Research Area',
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-flask' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Image', value: imgUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+
+        const viewFacBtns = document.querySelectorAll('.view-facility-btn');
+        viewFacBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'all') ?>";
+                const imgUrl = rec.image_path ? ('../' + rec.image_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Infrastructure Facility Details',
+                    recordTitle: rec.name || 'Untitled Facility',
+                    institutePrefix: instPrefix,
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Facility Name', value: rec.name, fullWidth: true, icon: 'fa-solid fa-microscope' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Equipment Details', value: rec.equipment_details, type: 'longtext', icon: 'fa-solid fa-toolbox' },
+                        { label: 'Facility Photo', value: imgUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+    });
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

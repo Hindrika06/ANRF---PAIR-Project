@@ -48,11 +48,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $deleteTable = "{$deletePrefix}_webinars";
             $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -130,11 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // INSERT NEW RECORD
                 $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
@@ -149,11 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $new_id, 'CREATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -538,65 +532,46 @@ foreach ($webinars as $w) {
                                                 </span>
                                             </td>
                                             <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <?php if (canEditInstitute($prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#webinarModal"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($webinar['title']) ?>"
-                                                            data-speaker_name="<?= $speakerNameVal ?>"
-                                                            data-affiliation="<?= $affiliationVal ?>"
-                                                            data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-link="<?= $linkVal ?>"
-                                                            data-whatsapp_link="<?= $whatsappVal ?>"
-                                                            data-keynote_speaker="<?= $keynoteVal ?>"
-                                                            data-resource_persons="<?= $resourceVal ?>"
-                                                            data-conveners="<?= $convenersVal ?>"
-                                                            data-official_email="<?= $emailVal ?>"
-                                                            data-contact_phone="<?= $phoneVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-description="<?= $descriptionVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="Edit Record">
-                                                         <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            data-record-prefix="<?= htmlspecialchars($webinar['institute_prefix'] ?? $prefix) ?>"
-                                                            title="Delete Record">
-                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#webinarModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($webinar['title']) ?>"
-                                                            data-speaker_name="<?= $speakerNameVal ?>"
-                                                            data-affiliation="<?= $affiliationVal ?>"
-                                                            data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-link="<?= $linkVal ?>"
-                                                            data-whatsapp_link="<?= $whatsappVal ?>"
-                                                            data-keynote_speaker="<?= $keynoteVal ?>"
-                                                            data-resource_persons="<?= $resourceVal ?>"
-                                                            data-conveners="<?= $convenersVal ?>"
-                                                            data-official_email="<?= $emailVal ?>"
-                                                            data-contact_phone="<?= $phoneVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-description="<?= $descriptionVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="View Details">
+                                                 <div class="d-flex justify-content-center gap-1">
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                             data-record="<?= htmlspecialchars(json_encode($webinar), ENT_QUOTES, 'UTF-8') ?>"
+                                                             title="View Details">
                                                          <i class="fa fa-eye"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                     </button>
+                                                     <?php if (canEditInstitute($prefix)): ?>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#webinarModal"
+                                                             data-id="<?= $webinar['id'] ?>"
+                                                             data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
+                                                             data-title="<?= htmlspecialchars($webinar['title']) ?>"
+                                                             data-speaker_name="<?= $speakerNameVal ?>"
+                                                             data-affiliation="<?= $affiliationVal ?>"
+                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
+                                                             data-link="<?= $linkVal ?>"
+                                                             data-whatsapp_link="<?= $whatsappVal ?>"
+                                                             data-keynote_speaker="<?= $keynoteVal ?>"
+                                                             data-resource_persons="<?= $resourceVal ?>"
+                                                             data-conveners="<?= $convenersVal ?>"
+                                                             data-official_email="<?= $emailVal ?>"
+                                                             data-contact_phone="<?= $phoneVal ?>"
+                                                             data-image="<?= $imageVal ?>"
+                                                             data-description="<?= $descriptionVal ?>"
+                                                             data-publish_status="<?= $publishStatus ?>"
+                                                             title="Edit Record">
+                                                          <i class="fa fa-pencil"></i>
+                                                     </button>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
+                                                             data-id="<?= $webinar['id'] ?>"
+                                                             data-record-prefix="<?= htmlspecialchars($webinar['institute_prefix'] ?? $prefix) ?>"
+                                                             title="Delete Record">
+                                                          <i class="fa fa-trash"></i>
+                                                     </button>
+                                                     <?php endif; ?>
+                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -745,6 +720,8 @@ foreach ($webinars as $w) {
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
             <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
@@ -761,6 +738,43 @@ foreach ($webinars as $w) {
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Webinar Details',
+                recordTitle: rec.title || 'Untitled Webinar',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                publishStatus: rec.publish_status,
+                fields: [
+                    { label: 'Task Number', value: rec.taskno, icon: 'fa-solid fa-list-check' },
+                    { label: 'Webinar Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-laptop-code' },
+                    { label: 'Speaker Name', value: rec.speaker_name, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Affiliation / Organization', value: rec.affiliation, icon: 'fa-solid fa-building' },
+                    { label: 'Webinar Date & Time', value: rec.webinar_date ? formatDate(rec.webinar_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'Webinar Link', value: rec.link, type: 'link', icon: 'fa-solid fa-video' },
+                    { label: 'WhatsApp Group Link', value: rec.whatsapp_link, type: 'link', icon: 'fa-brands fa-whatsapp' },
+                    { label: 'Keynote Speaker', value: rec.keynote_speaker, icon: 'fa-solid fa-star' },
+                    { label: 'Resource Persons', value: rec.resource_persons, icon: 'fa-solid fa-chalkboard-user' },
+                    { label: 'Conveners', value: rec.conveners, icon: 'fa-solid fa-user-pen' },
+                    { label: 'Official Email', value: rec.official_email, icon: 'fa-solid fa-envelope' },
+                    { label: 'Contact Phone', value: rec.contact_phone, icon: 'fa-solid fa-phone' },
+                    { label: 'Webinar Poster / Image', value: rec.image, type: 'image', icon: 'fa-solid fa-image' },
+                    { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('webinarModalLabel');

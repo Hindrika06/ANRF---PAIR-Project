@@ -57,11 +57,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `collaborations` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete collaboration: ' . $e->getMessage();
         }
@@ -188,11 +184,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $edit_id, 'UPDATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // Insert
                 if (!$logoPath) {
@@ -216,11 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $new_id, 'CREATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = "Database Error: " . $e->getMessage();
@@ -337,10 +331,13 @@ try {
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-kpi-btn" data-record="<?= htmlspecialchars(json_encode($c), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)" title="Edit Record">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="<?= $navUrl('collaborations_management.php?action=delete&id=' . $c['id'] . '&record_prefix=' . urlencode($c['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                            <a href="<?= $navUrl('collaborations_management.php?action=delete&id=' . $c['id'] . '&record_prefix=' . urlencode($c['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>
@@ -476,6 +473,34 @@ try {
         document.getElementById('modalTitle').innerText = 'Edit Collaboration Partner';
         showCollabModal();
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+        viewKpiBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'all') ?>";
+                const logoUrl = rec.logo_path ? ('../' + rec.logo_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Collaboration Details',
+                    recordTitle: rec.partner_name || 'Untitled Partner',
+                    institutePrefix: instPrefix,
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Partner Name', value: rec.partner_name, fullWidth: true, icon: 'fa-solid fa-handshake' },
+                        { label: 'Collaboration Type', value: rec.collab_type, icon: 'fa-solid fa-tag' },
+                        { label: 'Website URL', value: rec.website_url, type: 'link', icon: 'fa-solid fa-globe' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Profile Description', value: rec.profile_description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Partner Logo', value: logoUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+    });
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

@@ -1,6 +1,7 @@
 <?php
 $adminAllowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 $adminPrefixLabels = [
+    'all' => 'All Institutes',
     'cuk' => 'CUK',
     'kannur' => 'Kannur',
     'mgu' => 'MGU',
@@ -10,6 +11,7 @@ $adminPrefixLabels = [
     'yvu' => 'YVU',
 ];
 $adminPrefixFullNames = [
+    'all' => 'All Institutes (Combined View)',
     'cuk' => 'Central University of Karnataka',
     'kannur' => 'Kannur University',
     'mgu' => 'Mahatma Gandhi University',
@@ -40,6 +42,9 @@ $adminPrefixFavicons = [
 function isValidPrefix($prefix)
 {
     global $adminAllowedPrefixes;
+    if ($prefix === 'all' && isSuperAdmin()) {
+        return true;
+    }
     return in_array($prefix, $adminAllowedPrefixes, true);
 }
 
@@ -63,11 +68,11 @@ function resolveAdminPrefix($requestedPrefix = null)
     // 1. Super Admin: allow ?prefix= from URL or argument to change/view active institute
     if (isSuperAdmin()) {
         $req = $requestedPrefix ?? $_GET['prefix'] ?? null;
-        if ($req && in_array($req, $adminAllowedPrefixes, true)) {
+        if ($req && ($req === 'all' || in_array($req, $adminAllowedPrefixes, true))) {
             $_SESSION['active_prefix'] = $req;
             return $req;
         }
-        if (!empty($_SESSION['active_prefix']) && in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true)) {
+        if (!empty($_SESSION['active_prefix']) && ($_SESSION['active_prefix'] === 'all' || in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true))) {
             return $_SESSION['active_prefix'];
         }
         // Fallback default for Super Admin if active_prefix is not set yet
@@ -95,7 +100,10 @@ function isSuperAdmin()
 
 function canEditInstitute($prefix)
 {
-    return isSuperAdmin() || (!empty($_SESSION['institute_prefix']) && $_SESSION['institute_prefix'] === $prefix);
+    if (isSuperAdmin()) {
+        return true;
+    }
+    return (!empty($_SESSION['institute_prefix']) && $_SESSION['institute_prefix'] === $prefix);
 }
 
 function getInstituteLabel($prefix)
@@ -132,5 +140,63 @@ function getActiveInstituteContext()
         'name' => $name,
         'favicon' => $favicon,
     ];
+}
+
+/**
+ * Helper to build navigation URLs preserving active institute prefix and tab_token.
+ */
+function buildNavUrl($targetPage)
+{
+    $url = $targetPage;
+    if (isSuperAdmin()) {
+        $activePrefix = resolveAdminPrefix();
+        if (!empty($activePrefix) && strpos($url, 'prefix=') === false) {
+            $sep = (strpos($url, '?') !== false) ? '&' : '?';
+            $url .= $sep . 'prefix=' . urlencode($activePrefix);
+        }
+    }
+    $tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? null;
+    if (!empty($tabToken) && strpos($url, 'tab_token=') === false) {
+        $sep = (strpos($url, '?') !== false) ? '&' : '?';
+        $url .= $sep . 'tab_token=' . urlencode($tabToken);
+    }
+    return $url;
+}
+
+/**
+ * Helper for safe admin header redirects preserving active prefix, tab_token, and additional query parameters.
+ */
+function adminRedirect($extraParams = [], $targetPage = null)
+{
+    $page = $targetPage ? strtok($targetPage, '?') : strtok($_SERVER["REQUEST_URI"], '?');
+
+    $params = $targetPage ? [] : $_GET;
+
+    unset($params['action'], $params['id'], $params['record_prefix']);
+
+    if (isSuperAdmin()) {
+        $activePrefix = resolveAdminPrefix();
+        if (!empty($activePrefix)) {
+            $params['prefix'] = $activePrefix;
+        }
+    }
+
+    $tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? null;
+    if (!empty($tabToken)) {
+        $params['tab_token'] = $tabToken;
+    }
+
+    foreach ($extraParams as $k => $v) {
+        if ($v === null) {
+            unset($params[$k]);
+        } else {
+            $params[$k] = $v;
+        }
+    }
+
+    $query = http_build_query($params);
+    $redirectUrl = $page . ($query ? '?' . $query : '');
+    header("Location: " . $redirectUrl);
+    exit();
 }
 

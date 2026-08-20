@@ -33,11 +33,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -181,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute($binds);
 
-                    header("Location: event_calendar.php?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `events` (
                         title, description, university_id, event_date, end_date, start_time, end_time, venue, 
@@ -220,9 +216,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':training_schedule'       => $training_schedule,
                         ':created_by'              => $_SESSION['username']
                     ]);
-                    header("Location: event_calendar.php?success_msg=added");
+                    adminRedirect(['success_msg' => 'added']);
                 }
-                exit;
             } catch (Exception $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }

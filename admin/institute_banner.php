@@ -28,6 +28,9 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
                     class="form-select institute-select-dropdown"
                     onchange="if (typeof updateTabTitleAndFavicon === 'function') updateTabTitleAndFavicon(this.value); window.location.href = window.location.pathname + '?prefix=' + this.value + '<?= !empty($__tabToken) ? '&tab_token=' . urlencode($__tabToken) : '' ?>';"
                 >
+                    <option value="all" <?= ($__bannerPrefix === 'all') ? 'selected' : '' ?>>
+                        🌐 All Institutes (Combined View)
+                    </option>
                     <?php
                     global $adminAllowedPrefixes;
                     foreach ($adminAllowedPrefixes as $pref): ?>
