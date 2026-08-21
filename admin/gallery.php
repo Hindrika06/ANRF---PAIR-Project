@@ -491,6 +491,12 @@ $total_categories   = count($categories_count);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($ev), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -512,22 +518,6 @@ $total_categories   = count($categories_count);
                                                             data-record-prefix="<?= htmlspecialchars($ev['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#galleryModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $ev['id'] ?>"
-                                                            data-event="<?= htmlspecialchars($ev['event_name']) ?>"
-                                                            data-coordinator="<?= htmlspecialchars($ev['coordinator_name'] ?? '') ?>"
-                                                            data-date="<?= $ev['event_date'] ?? '' ?>"
-                                                            data-drive="<?= htmlspecialchars($ev['photos_drive_link'] ?? '') ?>"
-                                                            data-category="<?= htmlspecialchars($ev['category'] ?? 'General') ?>"
-                                                            data-description="<?= htmlspecialchars($ev['description'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -647,9 +637,11 @@ $total_categories   = count($categories_count);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -662,6 +654,34 @@ $total_categories   = count($categories_count);
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Gallery Event Details',
+                recordTitle: rec.event_name || 'Untitled Event',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                extraStatus: rec.category ? `Category: ${rec.category}` : null,
+                fields: [
+                    { label: 'Event Name', value: rec.event_name, fullWidth: true, icon: 'fa-solid fa-camera' },
+                    { label: 'Coordinator Name', value: rec.coordinator_name, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Category', value: rec.category, icon: 'fa-solid fa-folder' },
+                    { label: 'Event Date', value: rec.event_date ? formatDate(rec.event_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'Google Drive Photos Folder', value: rec.photos_drive_link, type: 'link', linkText: 'Open Photos Drive Folder', icon: 'fa-brands fa-google-drive' },
+                    { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn    = document.getElementById('addNewBtn');
     const editButtons  = document.querySelectorAll('.edit-btn');
     const modalTitle   = document.getElementById('galleryModalLabel');

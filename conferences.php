@@ -158,10 +158,7 @@ try {
         width: 100%;
         height: 100%;
         object-fit: contain;
-<<<<<<< HEAD
-=======
         object-position: center;
->>>>>>> 2ad8fcada5518e56e31a322cacb673215e457895
         display: block;
     }
 

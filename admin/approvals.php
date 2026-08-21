@@ -311,7 +311,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                                             Approved by <?= htmlspecialchars($r['approved_by']) ?>
                                                         </div>
                                                     <?php else: ?>
-                                                        <span class="text-muted">Awaiting Super Admin review</span>
+                                                        <span class="text-muted">Awaiting Hub Admin review</span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>

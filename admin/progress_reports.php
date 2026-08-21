@@ -539,6 +539,12 @@ $total_unique_tasks   = count($unique_tasks);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($report), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -562,24 +568,6 @@ $total_unique_tasks   = count($unique_tasks);
                                                             data-record-prefix="<?= htmlspecialchars($report['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#reportModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $report['id'] ?>"
-                                                            data-title="<?= htmlspecialchars($report['project_title']) ?>"
-                                                            data-pi="<?= htmlspecialchars($report['pi_name']) ?>"
-                                                            data-copi="<?= htmlspecialchars($report['co_pi_name'] ?? '') ?>"
-                                                            data-task="<?= htmlspecialchars($report['task_no']) ?>"
-                                                            data-wp="<?= htmlspecialchars($report['work_package_no'] ?? '') ?>"
-                                                            data-objects="<?= htmlspecialchars($report['approved_objects'] ?? '') ?>"
-                                                            data-methodology="<?= htmlspecialchars($report['methodology'] ?? '') ?>"
-                                                            data-summary="<?= htmlspecialchars($report['summary_progress'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -694,9 +682,11 @@ $total_unique_tasks   = count($unique_tasks);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -709,6 +699,37 @@ $total_unique_tasks   = count($unique_tasks);
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Progress Report Details',
+                recordTitle: rec.project_title || 'Untitled Progress Report',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                fields: [
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Work Package Number', value: rec.work_package_no, icon: 'fa-solid fa-box-archive' },
+                    { label: 'Project Title', value: rec.project_title, fullWidth: true, icon: 'fa-solid fa-diagram-project' },
+                    { label: 'Principal Investigator (PI)', value: rec.pi_name, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Co-PI Name', value: rec.co_pi_name, icon: 'fa-solid fa-user-group' },
+                    { label: 'Approved Objectives', value: rec.approved_objects, type: 'longtext', icon: 'fa-solid fa-bullseye' },
+                    { label: 'Methodology', value: rec.methodology, type: 'longtext', icon: 'fa-solid fa-vial' },
+                    { label: 'Summary of Progress', value: rec.summary_progress, type: 'longtext', icon: 'fa-solid fa-chart-line' },
+                    { label: 'Submission Date', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('reportModalLabel');

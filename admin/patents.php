@@ -694,6 +694,12 @@ $total_inventors = count($unique_inventors);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($patent), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -723,30 +729,6 @@ $total_inventors = count($unique_inventors);
                                                             data-record-prefix="<?= htmlspecialchars($patent['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#patentModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $patent['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($patent['task_no'] ?? '') ?>"
-                                                            data-patid="<?= htmlspecialchars($patent['patent_id']) ?>"
-                                                            data-title="<?= htmlspecialchars($patent['patent_title']) ?>"
-                                                            data-inventor="<?= htmlspecialchars($patent['inventor_name']) ?>"
-                                                            data-coinventors="<?= htmlspecialchars($patent['co_inventors'] ?? '') ?>"
-                                                            data-appno="<?= htmlspecialchars($patent['application_no'] ?? '') ?>"
-                                                            data-patno="<?= htmlspecialchars($patent['patent_no'] ?? '') ?>"
-                                                            data-country="<?= htmlspecialchars($patent['country'] ?? '') ?>"
-                                                            data-filing="<?= $patent['filing_date'] ?? '' ?>"
-                                                            data-pub="<?= $patent['publication_date'] ?? '' ?>"
-                                                            data-grant="<?= $patent['grant_date'] ?? '' ?>"
-                                                            data-status="<?= htmlspecialchars($patent['status']) ?>"
-                                                            data-tech="<?= htmlspecialchars($patent['technology_area'] ?? '') ?>"
-                                                            data-abstract="<?= htmlspecialchars($patent['abstract'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -903,9 +885,11 @@ $total_inventors = count($unique_inventors);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -918,6 +902,43 @@ $total_inventors = count($unique_inventors);
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Patent Details',
+                recordTitle: rec.patent_title || 'Untitled Patent',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                fields: [
+                    { label: 'Patent ID', value: rec.patent_id, icon: 'fa-solid fa-barcode' },
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Patent Title', value: rec.patent_title, fullWidth: true, icon: 'fa-solid fa-certificate' },
+                    { label: 'Primary Inventor', value: rec.inventor_name, icon: 'fa-solid fa-user-gear' },
+                    { label: 'Co-Inventors', value: rec.co_inventors, icon: 'fa-solid fa-users' },
+                    { label: 'Application Number', value: rec.application_no, icon: 'fa-solid fa-file-signature' },
+                    { label: 'Patent Number', value: rec.patent_no, icon: 'fa-solid fa-hashtag' },
+                    { label: 'Country', value: rec.country, icon: 'fa-solid fa-globe' },
+                    { label: 'Technology Area', value: rec.technology_area, icon: 'fa-solid fa-microchip' },
+                    { label: 'Filing Date', value: rec.filing_date ? formatDate(rec.filing_date) : null, icon: 'fa-solid fa-calendar' },
+                    { label: 'Publication Date', value: rec.publication_date ? formatDate(rec.publication_date) : null, icon: 'fa-solid fa-calendar-check' },
+                    { label: 'Grant Date', value: rec.grant_date ? formatDate(rec.grant_date) : null, icon: 'fa-solid fa-award' },
+                    { label: 'Abstract / Summary', value: rec.abstract, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                    { label: 'Patent Document File', value: rec.patent_file, type: 'file', icon: 'fa-solid fa-file-pdf' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('patentModalLabel');

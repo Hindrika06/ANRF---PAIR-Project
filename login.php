@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = "Login | ANRF–PAIR Project";
+$pageTitle = "Spoke Admin Login | ANRF–PAIR Project";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,8 +65,9 @@ $pageTitle = "Login | ANRF–PAIR Project";
     <meta charset="utf-8">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Load custom fonts -->
+    <!-- Load custom fonts & icons -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="assets/css/font-awesome.css" rel="stylesheet" type="text/css">
     <style>
         * {
             box-sizing: border-box;
@@ -100,7 +101,7 @@ $pageTitle = "Login | ANRF–PAIR Project";
             display: block;
         }
         .login-title {
-            color: #b21e1e; /* Bold red "ADMIN" */
+            color: #b21e1e; /* Bold red "SPOKE ADMIN" */
             font-weight: 800;
             font-size: 20px; /* Slightly smaller size */
             margin-top: 12px;
@@ -149,6 +150,39 @@ $pageTitle = "Login | ANRF–PAIR Project";
             border-color: #024283;
             box-shadow: 0 0 0 3px rgba(2, 66, 131, 0.15);
         }
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .password-wrapper .form-control-login {
+            padding-right: 42px;
+        }
+        .password-toggle-btn {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            margin: 0;
+            cursor: pointer;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            font-size: 15px;
+            line-height: 1;
+            z-index: 2;
+        }
+        .password-toggle-btn:hover,
+        .password-toggle-btn:focus {
+            color: #024283;
+            outline: none;
+            background-color: rgba(2, 66, 131, 0.08);
+        }
         .btn-login-custom {
             width: 100%;
             height: 44px; /* Reduced button height */
@@ -189,7 +223,7 @@ $pageTitle = "Login | ANRF–PAIR Project";
     <div class="login-card">
         <!-- Center image logo -->
         <img src="2.png" alt="ANRF-PAIR Logo" class="login-logo">
-        <h2 class="login-title">ADMIN</h2>
+        <h2 class="login-title">SPOKE ADMIN</h2>
         <p class="login-subtitle">SIGN IN TO DASHBOARD</p>
 
         <?php if ($error !== ""): ?>
@@ -214,7 +248,12 @@ $pageTitle = "Login | ANRF–PAIR Project";
             <!-- Password field -->
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input id="password" type="password" name="password" class="form-control-login" placeholder="Password" autocomplete="new-password" required>
+                <div class="password-wrapper">
+                    <input id="password" type="password" name="password" class="form-control-login" placeholder="Password" autocomplete="new-password" required>
+                    <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Show password" title="Show password">
+                        <i id="passwordToggleIcon" class="fa fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Sign in button -->
@@ -228,6 +267,31 @@ $pageTitle = "Login | ANRF–PAIR Project";
 window.addEventListener('load', function () {
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const toggleIcon = document.getElementById('passwordToggleIcon');
+
+    if (passwordInput && toggleBtn && toggleIcon) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const isPassword = passwordInput.type === 'password';
+
+            if (isPassword) {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fa fa-eye-slash';
+                toggleBtn.setAttribute('aria-label', 'Hide password');
+                toggleBtn.setAttribute('title', 'Hide password');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fa fa-eye';
+                toggleBtn.setAttribute('aria-label', 'Show password');
+                toggleBtn.setAttribute('title', 'Show password');
+            }
+        });
+    }
 });
 </script>
 </body>

@@ -780,7 +780,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <li class="kpi-sub-link kpi-sub-item-patents <?= ($currentPage === 'manage_admins.php') ? 'mm-active' : '' ?>">
                         <a href="<?= $navUrl('manage_admins.php') ?>">
                             <i class="fas fa-users-cog"></i>
-                            <span class="nav-text">Manage Admins</span>
+                            <span class="nav-text">Manage Spoke Admins</span>
                         </a>
                     </li>
                 </ul>

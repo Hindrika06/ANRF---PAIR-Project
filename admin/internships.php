@@ -563,6 +563,12 @@ $total_pis = count($unique_investigators);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -585,23 +591,6 @@ $total_pis = count($unique_investigators);
                                                             data-record-prefix="<?= htmlspecialchars($item['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#internshipModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $item['id'] ?>"
-                                                            data-task="<?= htmlspecialchars($item['task_no'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($item['title']) ?>"
-                                                            data-pi="<?= htmlspecialchars($item['project_investigator']) ?>"
-                                                            data-trained="<?= (int)$item['no_students_trained'] ?>"
-                                                            data-days="<?= $item['no_days_trained'] ?? '' ?>"
-                                                            data-names="<?= htmlspecialchars($item['students_names'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($item['content'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -713,9 +702,11 @@ $total_pis = count($unique_investigators);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -728,6 +719,36 @@ $total_pis = count($unique_investigators);
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Internship / Training Details',
+                recordTitle: rec.title || 'Untitled Internship Program',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                fields: [
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Program Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-graduation-cap' },
+                    { label: 'Project Investigator / Mentor', value: rec.project_investigator, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Students Trained', value: (rec.no_students_trained !== null && rec.no_students_trained !== undefined) ? `${rec.no_students_trained} Students` : null, icon: 'fa-solid fa-user-group' },
+                    { label: 'Duration in Days', value: rec.no_days_trained ? `${rec.no_days_trained} Days` : null, icon: 'fa-solid fa-hourglass-half' },
+                    { label: 'Trained Students List', value: rec.students_names, type: 'longtext', icon: 'fa-solid fa-users-line' },
+                    { label: 'Program Details / Content', value: rec.content, type: 'longtext', icon: 'fa-solid fa-file-lines' },
+                    { label: 'Submission Date', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('internshipModalLabel');

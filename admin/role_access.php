@@ -1,6 +1,7 @@
 <?php
 $adminAllowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 $adminPrefixLabels = [
+    'all' => 'All Institutes',
     'cuk' => 'CUK',
     'kannur' => 'Kannur',
     'mgu' => 'MGU',
@@ -10,6 +11,7 @@ $adminPrefixLabels = [
     'yvu' => 'YVU',
 ];
 $adminPrefixFullNames = [
+    'all' => 'All Institutes (Combined View)',
     'cuk' => 'Central University of Karnataka',
     'kannur' => 'Kannur University',
     'mgu' => 'Mahatma Gandhi University',
@@ -40,6 +42,9 @@ $adminPrefixFavicons = [
 function isValidPrefix($prefix)
 {
     global $adminAllowedPrefixes;
+    if ($prefix === 'all' && isSuperAdmin()) {
+        return true;
+    }
     return in_array($prefix, $adminAllowedPrefixes, true);
 }
 
@@ -63,11 +68,11 @@ function resolveAdminPrefix($requestedPrefix = null)
     // 1. Super Admin: allow ?prefix= from URL or argument to change/view active institute
     if (isSuperAdmin()) {
         $req = $requestedPrefix ?? $_GET['prefix'] ?? null;
-        if ($req && in_array($req, $adminAllowedPrefixes, true)) {
+        if ($req && ($req === 'all' || in_array($req, $adminAllowedPrefixes, true))) {
             $_SESSION['active_prefix'] = $req;
             return $req;
         }
-        if (!empty($_SESSION['active_prefix']) && in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true)) {
+        if (!empty($_SESSION['active_prefix']) && ($_SESSION['active_prefix'] === 'all' || in_array($_SESSION['active_prefix'], $adminAllowedPrefixes, true))) {
             return $_SESSION['active_prefix'];
         }
         // Fallback default for Super Admin if active_prefix is not set yet
@@ -93,9 +98,28 @@ function isSuperAdmin()
     return (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
 }
 
+/**
+ * Returns the user-facing display label for a role.
+ * Maps 'admin' -> 'SPOKE ADMIN' (or 'Spoke Admin')
+ * Maps 'super_admin' -> 'HUB ADMIN' (or 'Hub Admin')
+ */
+function getRoleDisplayName($role, $uppercase = true)
+{
+    if ($role === 'super_admin') {
+        return $uppercase ? 'HUB ADMIN' : 'Hub Admin';
+    }
+    if ($role === 'admin') {
+        return $uppercase ? 'SPOKE ADMIN' : 'Spoke Admin';
+    }
+    return $uppercase ? strtoupper(str_replace('_', ' ', (string)$role)) : ucwords(str_replace('_', ' ', (string)$role));
+}
+
 function canEditInstitute($prefix)
 {
-    return isSuperAdmin() || (!empty($_SESSION['institute_prefix']) && $_SESSION['institute_prefix'] === $prefix);
+    if (isSuperAdmin()) {
+        return true;
+    }
+    return (!empty($_SESSION['institute_prefix']) && $_SESSION['institute_prefix'] === $prefix);
 }
 
 function getInstituteLabel($prefix)

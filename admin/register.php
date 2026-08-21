@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="text-center mb-4">
                         <img src="logo/logo.png" class="logo-auth" alt="">
                         <h3>SPOKEN INSTITUTE</h3>
-                        <h4>Register Admin Account</h4>
+                        <h4>Register Spoke Admin Account</h4>
                     </div>
                     <?php if ($error !== ''): ?>
                         <div class="alert-error"><?= htmlspecialchars($error) ?></div>

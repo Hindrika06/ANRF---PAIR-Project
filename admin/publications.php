@@ -8,7 +8,7 @@ if (!isValidPrefix($prefix)) {
     die('Invalid institute configuration. Please contact admin.');
 }
 
-$table = "{$prefix}_publications";
+$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
@@ -18,8 +18,13 @@ $error   = '';
 
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
-    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
+    if (isSuperAdmin()) {
+        $deletePrefix = $_GET['record_prefix'] ?? ($prefix !== 'all' ? $prefix : '');
+    } else {
+        $deletePrefix = $_SESSION['institute_prefix'] ?? '';
+    }
+
+    if (!in_array($deletePrefix, $allowedPrefixes, true) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
         try {
@@ -51,10 +56,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $edit_id              = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
     $is_super             = isSuperAdmin();
 
+    if ($is_super) {
+        $targetPrefix = trim($_POST['target_prefix'] ?? ($prefix !== 'all' ? $prefix : 'uoh'));
+        if (!in_array($targetPrefix, $allowedPrefixes, true)) {
+            $targetPrefix = 'uoh';
+        }
+    } else {
+        $targetPrefix = $_SESSION['institute_prefix'] ?? '';
+        if (!in_array($targetPrefix, $allowedPrefixes, true)) {
+            die('Invalid institute configuration.');
+        }
+    }
+
+    $table = "{$targetPrefix}_publications";
+
     if ($task_no === '' || $publication_title === '' || $author_name === '' || $publication_journal === '' || $publication_date === '') {
         $error = 'Please fill in all required fields marked with *.';
     } else {
-        if (!canEditInstitute($prefix)) {
+        if (!canEditInstitute($targetPrefix)) {
             $error = 'You are not allowed to update records for this institute.';
         } else {
         try {
@@ -87,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute($payload);
 
                 if (!$is_super) {
-                    submitKpiApprovalRequest($pdo, 'Publications', $table, $prefix, $edit_id, 'UPDATE', $payload);
+                    submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $edit_id, 'UPDATE', $payload);
                     adminRedirect(['success_msg' => 'submitted']);
                 } else {
                     adminRedirect(['success_msg' => 'updated']);
@@ -105,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_id = $pdo->lastInsertId();
 
                 if (!$is_super) {
-                    submitKpiApprovalRequest($pdo, 'Publications', $table, $prefix, $new_id, 'CREATE', $payload);
+                    submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $new_id, 'CREATE', $payload);
                     adminRedirect(['success_msg' => 'submitted']);
                 } else {
                     adminRedirect(['success_msg' => 'inserted']);
@@ -593,12 +612,19 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <?php if (canEditInstitute($prefix)): ?>
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($pub), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                    <?php if (canEditInstitute($pub['institute_prefix'] ?? $prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#publicationModal"
                                                             data-id="<?= $pub['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($pub['institute_prefix'] ?? $prefix) ?>"
                                                             data-task-no="<?= htmlspecialchars($pub['task_no'] ?? '') ?>"
                                                             data-title="<?= htmlspecialchars($pub['publication_title']) ?>"
                                                             data-author="<?= htmlspecialchars($pub['author_name']) ?>"
@@ -615,23 +641,6 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                                             data-record-prefix="<?= htmlspecialchars($pub['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#publicationModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $pub['id'] ?>"
-                                                            data-task-no="<?= htmlspecialchars($pub['task_no'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($pub['publication_title']) ?>"
-                                                            data-author="<?= htmlspecialchars($pub['author_name']) ?>"
-                                                            data-doi="<?= htmlspecialchars($pub['doi_number'] ?? '') ?>"
-                                                            data-date="<?= $pub['publication_date'] ?? '' ?>"
-                                                            data-journal="<?= htmlspecialchars($pub['publication_journal']) ?>"
-                                                            data-impact="<?= htmlspecialchars($pub['impact_factor'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -672,6 +681,24 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                 <form method="POST" id="modalForm">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
+                        <input type="hidden" name="target_prefix" id="modal_target_prefix" value="<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>">
+
+                        <?php if (isSuperAdmin()): ?>
+                        <div class="row mb-3" id="target_prefix_wrapper">
+                            <div class="col-md-12">
+                                <label class="form-label form-label-grey">
+                                    Target University / Institute <span class="text-danger">*</span>
+                                </label>
+                                <select id="modal_target_prefix_select" class="form-select" required>
+                                    <?php foreach ($allowedPrefixes as $ap): ?>
+                                        <option value="<?= $ap ?>" <?= ($prefix === $ap || ($prefix === 'all' && $ap === 'uoh')) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars(getInstituteFullName($ap)) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
                         <!-- Task No / Publication Title -->
                         <div class="row">
@@ -769,11 +796,11 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by
-                <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026
-            </p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -787,6 +814,35 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Publication Details',
+                recordTitle: rec.publication_title || 'Untitled Publication',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                fields: [
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Publication Title', value: rec.publication_title, fullWidth: true, icon: 'fa-solid fa-book' },
+                    { label: 'Primary Author', value: rec.author_name, icon: 'fa-solid fa-user-pen' },
+                    { label: 'Journal Name', value: rec.publication_journal, icon: 'fa-solid fa-newspaper' },
+                    { label: 'DOI Number', value: rec.doi_number, type: 'doi', icon: 'fa-solid fa-fingerprint' },
+                    { label: 'Publication Date', value: rec.publication_date ? formatDate(rec.publication_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'Impact Factor', value: (rec.impact_factor !== null && rec.impact_factor !== undefined && rec.impact_factor !== '') ? parseFloat(rec.impact_factor).toFixed(2) : null, icon: 'fa-solid fa-chart-line' },
+                    { label: 'Created At', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+                ]
+            });
+        });
+    });
 
     const addNewBtn      = document.getElementById('addNewBtn');
     const editButtons    = document.querySelectorAll('.edit-btn');
@@ -813,6 +869,19 @@ document.addEventListener("DOMContentLoaded", function () {
             modalForm.reset();
             pubDatePicker.clear();
             document.getElementById('modal_edit_id').value = '';
+            const targetSelect = document.getElementById('modal_target_prefix_select');
+            if (targetSelect) {
+                targetSelect.disabled = false;
+                const currentPrefix = "<?= htmlspecialchars($prefix) ?>";
+                if (currentPrefix !== 'all') {
+                    targetSelect.value = currentPrefix;
+                } else {
+                    targetSelect.value = 'uoh';
+                }
+                document.getElementById('modal_target_prefix').value = targetSelect.value;
+            } else {
+                document.getElementById('modal_target_prefix').value = "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            }
             modalTitle.innerText     = 'Publication Registration Form';
             modalSubmitBtn.innerText = 'Save Publication';
             modalSubmitBtn.style.display = "block";
@@ -823,10 +892,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    const targetSelectElem = document.getElementById('modal_target_prefix_select');
+    if (targetSelectElem) {
+        targetSelectElem.addEventListener('change', function() {
+            document.getElementById('modal_target_prefix').value = this.value;
+        });
+    }
+
     // ── EDIT
     editButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
             const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            const recordPrefix = this.dataset.recordPrefix || this.dataset.prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+
+            document.getElementById('modal_edit_id').value       = this.dataset.id;
+            document.getElementById('modal_target_prefix').value = recordPrefix;
+            const targetSelect = document.getElementById('modal_target_prefix_select');
+            if (targetSelect) {
+                targetSelect.value = recordPrefix;
+                targetSelect.disabled = true;
+            }
+
             if (isViewOnly) {
                 modalTitle.innerText     = 'View Publication Info';
                 modalSubmitBtn.style.display = "none";
@@ -839,12 +925,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 modalSubmitBtn.innerText = 'Save Changes';
                 modalSubmitBtn.style.display = "block";
                 modalForm.querySelectorAll('input, select, textarea').forEach(el => {
-                    el.disabled = false;
-                    el.readOnly = false;
+                    if (el !== targetSelect) {
+                        el.disabled = false;
+                        el.readOnly = false;
+                    }
                 });
             }
 
-            document.getElementById('modal_edit_id').value             = this.dataset.id;
             document.getElementById('modal_task_no').value             = this.dataset.taskNo;
             document.getElementById('modal_publication_title').value   = this.dataset.title;
             document.getElementById('modal_author_name').value         = this.dataset.author;
