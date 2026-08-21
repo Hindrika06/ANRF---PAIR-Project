@@ -5,6 +5,8 @@
  *
  * Usage: <?php include 'footer.php'; ?>
  */
+require_once __DIR__ . '/visitor_tracker.php';
+$uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
 ?>
 
 <!-- ===== FOOTER ===================================================== -->
@@ -79,7 +81,14 @@
                         <p>The ANRF–PAIR (Partnerships for Accelerated Innovation and Research) program is a
                            national-level initiative supporting multi-institutional collaborations in health
                            and medical technology research.</p>
-                        <div>
+
+                        <div class="footer-about-visitor" aria-label="Website visitor count" title="Total Visitors">
+                            <span class="visitor-icon"><i class="fa fa-users" aria-hidden="true"></i></span>
+                            <span class="visitor-number"><?php echo number_format($uniqueVisitorsCount); ?></span>
+                            <span class="visitor-label">Visitors</span>
+                        </div>
+
+                        <div class="footer-about-readmore">
                             <a href="about-us.php" class="read-more">Read More</a>
                         </div>
                     </aside>
@@ -93,15 +102,22 @@
         </div>
     </section><!-- /#footer-content -->
 
-    <!-- Bottom bar: copyright -->
-    <section id="footer-bottom">
-        <div class="container">
-            <div class="footer-inner">
-                <div class="copyright">
-                    &copy; <?php echo date('Y'); ?> ANRF–PAIR Project, University of Hyderabad. All rights reserved.
-                </div><!-- /.copyright -->
-            </div><!-- /.footer-inner -->
-        </div><!-- /.container -->
+    <!-- Bottom bar: copyright + developer credit -->
+    <section id="footer-bottom" style="position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; width: 100vw; max-width: 100vw; background-color: #012447; padding: 18px 0; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; box-sizing: border-box; clear: both; overflow: hidden;">
+        <div class="footer-bottom-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; padding: 0 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; box-sizing: border-box;">
+            <!-- Line 1: Copyright Info -->
+            <div class="footer-copyright" style="width: 100%; text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.5; display: block;">
+                &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. <span class="nowrap">All rights reserved.</span>
+            </div>
+
+            <!-- Line 2: Developer Credit -->
+            <div class="footer-dev" style="width: 100%; text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.5; display: block;">
+                <span>Developed by</span>
+                <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link" title="Visits Bhimavaram Digitals website (opens in a new tab)" style="color: #38bdf8; font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 3px; display: inline-block;">
+                    Bhimavaram Digitals <i class="fa fa-external-link" aria-hidden="true" style="font-size: 10px; margin-left: 2px; vertical-align: baseline;"></i>
+                </a>
+            </div>
+        </div><!-- /.footer-bottom-wrapper -->
     </section><!-- /#footer-bottom -->
 
 </footer>

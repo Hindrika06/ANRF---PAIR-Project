@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare('INSERT INTO users (username, password, institute_prefix, role, created_at) VALUES (?, ?, ?, ?, NOW())');
             $stmt->execute([$username, $hashedPassword, $institute_prefix, 'admin']);
-            $message = 'Admin account created successfully.';
+            $message = 'Spoke Admin account created successfully.';
         }
     }
 }
@@ -38,7 +38,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Manage Admin Accounts</title>
+    <title>Manage Spoke Admin Accounts</title>
     <link href="vendor/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
@@ -50,7 +50,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="content-body" style="margin-left: 260px; padding: 24px;">
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header"><h4 class="card-title">Manage Admin Accounts</h4></div>
+            <div class="card-header"><h4 class="card-title">Manage Spoke Admin Accounts</h4></div>
             <div class="card-body">
                 <?php if ($message !== ''): ?><div class="alert alert-info"><?= htmlspecialchars($message) ?></div><?php endif; ?>
                 <form method="post" class="row g-3">
@@ -71,7 +71,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </select>
                     </div>
                     <div class="col-12">
-                        <button class="btn btn-primary" type="submit">Create Admin</button>
+                        <button class="btn btn-primary" type="submit">Create Spoke Admin</button>
                     </div>
                 </form>
                 <hr>

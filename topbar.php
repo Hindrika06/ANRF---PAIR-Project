@@ -290,7 +290,7 @@
                     </a>
                     <ul class="topbar-dropdown-menu">
                         <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Hub Admin</a></li>
-                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Admin</a></li>
+                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Spoke Admin</a></li>
                     </ul>
                 </li>
             </ul>

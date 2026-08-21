@@ -9,7 +9,7 @@ $__activeInstContext = getActiveInstituteContext();
 <html lang="en">
 <head>
 	<!-- DYNAMIC PAGE TITLE & FAVICON BASED ON ACTIVE INSTITUTE -->
-	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name'] . ' | ANRF-PAIR Admin Portal') ?></title>
+	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name'] . ' | ANRF-PAIR ' . (isSuperAdmin() ? 'Hub Admin Portal' : 'Spoke Admin Portal')) ?></title>
 
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -46,7 +46,8 @@ $__activeInstContext = getActiveInstituteContext();
 		if (!data) return;
 
 		// 1. Immediately update document title
-		var fullTitle = data.name + ' | ANRF-PAIR Admin Portal';
+		var portalName = <?= isSuperAdmin() ? "'Hub Admin Portal'" : "'Spoke Admin Portal'" ?>;
+		var fullTitle = data.name + ' | ANRF-PAIR ' + portalName;
 		document.title = fullTitle;
 		var titleElem = document.getElementById('dynamic-title');
 		if (titleElem) titleElem.textContent = fullTitle;
@@ -1150,8 +1151,8 @@ $__activeInstContext = getActiveInstituteContext();
 								
 								// Dynamic display that strictly falls back to requested defaults for Super Admin
 								$headerEmail = $_SESSION['username'] ?? 'admin@uoh.ac.in';
-								$headerRole = $headerIsSuper ? 'Super Admin' : 'Admin';
-								$headerBadge = $headerIsSuper ? 'ANRF Super Admin' : 'ANRF Admin - ' . getInstituteLabel($headerBrandPrefix);
+								$headerRole = $headerIsSuper ? 'Hub Admin' : 'Spoke Admin';
+								$headerBadge = $headerIsSuper ? 'ANRF Hub Admin' : 'ANRF Spoke Admin - ' . getInstituteLabel($headerBrandPrefix);
 								?>
 								<button class="nav-link p-0 profile-trigger-btn" id="profileDropdownTrigger" aria-haspopup="true" aria-expanded="false">
 									<img src="<?= htmlspecialchars($headerProfileLogo) ?>" alt="ANRF-PAIR" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; border: 2px solid #e2e8f0; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s ease, border-color 0.2s ease;" class="profile-avatar-img">

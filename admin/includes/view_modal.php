@@ -290,15 +290,23 @@ function openKpiRecordViewModal(options) {
                 </a>
             </div>`;
         } else if (field.type === 'file') {
+            let fileUrl = field.value.trim();
+            if (!/^https?:\/\//i.test(fileUrl) && !fileUrl.startsWith('/') && !fileUrl.startsWith('../')) {
+                fileUrl = '../' + fileUrl;
+            }
             valueHtml = `<div class="kpi-view-value">
-                <a href="${escapeHtml(field.value)}" target="_blank" rel="noopener noreferrer" class="kpi-view-link-btn">
+                <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="kpi-view-link-btn">
                     <i class="fa-solid fa-file-pdf text-danger"></i> View Document / Attachment
                 </a>
             </div>`;
         } else if (field.type === 'image') {
+            let imgUrl = field.value.trim();
+            if (!/^https?:\/\//i.test(imgUrl) && !imgUrl.startsWith('/') && !imgUrl.startsWith('../')) {
+                imgUrl = '../' + imgUrl;
+            }
             valueHtml = `<div class="kpi-view-value">
-                <a href="${escapeHtml(field.value)}" target="_blank" rel="noopener noreferrer">
-                    <img src="${escapeHtml(field.value)}" alt="${escapeHtml(field.label)}" class="kpi-view-img-preview" />
+                <a href="${escapeHtml(imgUrl)}" target="_blank" rel="noopener noreferrer">
+                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(field.label)}" class="kpi-view-img-preview" />
                 </a>
             </div>`;
         } else if (field.type === 'longtext') {

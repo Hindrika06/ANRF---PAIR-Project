@@ -49,18 +49,6 @@ if (!isValidPrefix($prefix)) {
         </div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        <div class="copyright">
-            <p>
-                Copyright &copy; Designed &amp; Developed by
-                <a href="https://bhimavaramdigitals.com/" target="_blank">
-                    Bhimavaram Digitals
-                </a>
-                2026
-            </p>
-        </div>
-    </div>
 </div>
 
 <script src="vendor/global/global.min.js"></script>

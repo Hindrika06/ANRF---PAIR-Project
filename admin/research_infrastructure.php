@@ -355,7 +355,7 @@ try {
                         <i class="fa fa-plus me-1"></i> Add Research Area
                     </button>
                     <?php else: ?>
-                    <span class="text-muted" style="font-size: 13px;"><i class="fa fa-lock"></i> Super Admin Only</span>
+                    <span class="text-muted" style="font-size: 13px;"><i class="fa fa-lock"></i> Hub Admin Only</span>
                     <?php endif; ?>
                 </div>
                 <div class="card-body">

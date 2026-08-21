@@ -360,7 +360,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                         <span style="font-size: 18px; line-height: 1;">🔴</span>
                         <div>
                             <strong style="color: #991b1b; font-size: 14px;">Pending Approvals (<?= $pendingApprovalsCount ?>)</strong>
-                            <p style="color: #7f1d1d; font-size: 12.5px; margin: 2px 0 0 0;">There are pending admin modification requests that require your review.</p>
+                            <p style="color: #7f1d1d; font-size: 12.5px; margin: 2px 0 0 0;">There are pending Spoke Admin modification requests that require your review.</p>
                         </div>
                     </div>
                     <a href="approvals.php" class="btn btn-sm btn-danger" style="background-color: #ef4444; border-color: #ef4444; color: #fff; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 13px;">Review Requests</a>

@@ -364,7 +364,7 @@ include 'loader.php';
 
             <div class="page-titles">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Super Admin Control</a></li>
+                    <li class="breadcrumb-item"><a href="#">Hub Admin Control</a></li>
                     <li class="breadcrumb-item active">Team Management</li>
                 </ol>
             </div>
@@ -693,7 +693,7 @@ include 'loader.php';
 
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>

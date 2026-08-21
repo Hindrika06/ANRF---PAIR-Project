@@ -10426,6 +10426,19 @@ label {
       margin: 0; }
     .footer .copyright a {
       color: var(--primary); }
+    .footer .copyright a.footer-dev-link,
+    .copyright a.footer-dev-link {
+      color: #0066cc;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.2s ease-in-out, text-decoration 0.2s ease-in-out;
+      cursor: pointer; }
+    .footer .copyright a.footer-dev-link:hover,
+    .footer .copyright a.footer-dev-link:focus,
+    .copyright a.footer-dev-link:hover,
+    .copyright a.footer-dev-link:focus {
+      color: #004499;
+      text-decoration: underline; }
 
 .nav-header {
   height: var(--dz-header-height);

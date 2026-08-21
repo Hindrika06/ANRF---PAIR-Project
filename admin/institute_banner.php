@@ -19,7 +19,7 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
 
     <!-- Text + Dropdown -->
     <div class="institute-banner-text" style="flex: 1; display: flex; flex-direction: column;">
-        <span class="institute-banner-label">🛡️ Super Admin — Switch Institute</span>
+        <span class="institute-banner-label">🛡️ Hub Admin — Switch Institute</span>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 5px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 250px;">
                 <?php $__tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? ''; ?>

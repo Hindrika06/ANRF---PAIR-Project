@@ -34,15 +34,23 @@ CREATE TABLE IF NOT EXISTS `team` (
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 3. Homepage Banners (Carousel) Table
+-- 3. Homepage Banners (Carousel / Event Posters) Table
 CREATE TABLE IF NOT EXISTS `homepage_banners` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL DEFAULT '',
+  `short_description` TEXT DEFAULT NULL,
+  `target_url` VARCHAR(1000) DEFAULT '',
+  `start_datetime` DATETIME DEFAULT NULL,
+  `end_datetime` DATETIME DEFAULT NULL,
+  `institute_prefix` VARCHAR(50) NOT NULL DEFAULT 'all',
   `image_path` VARCHAR(255) NOT NULL,
   `caption` VARCHAR(500) DEFAULT '',
   `display_order` INT NOT NULL DEFAULT 10,
   `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY `idx_status_dates` (`status`, `start_datetime`, `end_datetime`),
+  KEY `idx_display_order` (`display_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 4. Announcements ("What's New" news ticker) Table

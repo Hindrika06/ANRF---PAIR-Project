@@ -98,6 +98,22 @@ function isSuperAdmin()
     return (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
 }
 
+/**
+ * Returns the user-facing display label for a role.
+ * Maps 'admin' -> 'SPOKE ADMIN' (or 'Spoke Admin')
+ * Maps 'super_admin' -> 'HUB ADMIN' (or 'Hub Admin')
+ */
+function getRoleDisplayName($role, $uppercase = true)
+{
+    if ($role === 'super_admin') {
+        return $uppercase ? 'HUB ADMIN' : 'Hub Admin';
+    }
+    if ($role === 'admin') {
+        return $uppercase ? 'SPOKE ADMIN' : 'Spoke Admin';
+    }
+    return $uppercase ? strtoupper(str_replace('_', ' ', (string)$role)) : ucwords(str_replace('_', ' ', (string)$role));
+}
+
 function canEditInstitute($prefix)
 {
     if (isSuperAdmin()) {
