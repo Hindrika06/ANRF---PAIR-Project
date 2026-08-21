@@ -73,12 +73,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `research_areas` WHERE id = ?");
                 $stmt->execute([$id]);
-                $redirectParams = $_GET;
-                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type']);
-                $redirectParams['tab'] = 'research';
-                $redirectParams['success_msg'] = 'deleted';
-                header("Location: research_infrastructure.php?" . http_build_query($redirectParams));
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete research area: ' . $e->getMessage();
             }
@@ -99,12 +94,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `infrastructure_facilities` WHERE id = ?");
                 $stmt->execute([$id]);
-                $redirectParams = $_GET;
-                unset($redirectParams['action'], $redirectParams['id'], $redirectParams['type'], $redirectParams['record_prefix']);
-                $redirectParams['tab'] = 'infrastructure';
-                $redirectParams['success_msg'] = 'deleted';
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-                exit;
+                adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete facility: ' . $e->getMessage();
             }
@@ -173,8 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("INSERT INTO `research_areas` (title, description, image_path, display_order, status) VALUES (:title, :description, :image_path, :display_order, :status)");
                     $stmt->execute([':title' => $title, ':description' => $description, ':image_path' => $imagePath, ':display_order' => $display_order, ':status' => $status]);
                 }
-                header("Location: research_infrastructure.php?tab=research&success_msg=saved");
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'saved']);
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }
@@ -233,11 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $edit_id, 'UPDATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `infrastructure_facilities` (name, description, equipment_details, image_path, institute_prefix, display_order, status, approval_status) VALUES (:name, :description, :equipment_details, :image_path, :institute_prefix, :display_order, :status, :approval_status)");
                     $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':institute_prefix' => $prefix, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus];
@@ -246,11 +234,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $new_id, 'CREATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 }
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();

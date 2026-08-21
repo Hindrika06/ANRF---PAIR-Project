@@ -34,11 +34,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     try {
         $stmt = $pdo->prepare("DELETE FROM `announcements` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['id']);
-        $redirectParams['success_msg'] = 'deleted';
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete ticker: ' . $e->getMessage();
     }
@@ -69,8 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':is_active' => $is_active,
                     ':id'        => $edit_id
                 ]);
-                header("Location: announcements_management.php?success_msg=updated");
-                exit;
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 // Insert
                 $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active) VALUES (:title, :link, :is_active)");
@@ -79,8 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':link'      => $link,
                     ':is_active' => $is_active
                 ]);
-                header("Location: announcements_management.php?success_msg=inserted");
-                exit;
+                adminRedirect(['success_msg' => 'inserted']);
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();

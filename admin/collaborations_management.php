@@ -57,11 +57,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `collaborations` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete collaboration: ' . $e->getMessage();
         }
@@ -188,11 +184,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $edit_id, 'UPDATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // Insert
                 if (!$logoPath) {
@@ -216,11 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $new_id, 'CREATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = "Database Error: " . $e->getMessage();

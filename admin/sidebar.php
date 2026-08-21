@@ -9,19 +9,8 @@ $__brandLogo = getInstituteLogo($__brandPrefix);
 $currentPage = basename($_SERVER['PHP_SELF']);
 
 // Helper to preserve active institute prefix and tab_token for navigation links
-$navUrl = function($targetPage) use ($__isSuper, $__activePrefix) {
-    $url = $targetPage;
-    if ($__isSuper && !empty($__activePrefix)) {
-        $sep = (strpos($url, '?') !== false) ? '&' : '?';
-        $url .= $sep . 'prefix=' . urlencode($__activePrefix);
-    }
-    $tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? null;
-    if (!empty($tabToken)) {
-        $sep = (strpos($url, '?') !== false) ? '&' : '?';
-        $url .= $sep . 'tab_token=' . urlencode($tabToken);
-    }
-    return $url;
-};
+$navUrl = 'buildNavUrl';
+
 
 $__pendingCount = 0;
 try {

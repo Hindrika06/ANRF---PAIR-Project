@@ -67,11 +67,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $deleteTable = "{$deletePrefix}_gallery_events";
             $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            $redirectParams = $_GET;
-            unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-            $redirectParams['success_msg'] = 'deleted';
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -117,8 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':description'       => $description,
                     ':id'                => $edit_id,
                 ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
-                exit;
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 $stmt = $pdo->prepare("
                     INSERT INTO `$table`
@@ -134,8 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':category'          => $category,
                     ':description'       => $description,
                 ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
-                exit;
+                adminRedirect(['success_msg' => 'inserted']);
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();

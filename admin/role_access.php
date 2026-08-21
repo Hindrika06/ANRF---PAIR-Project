@@ -134,3 +134,61 @@ function getActiveInstituteContext()
     ];
 }
 
+/**
+ * Helper to build navigation URLs preserving active institute prefix and tab_token.
+ */
+function buildNavUrl($targetPage)
+{
+    $url = $targetPage;
+    if (isSuperAdmin()) {
+        $activePrefix = resolveAdminPrefix();
+        if (!empty($activePrefix) && strpos($url, 'prefix=') === false) {
+            $sep = (strpos($url, '?') !== false) ? '&' : '?';
+            $url .= $sep . 'prefix=' . urlencode($activePrefix);
+        }
+    }
+    $tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? null;
+    if (!empty($tabToken) && strpos($url, 'tab_token=') === false) {
+        $sep = (strpos($url, '?') !== false) ? '&' : '?';
+        $url .= $sep . 'tab_token=' . urlencode($tabToken);
+    }
+    return $url;
+}
+
+/**
+ * Helper for safe admin header redirects preserving active prefix, tab_token, and additional query parameters.
+ */
+function adminRedirect($extraParams = [], $targetPage = null)
+{
+    $page = $targetPage ? strtok($targetPage, '?') : strtok($_SERVER["REQUEST_URI"], '?');
+
+    $params = $targetPage ? [] : $_GET;
+
+    unset($params['action'], $params['id'], $params['record_prefix']);
+
+    if (isSuperAdmin()) {
+        $activePrefix = resolveAdminPrefix();
+        if (!empty($activePrefix)) {
+            $params['prefix'] = $activePrefix;
+        }
+    }
+
+    $tabToken = $_SESSION['tab_token'] ?? $_REQUEST['tab_token'] ?? null;
+    if (!empty($tabToken)) {
+        $params['tab_token'] = $tabToken;
+    }
+
+    foreach ($extraParams as $k => $v) {
+        if ($v === null) {
+            unset($params[$k]);
+        } else {
+            $params[$k] = $v;
+        }
+    }
+
+    $query = http_build_query($params);
+    $redirectUrl = $page . ($query ? '?' . $query : '');
+    header("Location: " . $redirectUrl);
+    exit();
+}
+

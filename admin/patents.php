@@ -44,11 +44,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
         $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        $redirectParams = $_GET;
-        unset($redirectParams['action'], $redirectParams['id'], $redirectParams['record_prefix']);
-        $redirectParams['success_msg'] = 'deleted';
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . '?' . http_build_query($redirectParams));
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
     }
@@ -154,11 +150,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $edit_id, 'UPDATE', $params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                adminRedirect(['success_msg' => 'updated']);
             }
-            exit;
         } else {
             // INSERT NEW PATENT RECORD
             $final_id = !empty($req_patent_id) ? $req_patent_id : $patentId;
@@ -199,11 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $new_id, 'CREATE', $params);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                adminRedirect(['success_msg' => 'inserted']);
             }
-            exit;
         }
     } catch (RuntimeException $e) {
         $error = "System Upload Notice: " . $e->getMessage();
