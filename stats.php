@@ -16,7 +16,6 @@ $uohyd_stats = [
     'conferences'       => 0,
     'webinars'          => 0,
     'internships'       => 0,
-    'progress_reports'  => 0,
 ];
 
 if (isset($pdo) && $pdo instanceof PDO) {
@@ -27,7 +26,6 @@ if (isset($pdo) && $pdo instanceof PDO) {
         'conferences'      => 'conferences',
         'webinars'         => 'webinars',
         'internships'      => 'internships',
-        'progress_reports' => 'progress_reports',
     ];
 
     foreach ($modules as $key => $suffix) {
@@ -97,13 +95,6 @@ $uohyd_cards = [
         'color' => '#F0932B',
         'url'   => 'internships.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="8" width="18" height="12" rx="1.5" stroke="white" stroke-width="1.6"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="M3 13h18" stroke="white" stroke-width="1.6"/></svg>',
-    ],
-    [
-        'label' => 'Progress Reports',
-        'key'   => 'progress_reports',
-        'color' => '#7E57C2',
-        'url'   => 'progress_reports.php',
-        'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19V5a1 1 0 0 1 1-1h9l6 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 4v5a1 1 0 0 0 1 1h5" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 13h8M8 16h5" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>',
     ],
 ];
 ?>

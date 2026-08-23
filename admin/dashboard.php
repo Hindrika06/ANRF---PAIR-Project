@@ -512,28 +512,6 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                     </div>
                 </a>
 
-                <!-- 6. Progress Reports (#FF8FAB) -->
-                <a href="<?= $navUrl('progress_reports.php') ?>" class="kpi-card kpi-reports">
-                    <div class="kpi-card-header">
-                        <div class="kpi-icon-container">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF8FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                                <polyline points="17 6 23 6 23 12"/>
-                            </svg>
-                        </div>
-                        <span class="kpi-link">
-                            View Details
-                            <svg class="kpi-link-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
-                        </span>
-                    </div>
-                    <div class="kpi-body">
-                        <div class="kpi-number"><?= $countReports ?></div>
-                        <div class="kpi-title">Progress Reports</div>
-                    </div>
-                </a>
 
                 <!-- 7. Gallery & Albums (#F0932B) -->
                 <a href="<?= $navUrl('gallery.php') ?>" class="kpi-card kpi-gallery">
