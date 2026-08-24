@@ -1,3 +1,9 @@
+<?php
+if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
+    header("Location: dashboard.php");
+    exit();
+}
+?>
 <!-- ==========================================
      LOADING ANIMATION SNIPPETS FOR EACH PAGE
      =========================================== -->

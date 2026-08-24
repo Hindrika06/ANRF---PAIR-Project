@@ -32,8 +32,9 @@ try {
         foreach ($banners as $b) {
             $activeSlides[] = [
                 'src' => $b['image_path'],
-                'alt' => htmlspecialchars(!empty($b['title']) ? $b['title'] : ($b['caption'] ?: 'ANRF PAIR Event Poster')),
-                'caption' => $b['caption'] ?: $b['title']
+                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
+                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
+                'is_poster' => true
             ];
         }
         // Combine default group photo slide + scheduled active posters
@@ -53,14 +54,26 @@ try {
     <div class="main-slider">
         <?php foreach ($sliderImages as $idx => $slide): ?>
             <div class="slide <?= $idx === 0 ? 'active' : '' ?>">
-                <img src="<?= htmlspecialchars($slide['src']) ?>"
-                     alt="<?= htmlspecialchars($slide['alt']) ?>"
-                     <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
-                     decoding="async"
-                     style="object-fit: contain; background: #090f1d;">
+                <?php if (!empty($slide['is_poster'])): ?>
+                    <div class="poster-slide-wrapper" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+                        <div class="poster-slide-bg" style="position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; background-image: url('<?= htmlspecialchars($slide['src']) ?>'); background-size: cover; background-position: center; filter: blur(22px) brightness(0.4); transform: scale(1.1);"></div>
+                        <img src="<?= htmlspecialchars($slide['src']) ?>"
+                             alt="<?= htmlspecialchars($slide['alt']) ?>"
+                             <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
+                             decoding="async"
+                             style="position: relative; z-index: 2; max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; display: block; margin: 0 auto;">
+                    </div>
+                <?php else: ?>
+                    <img src="<?= htmlspecialchars($slide['src']) ?>"
+                         alt="<?= htmlspecialchars($slide['alt']) ?>"
+                         <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
+                         decoding="async"
+                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                <?php endif; ?>
+
                 <?php if (!empty($slide['caption'])): ?>
                     <div class="slide-overlay">
-                        <h5 style="text-transform:none; font-size:2.5rem; margin-top:-50px;"><?= htmlspecialchars($slide['caption']) ?></h5>
+                        <h2><?= htmlspecialchars($slide['caption']) ?></h2>
                     </div>
                 <?php endif; ?>
             </div>

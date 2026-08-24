@@ -67,39 +67,72 @@ if (isset($_SESSION['LAST_ACTIVITY'])) {
 $_SESSION['LAST_ACTIVITY'] = time();
 
 // Start output buffering to inject client-side inactivity timer script before </body>
-ob_start(function($buffer) use ($timeout_duration) {
-    $js_timeout = $timeout_duration * 1000; // in milliseconds
-    
-    $js_script = <<<JS
+if (PHP_SAPI !== 'cli') {
+    ob_start(function($buffer) use ($timeout_duration) {
+        $js_timeout = $timeout_duration * 1000; // in milliseconds
+
+        $js_script = <<<JS
 <script>
 (function() {
     var timeoutDuration = {$js_timeout};
     var idleTimer;
-    
+
     function resetIdleTimer() {
         clearTimeout(idleTimer);
         idleTimer = setTimeout(logoutUser, timeoutDuration);
     }
-    
+
     function logoutUser() {
         window.location.href = 'logout.php?timeout=1';
     }
-    
+
     // User activity events to listen to
     var events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
     events.forEach(function(eventName) {
         document.addEventListener(eventName, resetIdleTimer, true);
     });
-    
+
     // Start initial timer
     resetIdleTimer();
 })();
 </script>
 JS;
 
-    // Inject before </body> if present
-    if (stripos($buffer, '</body>') !== false) {
-        return str_replace('</body>', $js_script . '</body>', $buffer);
+        // Inject before </body> if present
+        if (stripos($buffer, '</body>') !== false) {
+            return str_replace('</body>', $js_script . '</body>', $buffer);
+        }
+        return $buffer;
+    });
+}
+
+// CSRF PROTECTION MIDDLEWARE HELPERS
+if (!function_exists('getCsrfToken')) {
+    function getCsrfToken() {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
     }
-    return $buffer;
-});
+}
+
+if (!function_exists('getCsrfInputField')) {
+    function getCsrfInputField() {
+        $token = getCsrfToken();
+        return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
+    }
+}
+
+if (!function_exists('verifyCsrfToken')) {
+    function verifyCsrfToken() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+            if (!$token || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+                if (PHP_SAPI !== 'cli') {
+                    http_response_code(403);
+                    die('CSRF Verification Failed: Invalid or missing security token.');
+                }
+            }
+        }
+    }
+}

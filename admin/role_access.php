@@ -1,4 +1,8 @@
 <?php
+if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
+    header("Location: dashboard.php");
+    exit();
+}
 $adminAllowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 $adminPrefixLabels = [
     'all' => 'All Institutes',

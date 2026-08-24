@@ -1,4 +1,8 @@
 <?php
+if (basename($_SERVER['PHP_SELF']) === basename(__FILE__)) {
+    header("Location: dashboard.php");
+    exit();
+}
 /**
  * admin/footer.php — ANRF–PAIR Admin Portal
  * Minimal footer include for admin pages.
