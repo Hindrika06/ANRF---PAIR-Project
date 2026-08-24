@@ -34,22 +34,6 @@ try {
             KEY `idx_webinar_date` (`webinar_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     ");
-
-    // Defensive Alterations to existing tables
-    $existingColumns = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
-    $columnsToAdd = [
-        'taskno' => "VARCHAR(50) DEFAULT NULL AFTER `id`",
-        'speaker_name' => "VARCHAR(255) NULL AFTER `title`",
-        'affiliation' => "VARCHAR(255) DEFAULT NULL AFTER `speaker_name`",
-        'link' => "VARCHAR(1000) DEFAULT NULL AFTER `webinar_date`",
-        'description' => "TEXT DEFAULT NULL AFTER `link`",
-        'publish_status' => "TINYINT(1) NOT NULL DEFAULT 1 AFTER `description`"
-    ];
-    foreach ($columnsToAdd as $col => $definition) {
-        if (!in_array($col, $existingColumns)) {
-            $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` $definition");
-        }
-    }
 } catch (PDOException $e) {
     // Ignore error
 }
@@ -77,68 +61,93 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $taskno         = trim($_POST['taskno']         ?? '');
-    $title          = trim($_POST['title']          ?? '');
-    $speaker_name   = trim($_POST['speaker_name']   ?? '');
-    $affiliation    = trim($_POST['affiliation']    ?? '');
-    $webinar_date   = $_POST['webinar_date']        ?? '';
-    $link           = trim($_POST['link']           ?? '');
-    $description    = trim($_POST['description']    ?? '');
-    $publish_status = isset($_POST['publish_status']) ? 1 : 0;
-    $edit_id        = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $taskno           = trim($_POST['taskno']           ?? '');
+    $title            = trim($_POST['title']            ?? '');
+    $speaker_name     = trim($_POST['speaker_name']     ?? '');
+    $affiliation      = trim($_POST['affiliation']      ?? '');
+    $webinar_date     = $_POST['webinar_date']          ?? '';
+    $link             = trim($_POST['link']             ?? '');
+    $whatsapp_link    = trim($_POST['whatsapp_link']    ?? '');
+    $keynote_speaker  = trim($_POST['keynote_speaker']  ?? '');
+    $resource_persons = trim($_POST['resource_persons'] ?? '');
+    $conveners        = trim($_POST['conveners']        ?? '');
+    $official_email   = trim($_POST['official_email']   ?? '');
+    $contact_phone    = trim($_POST['contact_phone']    ?? '');
+    $image            = trim($_POST['image']            ?? '');
+    $description      = trim($_POST['description']      ?? '');
+    $publish_status   = isset($_POST['publish_status']) ? 1 : 0;
+    $edit_id          = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super         = isSuperAdmin();
 
     if (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to update records for this institute.';
-    } elseif (empty($title) || empty($speaker_name) || empty($webinar_date)) {
-        $error = 'Title, Speaker Name, and Webinar Date & Time are required fields.';
+    } elseif (empty($title) || empty($webinar_date)) {
+        $error = 'Title and Webinar Date & Time are required fields.';
     } else {
         try {
+            $existingCols = array_flip($pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN));
+            $fieldCandidateMap = [
+                'taskno'           => $taskno ?: null,
+                'title'            => $title,
+                'speaker_name'     => $speaker_name ?: null,
+                'affiliation'      => $affiliation ?: null,
+                'webinar_date'     => $webinar_date ?: null,
+                'link'             => $link ?: null,
+                'whatsapp_link'    => $whatsapp_link ?: null,
+                'keynote_speaker'  => $keynote_speaker ?: null,
+                'resource_persons' => $resource_persons ?: null,
+                'conveners'        => $conveners ?: null,
+                'official_email'   => $official_email ?: null,
+                'contact_phone'    => $contact_phone ?: null,
+                'image'            => $image ?: null,
+                'description'      => $description ?: null,
+                'publish_status'   => $publish_status,
+                'approval_status'  => $is_super ? 'Approved' : 'Pending'
+            ];
+
+            $validPayload = [];
+            foreach ($fieldCandidateMap as $col => $val) {
+                if (isset($existingCols[$col])) {
+                    $validPayload[$col] = $val;
+                }
+            }
+
             if ($edit_id) {
                 // UPDATE RECORD
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        taskno = :taskno,
-                        title = :title,
-                        speaker_name = :speaker_name,
-                        affiliation = :affiliation,
-                        webinar_date = :webinar_date,
-                        link = :link,
-                        description = :description,
-                        publish_status = :publish_status
-                    WHERE id = :id
-                ");
-                $stmt->execute([
-                    ':taskno'         => $taskno,
-                    ':title'          => $title,
-                    ':speaker_name'   => $speaker_name,
-                    ':affiliation'    => $affiliation,
-                    ':webinar_date'   => $webinar_date ?: null,
-                    ':link'           => $link ?: null,
-                    ':description'    => $description ?: null,
-                    ':publish_status' => $publish_status,
-                    ':id'             => $edit_id
-                ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                $setSql = [];
+                $params = [':id' => $edit_id];
+                foreach ($validPayload as $col => $val) {
+                    $setSql[] = "`$col` = :$col";
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("UPDATE `$table` SET " . implode(', ', $setSql) . " WHERE id = :id");
+                $stmt->execute($params);
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                }
                 exit;
             } else {
                 // INSERT NEW RECORD
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (taskno, title, speaker_name, affiliation, webinar_date, link, description, publish_status)
-                    VALUES
-                        (:taskno, :title, :speaker_name, :affiliation, :webinar_date, :link, :description, :publish_status)
-                ");
-                $stmt->execute([
-                    ':taskno'         => $taskno,
-                    ':title'          => $title,
-                    ':speaker_name'   => $speaker_name,
-                    ':affiliation'    => $affiliation,
-                    ':webinar_date'   => $webinar_date ?: null,
-                    ':link'           => $link ?: null,
-                    ':description'    => $description ?: null,
-                    ':publish_status' => $publish_status
-                ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
+                $valsSql = implode(', ', array_map(function($c) { return ":$c"; }, array_keys($validPayload)));
+                $params = [];
+                foreach ($validPayload as $col => $val) {
+                    $params[":$col"] = $val;
+                }
+                $stmt = $pdo->prepare("INSERT INTO `$table` ($colsSql) VALUES ($valsSql)");
+                $stmt->execute($params);
+                $new_id = $pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $new_id, 'CREATE', $validPayload);
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                } else {
+                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                }
                 exit;
             }
         } catch (PDOException $e) {
@@ -147,12 +156,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 4. FETCH DATA
+// 4. FETCH CENTRALIZED DATA
 $webinars = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM `$table` ORDER BY webinar_date DESC");
-    $webinars = $stmt->fetchAll();
-} catch (PDOException $e) {
+    $webinars = fetchCentralizedKpiDataset($pdo, 'webinars', $prefix, isSuperAdmin());
+    usort($webinars, function($a, $b) {
+        $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
+        $tB = !empty($b['webinar_date']) ? strtotime($b['webinar_date']) : 0;
+        return $tB <=> $tA;
+    });
+} catch (Exception $e) {
     // Suppress error or handle gracefully
 }
 
@@ -435,13 +448,32 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                         $affiliationVal = htmlspecialchars($webinar['affiliation'] ?? $webinar['institute'] ?? '');
                                         $descriptionVal = htmlspecialchars($webinar['description'] ?? $webinar['content'] ?? '');
                                         $linkVal        = htmlspecialchars($webinar['link'] ?? '');
+                                        $whatsappVal    = htmlspecialchars($webinar['whatsapp_link'] ?? '');
+                                        $keynoteVal     = htmlspecialchars($webinar['keynote_speaker'] ?? '');
+                                        $resourceVal    = htmlspecialchars($webinar['resource_persons'] ?? '');
+                                        $convenersVal   = htmlspecialchars($webinar['conveners'] ?? '');
+                                        $emailVal       = htmlspecialchars($webinar['official_email'] ?? '');
+                                        $phoneVal       = htmlspecialchars($webinar['contact_phone'] ?? '');
+                                         $imageVal       = htmlspecialchars($webinar['image'] ?? '');
                                         $publishStatus  = (int)($webinar['publish_status'] ?? 1);
+                                        $approvalStatus = $webinar['approval_status'] ?? 'Approved';
+                                        $instPrefix     = strtoupper($webinar['institute_prefix'] ?? $prefix);
                                     ?>
                                         <tr>
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
                                             <td style="vertical-align: middle;">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if ($approvalStatus === 'Approved'): ?>
+                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
+                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
+                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <span class="registry-task-link">
                                                     <?= htmlspecialchars($webinar['taskno'] ?: 'TASK-UNASSIGNED') ?>
                                                 </span>
@@ -451,6 +483,11 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                 <?php if (!empty($linkVal)): ?>
                                                     <span class="d-block mt-1">
                                                         <a href="<?= $linkVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-link me-1"></i> Join / Recording URL</a>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($whatsappVal)): ?>
+                                                    <span class="d-block mt-1">
+                                                        <a href="<?= $whatsappVal ?>" target="_blank" class="text-success" style="font-size: 12px;"><i class="fa fa-whatsapp me-1"></i> WhatsApp Group Link</a>
                                                     </span>
                                                 <?php endif; ?>
                                             </td>
@@ -488,6 +525,13 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                             data-affiliation="<?= $affiliationVal ?>"
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
                                                             data-link="<?= $linkVal ?>"
+                                                            data-whatsapp_link="<?= $whatsappVal ?>"
+                                                            data-keynote_speaker="<?= $keynoteVal ?>"
+                                                            data-resource_persons="<?= $resourceVal ?>"
+                                                            data-conveners="<?= $convenersVal ?>"
+                                                            data-official_email="<?= $emailVal ?>"
+                                                            data-contact_phone="<?= $phoneVal ?>"
+                                                            data-image="<?= $imageVal ?>"
                                                             data-description="<?= $descriptionVal ?>"
                                                             data-publish_status="<?= $publishStatus ?>"
                                                             title="Edit Record">
@@ -512,6 +556,13 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                             data-affiliation="<?= $affiliationVal ?>"
                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
                                                             data-link="<?= $linkVal ?>"
+                                                            data-whatsapp_link="<?= $whatsappVal ?>"
+                                                            data-keynote_speaker="<?= $keynoteVal ?>"
+                                                            data-resource_persons="<?= $resourceVal ?>"
+                                                            data-conveners="<?= $convenersVal ?>"
+                                                            data-official_email="<?= $emailVal ?>"
+                                                            data-contact_phone="<?= $phoneVal ?>"
+                                                            data-image="<?= $imageVal ?>"
                                                             data-description="<?= $descriptionVal ?>"
                                                             data-publish_status="<?= $publishStatus ?>"
                                                             title="View Details">
@@ -558,7 +609,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Task No</label>
-                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. TASK-1" required>
+                                <input type="text" name="taskno" id="modal_taskno" class="form-control" placeholder="e.g. WEB-SVU-2026-01" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Webinar Title *</label>
@@ -582,9 +633,46 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                         </div>
 
                         <div class="row">
-                            <div class="col-md-9 mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Keynote Speaker</label>
+                                <input type="text" name="keynote_speaker" id="modal_keynote_speaker" class="form-control" placeholder="e.g. Prof. Tata Narasinga Rao">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Conveners</label>
+                                <input type="text" name="conveners" id="modal_conveners" class="form-control" placeholder="e.g. Prof. G. Madhavi &amp; Prof. V.V.S.S. Srikanth">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Registration / Recording Link</label>
-                                <input type="url" name="link" id="modal_link" class="form-control" placeholder="https://zoom.us/... or recording link">
+                                <input type="url" name="link" id="modal_link" class="form-control" placeholder="https://zoom.us/... or registration link">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">WhatsApp Group Link</label>
+                                <input type="url" name="whatsapp_link" id="modal_whatsapp_link" class="form-control" placeholder="https://chat.whatsapp.com/...">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Official Email</label>
+                                <input type="email" name="official_email" id="modal_official_email" class="form-control" placeholder="anrfpairsvu@gmail.com">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Contact Phone</label>
+                                <input type="text" name="contact_phone" id="modal_contact_phone" class="form-control" placeholder="e.g. 91 94400 96500">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Poster Image Path</label>
+                                <input type="text" name="image" id="modal_image" class="form-control" placeholder="uploads/webinars/poster.jpg">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-9 mb-3">
+                                <label class="form-label">Resource Persons</label>
+                                <textarea name="resource_persons" id="modal_resource_persons" rows="2" class="form-control" placeholder="List of resource persons..."></textarea>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">Publish Status</label>
@@ -598,7 +686,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Brief Description</label>
-                                <textarea name="description" id="modal_description" rows="4" class="form-control" placeholder="Brief outline of topics covered..."></textarea>
+                                <textarea name="description" id="modal_description" rows="3" class="form-control" placeholder="Brief outline of topics covered..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -714,6 +802,13 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('modal_speaker_name').value = this.getAttribute('data-speaker_name');
             document.getElementById('modal_affiliation').value = this.getAttribute('data-affiliation');
             document.getElementById('modal_link').value = this.getAttribute('data-link');
+            document.getElementById('modal_whatsapp_link').value = this.getAttribute('data-whatsapp_link') || '';
+            document.getElementById('modal_keynote_speaker').value = this.getAttribute('data-keynote_speaker') || '';
+            document.getElementById('modal_resource_persons').value = this.getAttribute('data-resource_persons') || '';
+            document.getElementById('modal_conveners').value = this.getAttribute('data-conveners') || '';
+            document.getElementById('modal_official_email').value = this.getAttribute('data-official_email') || '';
+            document.getElementById('modal_contact_phone').value = this.getAttribute('data-contact_phone') || '';
+            document.getElementById('modal_image').value = this.getAttribute('data-image') || '';
             document.getElementById('modal_description').value = this.getAttribute('data-description');
             
             const pubStatus = this.getAttribute('data-publish_status');

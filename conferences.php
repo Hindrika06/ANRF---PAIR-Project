@@ -14,9 +14,18 @@ try {
             $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
             if ($check > 0) {
                 $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $hasPublish = in_array('publish_status', $cols, true);
+                $hasApproval = in_array('approval_status', $cols, true);
+                $hasPublish  = in_array('publish_status', $cols, true);
 
-                $whereClause = $hasPublish ? "WHERE publish_status = 1" : "";
+                $whereConditions = [];
+                if ($hasApproval) {
+                    $whereConditions[] = "approval_status = 'Approved'";
+                }
+                if ($hasPublish) {
+                    $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                }
+
+                $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
                 $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows) {
@@ -351,7 +360,16 @@ try {
 
                         <?php else: ?>
 
-                            <?php foreach ($conferences as $conf): ?>
+                            <?php foreach ($conferences as $conf):
+                                $startDateVal    = !empty($conf['conf_date']) ? $conf['conf_date'] : ($conf['start_date'] ?? '');
+                                $endDateVal      = !empty($conf['end_date']) ? $conf['end_date'] : '';
+                                $locationVal     = !empty($conf['location']) ? $conf['location'] : '';
+                                $organisersVal   = !empty($conf['organisers']) ? $conf['organisers'] : ($conf['organizer'] ?? '');
+                                $instituteVal    = !empty($conf['institute']) ? $conf['institute'] : '';
+                                $investigatorVal = !empty($conf['investigator']) ? $conf['investigator'] : ($conf['convener'] ?? '');
+                                $resourceVal     = !empty($conf['resource_person']) ? $conf['resource_person'] : '';
+                                $websiteVal      = !empty($conf['website_url']) ? $conf['website_url'] : '';
+                            ?>
                                 <div class="conf-card">
 
                                     <!-- Image / date strip -->
@@ -368,10 +386,10 @@ try {
                                             </div>
                                         <?php endif; ?>
 
-                                        <?php if (!empty($conf['conf_date'])): ?>
+                                        <?php if (!empty($startDateVal)): ?>
                                             <div class="conf-date-badge">
-                                                <span class="day"><?= date('d', strtotime($conf['conf_date'])) ?></span>
-                                                <span class="mon"><?= date('M Y', strtotime($conf['conf_date'])) ?></span>
+                                                <span class="day"><?= date('d', strtotime($startDateVal)) ?></span>
+                                                <span class="mon"><?= date('M Y', strtotime($startDateVal)) ?></span>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -382,29 +400,55 @@ try {
                                         <h3 class="conf-card-title"><?= htmlspecialchars($conf['title'] ?: 'Untitled Conference') ?></h3>
 
                                         <div class="conf-meta-row">
-                                            <?php if (!empty($conf['organisers'])): ?>
+                                            <?php if (!empty($startDateVal)): ?>
+                                                <span class="conf-meta-item">
+                                                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                    <?= date('d M Y', strtotime($startDateVal)) ?><?= (!empty($endDateVal) && $endDateVal !== $startDateVal) ? ' – ' . date('d M Y', strtotime($endDateVal)) : '' ?>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($locationVal)): ?>
+                                                <span class="conf-meta-item">
+                                                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                    <?= htmlspecialchars($locationVal) ?>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($organisersVal)): ?>
                                                 <span class="conf-meta-item">
                                                     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                                    <?= htmlspecialchars($conf['organisers']) ?>
+                                                    <?= htmlspecialchars($organisersVal) ?>
                                                 </span>
                                             <?php endif; ?>
-                                            <?php if (!empty($conf['institute'])): ?>
+
+                                            <?php if (!empty($instituteVal)): ?>
                                                 <span class="conf-meta-item">
                                                     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                                                    <?= htmlspecialchars($conf['institute']) ?>
+                                                    <?= htmlspecialchars($instituteVal) ?>
                                                 </span>
                                             <?php endif; ?>
-                                            <?php if (!empty($conf['investigator'])): ?>
+
+                                            <?php if (!empty($investigatorVal)): ?>
                                                 <span class="conf-meta-item">
                                                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                                    <?= htmlspecialchars($conf['investigator']) ?>
+                                                    <?= htmlspecialchars($investigatorVal) ?>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($resourceVal)): ?>
+                                                <span class="conf-meta-item">
+                                                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+                                                    <strong>Resource:</strong> <?= htmlspecialchars($resourceVal) ?>
                                                 </span>
                                             <?php endif; ?>
                                         </div>
 
-                                        <?php if (!empty($conf['content'])): ?>
-                                            <hr class="conf-divider">
-                                            <p class="conf-description"><?= htmlspecialchars($conf['content']) ?></p>
+                                        <?php if (!empty($websiteVal)): ?>
+                                            <div style="margin-top: auto; padding-top: 10px;">
+                                                <a href="<?= htmlspecialchars($websiteVal) ?>" target="_blank" class="btn btn-primary btn-sm" style="background: #b91c1c; border-color: #b91c1c; border-radius: 6px; font-weight: 600; padding: 6px 16px;">
+                                                    <i class="fa fa-external-link me-1"></i> Registration &amp; Info
+                                                </a>
+                                            </div>
                                         <?php endif; ?>
 
                                     </div>

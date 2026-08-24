@@ -198,7 +198,7 @@ $pageTitle = "Login | ANRF–PAIR Project";
         <?php endif; ?>
 
         <?php if (isset($_GET['timeout']) && $_GET['timeout'] === '1'): ?>
-            <div class="alert-custom">Your session has expired due to 2 minutes of inactivity. Please log in again.</div>
+            <div class="alert-custom">Your session has expired due to 30 minutes of inactivity. Please log in again.</div>
         <?php endif; ?>
 
         <?php if (isset($_GET['registered']) && $_GET['registered'] === '1'): ?>

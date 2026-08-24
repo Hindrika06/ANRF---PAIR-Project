@@ -417,4 +417,10 @@ $pageTitle = "Dashboard | ANRF-PAIR Portal";
     </div>
 </div>
 
+<!-- Template Scripts for Sidebar & MetisMenu Dropdowns -->
+<script src="vendor/global/global.min.js"></script>
+<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
+<script src="js/custom.min.js"></script>
+<script src="js/dlabnav-init.js"></script>
+
 <?php include 'footer.php'; ?>

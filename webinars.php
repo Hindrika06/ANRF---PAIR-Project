@@ -18,9 +18,18 @@ try {
             $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
             if ($check > 0) {
                 $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $hasPublish = in_array('publish_status', $cols, true);
+                $hasApproval = in_array('approval_status', $cols, true);
+                $hasPublish  = in_array('publish_status', $cols, true);
 
-                $whereClause = $hasPublish ? "WHERE publish_status = 1" : "";
+                $whereConditions = [];
+                if ($hasApproval) {
+                    $whereConditions[] = "approval_status = 'Approved'";
+                }
+                if ($hasPublish) {
+                    $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                }
+
+                $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
                 $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows) {
@@ -102,7 +111,13 @@ try {
                                         $affiliationVal = !empty($row['affiliation']) ? $row['affiliation'] : ($row['institute'] ?? '');
                                         $descriptionVal = !empty($row['description']) ? $row['description'] : ($row['content'] ?? '');
                                         $linkVal        = !empty($row['link']) ? $row['link'] : '';
+                                        $whatsappVal    = !empty($row['whatsapp_link']) ? $row['whatsapp_link'] : '';
                                         $organisersVal  = !empty($row['organisers']) ? $row['organisers'] : '';
+
+                                        $displayDesc = $descriptionVal;
+                                        if (mb_strlen($displayDesc) > 280) {
+                                            $displayDesc = mb_substr($displayDesc, 0, 275) . '...';
+                                        }
                                     ?>
                                         <article class="webinar-card"
                                                  data-title="<?= htmlspecialchars(strtolower($row['title'] ?? '')) ?>"
@@ -149,7 +164,9 @@ try {
                                                     <?php endif; ?>
                                                 </div>
 
-                                                <p class="webinar-description"><?= nl2br(htmlspecialchars($descriptionVal)) ?></p>
+                                                <?php if (!empty($displayDesc)): ?>
+                                                    <p class="webinar-description"><?= nl2br(htmlspecialchars($displayDesc)) ?></p>
+                                                <?php endif; ?>
 
                                                 <div class="webinar-footer-details">
                                                     <?php if (!empty($organisersVal)): ?>
@@ -159,12 +176,20 @@ try {
                                                         </div>
                                                     <?php endif; ?>
 
-                                                    <?php if (!empty($linkVal)): ?>
-                                                        <a href="<?= htmlspecialchars($linkVal) ?>" target="_blank" class="webinar-btn <?= $isUpcoming ? 'btn-join' : 'btn-recording' ?>">
-                                                            <i class="fa <?= $isUpcoming ? 'fa-video-camera' : 'fa-play-circle' ?>"></i>
-                                                            <?= $isUpcoming ? 'Register / Join' : 'View Recording' ?>
-                                                        </a>
-                                                    <?php endif; ?>
+                                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                        <?php if (!empty($whatsappVal)): ?>
+                                                            <a href="<?= htmlspecialchars($whatsappVal) ?>" target="_blank" class="webinar-btn btn-whatsapp">
+                                                                <i class="fa fa-whatsapp"></i> WhatsApp Group
+                                                            </a>
+                                                        <?php endif; ?>
+
+                                                        <?php if (!empty($linkVal)): ?>
+                                                            <a href="<?= htmlspecialchars($linkVal) ?>" target="_blank" class="webinar-btn <?= $isUpcoming ? 'btn-join' : 'btn-recording' ?>">
+                                                                <i class="fa <?= $isUpcoming ? 'fa-video-camera' : 'fa-play-circle' ?>"></i>
+                                                                <?= $isUpcoming ? 'Register / Join' : 'View Recording' ?>
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -636,6 +661,16 @@ document.addEventListener("DOMContentLoaded", () => {
         background: #0d2c54;
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(2, 66, 131, 0.25);
+    }
+    .btn-whatsapp {
+        background: #25D366;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
+    }
+    .btn-whatsapp:hover {
+        background: #1eb954;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 211, 102, 0.25);
     }
 
     /* Image Wrapper */

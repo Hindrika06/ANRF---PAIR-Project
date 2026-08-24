@@ -3,219 +3,178 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-class ApprovalPDOStatement extends PDOStatement {
-    protected $pdo;
-    protected $boundParams = [];
-    
-    protected function __construct($pdo) {
-        $this->pdo = $pdo;
-    }
-    
-    public function bindValue($param, $value, $type = PDO::PARAM_STR) {
-        $this->boundParams[$param] = $value;
-        return parent::bindValue($param, $value, $type);
-    }
-    
-    public function bindParam($param, &$var, $type = PDO::PARAM_STR, $maxLength = null, $driverOptions = null) {
-        $this->boundParams[$param] =& $var;
-        return parent::bindParam($param, $var, $type, $maxLength, $driverOptions);
-    }
-    
-    public function execute($params = null) {
-        // Bypass if SQL is not write or user is super admin or bypass is active
-        if ($this->pdo->bypass_interceptor || 
-            !isset($_SESSION['role']) || 
-            $_SESSION['role'] === 'super_admin' ||
-            !preg_match('/^\s*(INSERT|UPDATE|DELETE)/i', $this->queryString)) {
-            return parent::execute($params);
-        }
-        
-        $merged_params = $this->boundParams;
-        if ($params) {
-            foreach ($params as $k => $v) {
-                $merged_params[$k] = $v;
-            }
-        }
-        
-        return $this->pdo->interceptQuery($this->queryString, $merged_params);
-    }
+/**
+ * KPI Central Approval & Helper Functions
+ */
+
+/**
+ * Creates an entry in approval_requests table for Hub Admin review
+ */
+function submitKpiApprovalRequest($pdo, $moduleName, $tableName, $institutePrefix, $recordId, $actionType, $newData, $oldData = null) {
+    $requestedBy = $_SESSION['username'] ?? 'unknown_admin';
+
+    $stmt = $pdo->prepare("
+        INSERT INTO `approval_requests`
+            (module_name, table_name, institute_prefix, record_id, action_type, old_data, new_data, requested_by, requested_at, status)
+        VALUES
+            (:module_name, :table_name, :institute_prefix, :record_id, :action_type, :old_data, :new_data, :requested_by, NOW(), 'Pending')
+    ");
+
+    return $stmt->execute([
+        ':module_name'     => $moduleName,
+        ':table_name'      => $tableName,
+        ':institute_prefix'=> $institutePrefix,
+        ':record_id'       => $recordId,
+        ':action_type'     => $actionType,
+        ':old_data'        => $oldData ? json_encode($oldData, JSON_UNESCAPED_UNICODE) : null,
+        ':new_data'        => $newData ? json_encode($newData, JSON_UNESCAPED_UNICODE) : null,
+        ':requested_by'    => $requestedBy
+    ]);
 }
 
-class ApprovalPDO extends PDO {
-    public $bypass_interceptor = false;
-    
-    public function __construct($dsn, $username = null, $password = null, $options = null) {
-        parent::__construct($dsn, $username, $password, $options);
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, ['ApprovalPDOStatement', [$this]]);
-        $this->installApprovalSchema();
+/**
+ * Approves a KPI request: updates approval_requests log and target table record
+ */
+function approveKpiRequest($pdo, $requestId, $approvedBy) {
+    // 1. Fetch request
+    $stmt = $pdo->prepare("SELECT * FROM `approval_requests` WHERE id = ?");
+    $stmt->execute([$requestId]);
+    $req = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$req) return false;
+
+    $tableName = $req['table_name'];
+    $recordId  = $req['record_id'];
+
+    // 2. Update target table approval_status to 'Approved'
+    if ($tableName && $recordId) {
+        $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
+        $upd->execute([$recordId]);
     }
-    
-    private function installApprovalSchema() {
+
+    // 3. Update approval_requests log
+    $updLog = $pdo->prepare("
+        UPDATE `approval_requests`
+        SET status = 'Approved', approved_by = ?, approved_at = NOW()
+        WHERE id = ?
+    ");
+    return $updLog->execute([$approvedBy, $requestId]);
+}
+
+/**
+ * Rejects a KPI request: updates approval_requests log and target table record
+ */
+function rejectKpiRequest($pdo, $requestId, $rejectedBy, $reason) {
+    // 1. Fetch request
+    $stmt = $pdo->prepare("SELECT * FROM `approval_requests` WHERE id = ?");
+    $stmt->execute([$requestId]);
+    $req = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$req) return false;
+
+    $tableName = $req['table_name'];
+    $recordId  = $req['record_id'];
+
+    // 2. Update target table approval_status to 'Rejected'
+    if ($tableName && $recordId) {
+        $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
+        $upd->execute([$recordId]);
+    }
+
+    // 3. Update approval_requests log
+    $updLog = $pdo->prepare("
+        UPDATE `approval_requests`
+        SET status = 'Rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ?
+        WHERE id = ?
+    ");
+    return $updLog->execute([$rejectedBy, $reason, $requestId]);
+}
+
+/**
+ * Fetches Centralized KPI Data:
+ * - Returns ALL approved records across all specified institute tables.
+ * - If current user is an Institute Admin, ALSO includes their OWN pending or rejected records.
+ * - If current user is Hub Admin ($isSuper = true), fetches all records across all tables.
+ */
+function fetchCentralizedKpiDataset($pdo, $moduleSuffix, $userPrefix, $isSuper = false) {
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $combined = [];
+
+    foreach ($prefixes as $p) {
+        $tbl = "{$p}_{$moduleSuffix}";
         try {
-            $this->exec("
-                CREATE TABLE IF NOT EXISTS `approval_requests` (
-                  `id` INT AUTO_INCREMENT PRIMARY KEY,
-                  `module_name` VARCHAR(255) NOT NULL,
-                  `table_name` VARCHAR(255) NOT NULL,
-                  `institute_prefix` VARCHAR(50) NOT NULL DEFAULT 'all',
-                  `record_id` INT DEFAULT NULL,
-                  `action_type` VARCHAR(50) NOT NULL,
-                  `old_data` LONGTEXT DEFAULT NULL,
-                  `new_data` LONGTEXT DEFAULT NULL,
-                  `requested_by` VARCHAR(255) NOT NULL,
-                  `requested_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                  `status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
-                  `approved_by` VARCHAR(255) DEFAULT NULL,
-                  `approved_at` DATETIME DEFAULT NULL,
-                  `rejection_reason` TEXT DEFAULT NULL,
-                  `sql_query` LONGTEXT DEFAULT NULL,
-                  `sql_params` LONGTEXT DEFAULT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-            ");
+            $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($check === 0) continue;
+
+            $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+            $hasApprovalStatus = in_array('approval_status', $cols, true);
+            $hasPublishStatus  = in_array('publish_status', $cols, true);
+
+            if ($isSuper) {
+                // Hub Admin: sees all records across all tables
+                $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl`");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) $combined = array_merge($combined, $rows);
+            } else {
+                // Institute Admin:
+                // 1) All APPROVED records from any institute
+                // 2) OWN records (where prefix matches $userPrefix) regardless of approval status (Pending/Rejected)
+                if ($hasApprovalStatus) {
+                    if ($p === $userPrefix) {
+                        // Own institute: fetch everything
+                        $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl`");
+                    } else {
+                        // Other institutes: fetch only Approved
+                        $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` WHERE approval_status = 'Approved'");
+                    }
+                } else {
+                    // Fallback if column not present yet
+                    $where = ($hasPublishStatus && $p !== $userPrefix) ? "WHERE publish_status = 1" : "";
+                    $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $where");
+                }
+
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) $combined = array_merge($combined, $rows);
+            }
         } catch (Exception $e) {
-            // Ignore schema creation errors
+            // Ignore single table errors
         }
     }
-    
-    public function interceptQuery($sql, $params) {
-        $action_type = 'CREATE';
-        if (preg_match('/^\s*INSERT/i', $sql)) {
-            $action_type = 'CREATE';
-        } elseif (preg_match('/^\s*UPDATE/i', $sql)) {
-            $action_type = 'UPDATE';
-        } elseif (preg_match('/^\s*DELETE/i', $sql)) {
-            $action_type = 'DELETE';
-        }
-        
-        $table_name = '';
-        if (preg_match('/(?:FROM|INTO|UPDATE)\s+[`"]?(\w+)[`"]?/i', $sql, $matches)) {
-            $table_name = $matches[1];
-        }
-        
-        if ($table_name === 'approval_requests') {
-            $this->bypass_interceptor = true;
-            $stmt = $this->prepare($sql);
-            $res = $stmt->execute($params);
-            $this->bypass_interceptor = false;
-            return $res;
-        }
-        
-        $module_name = $this->getModuleName($table_name);
-        $old_data = null;
-        $new_data = null;
-        $record_id = null;
-        
-        $clean_params = [];
-        if ($params) {
-            foreach ($params as $k => $v) {
-                $clean_k = ltrim($k, ':');
-                $clean_params[$clean_k] = $v;
+
+    return $combined;
+}
+
+/**
+ * Fetches Centralized KPI Data for single-table modules (e.g. collaborations, infrastructure_facilities)
+ */
+function fetchSingleTableKpiDataset($pdo, $tableName, $userPrefix, $isSuper = false) {
+    try {
+        $check = $pdo->query("SHOW TABLES LIKE '$tableName'")->rowCount();
+        if ($check === 0) return [];
+
+        $cols = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
+        $hasApprovalStatus = in_array('approval_status', $cols, true);
+
+        if ($isSuper) {
+            $stmt = $pdo->query("SELECT * FROM `$tableName`");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            if ($hasApprovalStatus) {
+                $stmt = $pdo->prepare("
+                    SELECT * FROM `$tableName`
+                    WHERE approval_status = 'Approved'
+                       OR institute_prefix = ?
+                       OR institute_prefix = 'all'
+                ");
+                $stmt->execute([$userPrefix]);
+            } else {
+                $stmt = $pdo->prepare("
+                    SELECT * FROM `$tableName`
+                    WHERE institute_prefix = ? OR institute_prefix = 'all'
+                ");
+                $stmt->execute([$userPrefix]);
             }
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
-        $is_positional = false;
-        if ($params) {
-            $keys = array_keys($params);
-            if (is_int($keys[0])) {
-                $is_positional = true;
-            }
-        }
-        
-        if ($is_positional) {
-            if (preg_match('/INSERT\s+INTO\s+[`"]?\w+[`"]?\s*\(([^)]+)\)/i', $sql, $col_matches)) {
-                $cols = preg_split('/\s*,\s*/', $col_matches[1]);
-                $cols = array_map(function($c) { return trim($c, '`"\''); }, $cols);
-                foreach ($cols as $idx => $col) {
-                    if (isset($params[$idx])) {
-                        $clean_params[$col] = $params[$idx];
-                    }
-                }
-            }
-        }
-        
-        if ($action_type === 'UPDATE' || $action_type === 'DELETE') {
-            foreach ($clean_params as $k => $v) {
-                if (strtolower($k) === 'id') {
-                    $record_id = $v;
-                    break;
-                }
-            }
-            if ($record_id === null && !empty($params)) {
-                $keys = array_keys($params);
-                if (is_int($keys[0])) {
-                    if (preg_match('/WHERE\s+id\s*=\s*\?/i', $sql)) {
-                        $record_id = end($params);
-                    }
-                }
-            }
-            
-            if ($record_id) {
-                $this->bypass_interceptor = true;
-                $stmt = $this->prepare("SELECT * FROM `$table_name` WHERE id = ?");
-                $stmt->execute([$record_id]);
-                $old_data = $stmt->fetch(PDO::FETCH_ASSOC);
-                $this->bypass_interceptor = false;
-            }
-        }
-        
-        if ($action_type === 'CREATE') {
-            $new_data = $clean_params;
-        } elseif ($action_type === 'UPDATE') {
-            $new_data = $old_data ? $old_data : [];
-            foreach ($clean_params as $k => $v) {
-                if ($k !== 'id') {
-                    $new_data[$k] = $v;
-                }
-            }
-        }
-        
-        $this->bypass_interceptor = true;
-        $ins = $this->prepare("
-            INSERT INTO `approval_requests` 
-                (module_name, table_name, institute_prefix, record_id, action_type, old_data, new_data, requested_by, requested_at, status, sql_query, sql_params)
-            VALUES
-                (:module_name, :table_name, :institute_prefix, :record_id, :action_type, :old_data, :new_data, :requested_by, NOW(), 'Pending', :sql_query, :sql_params)
-        ");
-        
-        $ins->execute([
-            ':module_name' => $module_name,
-            ':table_name' => $table_name,
-            ':institute_prefix' => $_SESSION['institute_prefix'] ?? 'all',
-            ':record_id' => $record_id,
-            ':action_type' => $action_type,
-            ':old_data' => $old_data ? json_encode($old_data, JSON_UNESCAPED_UNICODE) : null,
-            ':new_data' => $new_data ? json_encode($new_data, JSON_UNESCAPED_UNICODE) : null,
-            ':requested_by' => $_SESSION['username'] ?? 'unknown_admin',
-            ':sql_query' => $sql,
-            ':sql_params' => $params ? json_encode($params, JSON_UNESCAPED_UNICODE) : null
-        ]);
-        $this->bypass_interceptor = false;
-        
-        $_SESSION['approval_message'] = "Your request has been submitted for Super Admin approval.";
-        return true;
-    }
-    
-    private function getModuleName($table_name) {
-        $clean_table = preg_replace('/^[a-z]+_/', '', $table_name);
-        $mappings = [
-            'publications' => 'Publications',
-            'patent' => 'Patents',
-            'patents' => 'Patents',
-            'conferences' => 'Conferences',
-            'webinars' => 'Webinars',
-            'internships' => 'Internships',
-            'progress_reports' => 'Progress Reports',
-            'infrastructure_facilities' => 'Research Infrastructure',
-            'research_areas' => 'Research Areas',
-            'collaborations' => 'Collaborations',
-            'gallery_events' => 'Gallery Events',
-            'gallery_albums' => 'Gallery Albums',
-            'gallery_photos' => 'Gallery Photos',
-            'events' => 'Event Calendar',
-            'team' => 'Team',
-            'homepage_banners' => 'Homepage Banners',
-            'announcements' => 'Announcements'
-        ];
-        return $mappings[$clean_table] ?? ucfirst($clean_table);
+    } catch (Exception $e) {
+        return [];
     }
 }

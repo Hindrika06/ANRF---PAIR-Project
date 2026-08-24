@@ -9,6 +9,13 @@ try {
         $table = "{$prefix}_webinars";
         echo "Checking table `$table`...\n";
         
+        // Check if table exists
+        $tableExists = $pdo->query("SHOW TABLES LIKE '$table'")->fetch();
+        if (!$tableExists) {
+            echo "  -> Table `$table` does not exist yet. Skipping.\n";
+            continue;
+        }
+        
         // 1. Check existing columns
         $existingColumns = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
         
