@@ -40,14 +40,15 @@ try {
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
         try {
-            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $deleteTable = "{$deletePrefix}_webinars";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -125,11 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // INSERT NEW RECORD
                 $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
@@ -144,11 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Webinars', $table, $prefix, $new_id, 'CREATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -177,7 +176,6 @@ foreach ($webinars as $w) {
         $upcoming_count++;
     }
 }
-$pageTitle = "Webinars Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -217,20 +215,21 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
         vertical-align: middle;
     }
     .index-badge-circle {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: #f1f5f9;
-        color: #475569;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 11px;
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
     }
     .registry-task-link {
         font-weight: 700;
-        color: #024283 !important;
+        color: #bc2121 !important;
         display: block;
         font-size: 11.5px;
         margin-bottom: 3px;
@@ -278,13 +277,26 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
     .btn-action-delete-red:hover {
         background-color: #fca5a5 !important;
     }
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #ff8902da, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 20px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-        background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%) !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background: #831843 !important;
+        background-color: #831843 !important;
+        box-shadow: 0 6px 18px rgba(131, 24, 67, 0.25) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -372,7 +384,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-video"></i></div>
                             <span class="kpi-title-text">Total Webinars</span>
@@ -384,7 +396,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-calendar-days"></i></div>
                             <span class="kpi-title-text">Upcoming Webinars</span>
@@ -396,7 +408,7 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-3">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-graduation-cap"></i></div>
                             <span class="kpi-title-text">Active Institute</span>
@@ -463,33 +475,41 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                             <td style="text-align: center; vertical-align: middle;">
                                                 <span class="index-badge-circle"><?= $rowCounter++ ?></span>
                                             </td>
-                                            <td style="vertical-align: middle;">
-                                                <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
-                                                    <?php if ($approvalStatus === 'Approved'): ?>
-                                                        <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
-                                                    <?php elseif ($approvalStatus === 'Pending'): ?>
-                                                        <span class="badge bg-warning text-dark" style="font-size: 10px;">Pending Approval</span>
-                                                    <?php elseif ($approvalStatus === 'Rejected'): ?>
-                                                        <span class="badge bg-danger text-white" style="font-size: 10px;">Rejected</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <span class="registry-task-link">
-                                                    <?= htmlspecialchars($webinar['taskno'] ?: 'TASK-UNASSIGNED') ?>
-                                                </span>
-                                                <span class="registry-main-title">
-                                                    <?= htmlspecialchars($webinar['title']) ?>
-                                                </span>
-                                                <?php if (!empty($linkVal)): ?>
-                                                    <span class="d-block mt-1">
-                                                        <a href="<?= $linkVal ?>" target="_blank" class="text-info" style="font-size: 12px;"><i class="fa fa-link me-1"></i> Join / Recording URL</a>
-                                                    </span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($whatsappVal)): ?>
-                                                    <span class="d-block mt-1">
-                                                        <a href="<?= $whatsappVal ?>" target="_blank" class="text-success" style="font-size: 12px;"><i class="fa fa-whatsapp me-1"></i> WhatsApp Group Link</a>
-                                                    </span>
-                                                <?php endif; ?>
+                                            <td style="vertical-align: middle; padding: 12px 16px;">
+                                                 <!-- Header Badge Pill Row -->
+                                                 <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                                     <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 8px;">
+                                                         <i class="fa-solid fa-building me-1" style="font-size: 9px;"></i><?= htmlspecialchars($instPrefix) ?>
+                                                     </span>
+                                                     <?php if ($approvalStatus === 'Approved'): ?>
+                                                         <span class="badge" style="background-color: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; border: 1px solid #bbf7d0; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>
+                                                     <?php elseif ($approvalStatus === 'Pending'): ?>
+                                                         <span class="badge" style="background-color: #fef3c7; color: #b45309; font-size: 10px; font-weight: 700; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-clock me-1"></i>Pending Approval</span>
+                                                     <?php elseif ($approvalStatus === 'Rejected'): ?>
+                                                         <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-size: 10px; font-weight: 700; border: 1px solid #fca5a5; border-radius: 6px; padding: 4px 8px;"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>
+                                                     <?php endif; ?>
+                                                 </div>
+
+                                                 <!-- Webinar Title -->
+                                                 <h6 class="mb-2" style="font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.4;">
+                                                     <?= htmlspecialchars($webinar['title']) ?>
+                                                 </h6>
+
+                                                 <!-- Interactive Link Pills (Horizontal Alignment) -->
+                                                 <?php if (!empty($linkVal) || !empty($whatsappVal)): ?>
+                                                 <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                                     <?php if (!empty($linkVal)): ?>
+                                                         <a href="<?= $linkVal ?>" target="_blank" class="btn btn-xs" style="background-color: #e0f2fe; color: #0284c7; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; text-decoration: none; border: 1px solid #bae6fd; transition: all 0.2s ease;">
+                                                             <i class="fa fa-link me-1"></i> Join / Recording URL
+                                                         </a>
+                                                     <?php endif; ?>
+                                                     <?php if (!empty($whatsappVal)): ?>
+                                                         <a href="<?= $whatsappVal ?>" target="_blank" class="btn btn-xs" style="background-color: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; text-decoration: none; border: 1px solid #bbf7d0; transition: all 0.2s ease;">
+                                                             <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp Group
+                                                         </a>
+                                                     <?php endif; ?>
+                                                 </div>
+                                                 <?php endif; ?>
                                             </td>
                                             <td style="vertical-align: middle;">
                                                 <span class="registry-meta-text font-w600 text-dark">
@@ -512,64 +532,46 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
                                                 </span>
                                             </td>
                                             <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <?php if (canEditInstitute($prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#webinarModal"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($webinar['title']) ?>"
-                                                            data-speaker_name="<?= $speakerNameVal ?>"
-                                                            data-affiliation="<?= $affiliationVal ?>"
-                                                            data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-link="<?= $linkVal ?>"
-                                                            data-whatsapp_link="<?= $whatsappVal ?>"
-                                                            data-keynote_speaker="<?= $keynoteVal ?>"
-                                                            data-resource_persons="<?= $resourceVal ?>"
-                                                            data-conveners="<?= $convenersVal ?>"
-                                                            data-official_email="<?= $emailVal ?>"
-                                                            data-contact_phone="<?= $phoneVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-description="<?= $descriptionVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="Edit Record">
-                                                         <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            title="Delete Record">
-                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#webinarModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $webinar['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($webinar['title']) ?>"
-                                                            data-speaker_name="<?= $speakerNameVal ?>"
-                                                            data-affiliation="<?= $affiliationVal ?>"
-                                                            data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
-                                                            data-link="<?= $linkVal ?>"
-                                                            data-whatsapp_link="<?= $whatsappVal ?>"
-                                                            data-keynote_speaker="<?= $keynoteVal ?>"
-                                                            data-resource_persons="<?= $resourceVal ?>"
-                                                            data-conveners="<?= $convenersVal ?>"
-                                                            data-official_email="<?= $emailVal ?>"
-                                                            data-contact_phone="<?= $phoneVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-description="<?= $descriptionVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="View Details">
+                                                 <div class="d-flex justify-content-center gap-1">
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                             data-record="<?= htmlspecialchars(json_encode($webinar), ENT_QUOTES, 'UTF-8') ?>"
+                                                             title="View Details">
                                                          <i class="fa fa-eye"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                     </button>
+                                                     <?php if (canEditInstitute($prefix)): ?>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#webinarModal"
+                                                             data-id="<?= $webinar['id'] ?>"
+                                                             data-taskno="<?= htmlspecialchars($webinar['taskno'] ?? '') ?>"
+                                                             data-title="<?= htmlspecialchars($webinar['title']) ?>"
+                                                             data-speaker_name="<?= $speakerNameVal ?>"
+                                                             data-affiliation="<?= $affiliationVal ?>"
+                                                             data-date="<?= $webinar['webinar_date'] ? date('Y-m-d\TH:i', strtotime($webinar['webinar_date'])) : '' ?>"
+                                                             data-link="<?= $linkVal ?>"
+                                                             data-whatsapp_link="<?= $whatsappVal ?>"
+                                                             data-keynote_speaker="<?= $keynoteVal ?>"
+                                                             data-resource_persons="<?= $resourceVal ?>"
+                                                             data-conveners="<?= $convenersVal ?>"
+                                                             data-official_email="<?= $emailVal ?>"
+                                                             data-contact_phone="<?= $phoneVal ?>"
+                                                             data-image="<?= $imageVal ?>"
+                                                             data-description="<?= $descriptionVal ?>"
+                                                             data-publish_status="<?= $publishStatus ?>"
+                                                             title="Edit Record">
+                                                          <i class="fa fa-pencil"></i>
+                                                     </button>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
+                                                             data-id="<?= $webinar['id'] ?>"
+                                                             data-record-prefix="<?= htmlspecialchars($webinar['institute_prefix'] ?? $prefix) ?>"
+                                                             title="Delete Record">
+                                                          <i class="fa fa-trash"></i>
+                                                     </button>
+                                                     <?php endif; ?>
+                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -718,9 +720,11 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -734,6 +738,43 @@ $pageTitle = "Webinars Management | ANRF-PAIR";
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Webinar Details',
+                recordTitle: rec.title || 'Untitled Webinar',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                publishStatus: rec.publish_status,
+                fields: [
+                    { label: 'Task Number', value: rec.taskno, icon: 'fa-solid fa-list-check' },
+                    { label: 'Webinar Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-laptop-code' },
+                    { label: 'Speaker Name', value: rec.speaker_name, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Affiliation / Organization', value: rec.affiliation, icon: 'fa-solid fa-building' },
+                    { label: 'Webinar Date & Time', value: rec.webinar_date ? formatDate(rec.webinar_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'Webinar Link', value: rec.link, type: 'link', icon: 'fa-solid fa-video' },
+                    { label: 'WhatsApp Group Link', value: rec.whatsapp_link, type: 'link', icon: 'fa-brands fa-whatsapp' },
+                    { label: 'Keynote Speaker', value: rec.keynote_speaker, icon: 'fa-solid fa-star' },
+                    { label: 'Resource Persons', value: rec.resource_persons, icon: 'fa-solid fa-chalkboard-user' },
+                    { label: 'Conveners', value: rec.conveners, icon: 'fa-solid fa-user-pen' },
+                    { label: 'Official Email', value: rec.official_email, icon: 'fa-solid fa-envelope' },
+                    { label: 'Contact Phone', value: rec.contact_phone, icon: 'fa-solid fa-phone' },
+                    { label: 'Webinar Poster / Image', value: rec.image, type: 'image', icon: 'fa-solid fa-image' },
+                    { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('webinarModalLabel');
@@ -820,7 +861,14 @@ document.addEventListener("DOMContentLoaded", function() {
         triggerBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const recordId = this.getAttribute('data-id');
-            modalDeleteExecutionLink.setAttribute('href', '?action=delete&id=' + recordId);
+            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', recordId);
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });
     });

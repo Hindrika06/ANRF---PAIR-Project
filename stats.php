@@ -2,7 +2,7 @@
 /**
  * UoHyd Stats Section
  * -------------------
- * Pulls counts from the uoh_* tables only (University of Hyderabad data).
+ * Aggregates KPI counts across all institute tables (CUK, Kannur, MGU, OU, SVU, UoH, YVU).
  * Include this file from index.php where you want the stats to appear.
  *
  * Uses the $pdo connection created in config.php.
@@ -16,70 +16,85 @@ $uohyd_stats = [
     'conferences'       => 0,
     'webinars'          => 0,
     'internships'       => 0,
-    'progress_reports'  => 0,
 ];
 
 if (isset($pdo) && $pdo instanceof PDO) {
-
-    $count_queries = [
-        'publications'     => "SELECT COUNT(*) AS c FROM uoh_publications",
-        'patents'          => "SELECT COUNT(*) AS c FROM uoh_patent",
-        'conferences'      => "SELECT COUNT(*) AS c FROM uoh_conferences",
-        'webinars'         => "SELECT COUNT(*) AS c FROM uoh_webinars WHERE publish_status = 1",
-        'internships'      => "SELECT COUNT(*) AS c FROM uoh_internships",
-        'progress_reports' => "SELECT COUNT(*) AS c FROM uoh_progress_reports",
+    $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $modules = [
+        'publications'     => 'publications',
+        'patents'          => 'patent',
+        'conferences'      => 'conferences',
+        'webinars'         => 'webinars',
+        'internships'      => 'internships',
     ];
 
-    foreach ($count_queries as $key => $sql) {
-        try {
-            $stmt = $pdo->query($sql);
-            $row  = $stmt->fetch();
-            if ($row && isset($row['c'])) {
-                $uohyd_stats[$key] = (int) $row['c'];
+    foreach ($modules as $key => $suffix) {
+        $total = 0;
+        foreach ($prefixes as $p) {
+            $tbl = "{$p}_{$suffix}";
+            try {
+                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+                if ($check > 0) {
+                    $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                    $hasApproval = in_array('approval_status', $cols, true);
+                    $hasPublish  = in_array('publish_status', $cols, true);
+
+                    $whereConditions = [];
+                    if ($hasApproval) {
+                        $whereConditions[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
+                    }
+                    if ($hasPublish) {
+                        $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";
+                    }
+
+                    $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
+                    $cnt = (int) $pdo->query("SELECT COUNT(*) FROM `$tbl` $whereClause")->fetchColumn();
+                    $total += $cnt;
+                }
+            } catch (PDOException $e) {
+                // Table missing or query failure failsafe
             }
-        } catch (PDOException $e) {
-            // Table missing, wrong schema, etc. Fails safely, count stays 0.
         }
+        $uohyd_stats[$key] = $total;
     }
 }
 
-// Card definitions: label, stat key, color, icon
+// Card definitions: label, stat key, color, icon, url
 $uohyd_cards = [
     [
         'label' => 'Publications',
         'key'   => 'publications',
         'color' => '#C2185B',
+        'url'   => 'publications-reports.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H18a1 1 0 0 1 1 1v17a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 18.5v-14Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 7h8M8 11h8M8 15h5" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>',
     ],
     [
         'label' => 'Patents',
         'key'   => 'patents',
         'color' => '#00897B',
+        'url'   => 'patents-innovations.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     ],
     [
         'label' => 'Conferences',
         'key'   => 'conferences',
         'color' => '#1E88C7',
+        'url'   => 'conferences.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="7" r="3" stroke="white" stroke-width="1.6"/><path d="M4 21c0-3.9 3.6-7 8-7s8 3.1 8 7" stroke="white" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="9" r="2" stroke="white" stroke-width="1.4"/><circle cx="19" cy="9" r="2" stroke="white" stroke-width="1.4"/></svg>',
     ],
     [
         'label' => 'Webinars',
         'key'   => 'webinars',
         'color' => '#8BC34A',
+        'url'   => 'webinars.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="12" rx="1.5" stroke="white" stroke-width="1.6"/><path d="M8 21h8M12 17v4" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="m10 9 4 2-4 2V9Z" fill="white"/></svg>',
     ],
     [
         'label' => 'Internships',
         'key'   => 'internships',
         'color' => '#F0932B',
+        'url'   => 'internships.php',
         'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="8" width="18" height="12" rx="1.5" stroke="white" stroke-width="1.6"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="M3 13h18" stroke="white" stroke-width="1.6"/></svg>',
-    ],
-    [
-        'label' => 'Progress Reports',
-        'key'   => 'progress_reports',
-        'color' => '#7E57C2',
-        'icon'  => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19V5a1 1 0 0 1 1-1h9l6 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 4v5a1 1 0 0 0 1 1h5" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 13h8M8 16h5" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>',
     ],
 ];
 ?>
@@ -90,13 +105,13 @@ $uohyd_cards = [
             <h2 class="gallery-main-heading">KEY PERFORMANCE INDICATORS</h2>
         <div class="uohyd-stats-grid">
             <?php foreach ($uohyd_cards as $card): ?>
-                <div class="uohyd-stat-card" style="background:<?php echo $card['color']; ?>;">
+                <a href="<?php echo htmlspecialchars($card['url']); ?>" class="uohyd-stat-card" style="background:<?php echo $card['color']; ?>; text-decoration:none;">
                     <div class="uohyd-stat-icon"><?php echo $card['icon']; ?></div>
                     <div class="uohyd-stat-body">
                         <div class="uohyd-stat-label"><?php echo htmlspecialchars($card['label']); ?></div>
                         <div class="uohyd-stat-number"><?php echo $uohyd_stats[$card['key']]; ?></div>
                     </div>
-                </div>
+                </a>
             <?php endforeach; ?>
         </div>
     </div>

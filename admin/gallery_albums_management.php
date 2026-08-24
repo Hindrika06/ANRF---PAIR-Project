@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage gallery albums
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {
@@ -59,8 +65,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET[
 
         $stmt = $pdo->prepare("DELETE FROM `gallery_albums` WHERE id = ?");
         $stmt->execute([$del_id]);
-        header("Location: gallery_albums_management.php?prefix=" . $prefix . "&success_msg=album_deleted");
-        exit;
+        adminRedirect(['success_msg' => 'album_deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete album: ' . $e->getMessage();
     }
@@ -79,8 +84,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET[
 
         $stmt = $pdo->prepare("DELETE FROM `gallery_photos` WHERE id = ?");
         $stmt->execute([$del_photo_id]);
-        header("Location: gallery_albums_management.php?prefix=" . $prefix . "&album_id=" . $album_id . "&success_msg=photo_deleted");
-        exit;
+        adminRedirect(['success_msg' => 'photo_deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete photo: ' . $e->getMessage();
     }
@@ -105,13 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
             if ($edit_album_id) {
                 $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
                 $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
-                header("Location: gallery_albums_management.php?prefix=" . $prefix . "&success_msg=album_updated");
+                adminRedirect(['success_msg' => 'album_updated']);
             } else {
                 $stmt = $pdo->prepare("INSERT INTO `gallery_albums` (album_name, album_date, description, institute_prefix) VALUES (:name, :date, :desc, :prefix)");
                 $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':prefix' => $prefix]);
-                header("Location: gallery_albums_management.php?prefix=" . $prefix . "&success_msg=album_created");
+                adminRedirect(['success_msg' => 'album_created']);
             }
-            exit;
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
         }
@@ -163,8 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
                 }
             }
 
-            header("Location: gallery_albums_management.php?prefix=" . $prefix . "&album_id=" . $album_id . "&success_msg=uploaded_" . $uploadedCount);
-            exit;
+            adminRedirect(['album_id' => $album_id, 'success_msg' => 'uploaded_' . $uploadedCount]);
         } catch (Exception $e) {
             $error = $e->getMessage();
         }
@@ -196,7 +198,6 @@ if ($album_id) {
     }
 }
 
-$pageTitle = "Gallery Albums CMS | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -253,7 +254,7 @@ $pageTitle = "Gallery Albums CMS | ANRF-PAIR";
                                             </a>
                                             <div class="ms-2">
                                                 <button class="btn btn-warning btn-xs" onclick="openEditAlbumModal(<?= htmlspecialchars(json_encode($al)) ?>)"><i class="fa fa-pencil"></i></button>
-                                                <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&action=delete_album&id=<?= $al['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Deleting this album will permanently delete all its photos! Continue?');"><i class="fa fa-trash"></i></a>
+                                                <a href="<?= $navUrl('gallery_albums_management.php?action=delete_album&id=' . $al['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Album?', message: 'Deleting this album will permanently delete all its photos! Continue?', confirmText: 'Delete Album', onConfirm: function() { window.location.href = targetUrl; } });"><i class="fa fa-trash"></i></a>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -310,7 +311,7 @@ $pageTitle = "Gallery Albums CMS | ANRF-PAIR";
                                                     <div class="p-2" style="font-size: 11px;">
                                                         <span class="text-truncate d-block text-muted"><?= htmlspecialchars($p['caption'] ?: '(No Caption)') ?></span>
                                                     </div>
-                                                    <a href="gallery_albums_management.php?prefix=<?= $prefix ?>&album_id=<?= $album_id ?>&action=delete_photo&photo_id=<?= $p['id'] ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="return confirm('Are you sure you want to delete this photo?');">
+                                                    <a href="<?= $navUrl('gallery_albums_management.php?album_id=' . $album_id . '&action=delete_photo&photo_id=' . $p['id']) ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Photo?', message: 'Are you sure you want to delete this photo?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                         <i class="fa fa-trash"></i>
                                                     </a>
                                                 </div>

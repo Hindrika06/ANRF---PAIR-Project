@@ -40,14 +40,15 @@ try {
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
         try {
-            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $deleteTable = "{$deletePrefix}_conferences";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -137,11 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $edit_id, 'UPDATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // INSERT NEW RECORD
                 $colsSql = implode(', ', array_map(function($c) { return "`$c`"; }, array_keys($validPayload)));
@@ -156,11 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Conferences', $table, $prefix, $new_id, 'CREATE', $validPayload);
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -192,7 +191,6 @@ foreach ($conferences as $c) {
         $upcoming_count++;
     }
 }
-$pageTitle = "Conferences Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -292,14 +290,25 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
     }
     .btn-action-delete-red:hover {
         background-color: #fca5a5 !important;
-    }
+    }    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 20px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 8px 24px rgba(14, 116, 144, 0.3);
-        background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%) !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: #7E57C2 !important;
+        box-shadow: 0 6px 18px rgba(126, 87, 194, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -354,7 +363,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
 
             <div class="page-titles">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Events Management</a></li>
+                    <li class="breadcrumb-item"><a href="#">IPR Management</a></li>
                     <li class="breadcrumb-item active">Conferences Dashboard</li>
                 </ol>
             </div>
@@ -378,7 +387,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
             <!-- WIDGETS ROW -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-hotel"></i></div>
                             <span class="kpi-title-text">Total Conferences</span>
@@ -390,7 +399,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-clock"></i></div>
                             <span class="kpi-title-text">Upcoming Conferences</span>
@@ -402,7 +411,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="col-xl-4 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-4">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-earth-americas"></i></div>
                             <span class="kpi-title-text">Active Institute</span>
@@ -418,7 +427,7 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
-                        <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
+                        <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-hotel me-2"></i>CONFERENCES CMS MANAGEMENT
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
@@ -527,72 +536,50 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
                                                 </div>
                                             </td>
                                             <td style="text-align: center; white-space: nowrap; vertical-align: middle;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <?php if (canEditInstitute($prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#conferenceModal"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
-                                                            data-organizer="<?= $organizerVal ?>"
-                                                            data-start_date="<?= $startDateVal ?>"
-                                                            data-end_date="<?= $endDateVal ?>"
-                                                            data-location="<?= $locationVal ?>"
-                                                            data-submission_deadline="<?= $deadlineVal ?>"
-                                                            data-website_url="<?= $websiteVal ?>"
-                                                            data-investigator="<?= $investigatorVal ?>"
-                                                            data-convener="<?= $convenerVal ?>"
-                                                            data-resource_person="<?= $resourceVal ?>"
-                                                            data-chief_patron="<?= $chiefPatronVal ?>"
-                                                            data-patrons="<?= $patronsVal ?>"
-                                                            data-organising_committee="<?= $committeeVal ?>"
-                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
-                                                            data-training_schedule="<?= $scheduleVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-qr_code_image="<?= $qrVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="Edit Record">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            title="Delete Record">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#conferenceModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $conf['id'] ?>"
-                                                            data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($conf['title']) ?>"
-                                                            data-organizer="<?= $organizerVal ?>"
-                                                            data-start_date="<?= $startDateVal ?>"
-                                                            data-end_date="<?= $endDateVal ?>"
-                                                            data-location="<?= $locationVal ?>"
-                                                            data-submission_deadline="<?= $deadlineVal ?>"
-                                                            data-website_url="<?= $websiteVal ?>"
-                                                            data-investigator="<?= $investigatorVal ?>"
-                                                            data-convener="<?= $convenerVal ?>"
-                                                            data-resource_person="<?= $resourceVal ?>"
-                                                            data-chief_patron="<?= $chiefPatronVal ?>"
-                                                            data-patrons="<?= $patronsVal ?>"
-                                                            data-organising_committee="<?= $committeeVal ?>"
-                                                            data-registration_guidelines="<?= $regGuidelinesVal ?>"
-                                                            data-training_schedule="<?= $scheduleVal ?>"
-                                                            data-image="<?= $imageVal ?>"
-                                                            data-qr_code_image="<?= $qrVal ?>"
-                                                            data-publish_status="<?= $publishStatus ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                 <div class="d-flex justify-content-center gap-1">
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                             data-record="<?= htmlspecialchars(json_encode($conf), ENT_QUOTES, 'UTF-8') ?>"
+                                                             title="View Details">
+                                                         <i class="fa fa-eye"></i>
+                                                     </button>
+                                                     <?php if (canEditInstitute($prefix)): ?>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#conferenceModal"
+                                                             data-id="<?= $conf['id'] ?>"
+                                                             data-taskno="<?= htmlspecialchars($conf['taskno'] ?? '') ?>"
+                                                             data-title="<?= htmlspecialchars($conf['title']) ?>"
+                                                             data-organizer="<?= $organizerVal ?>"
+                                                             data-start_date="<?= $startDateVal ?>"
+                                                             data-end_date="<?= $endDateVal ?>"
+                                                             data-location="<?= $locationVal ?>"
+                                                             data-submission_deadline="<?= $deadlineVal ?>"
+                                                             data-website_url="<?= $websiteVal ?>"
+                                                             data-investigator="<?= $investigatorVal ?>"
+                                                             data-convener="<?= $convenerVal ?>"
+                                                             data-resource_person="<?= $resourceVal ?>"
+                                                             data-chief_patron="<?= $chiefPatronVal ?>"
+                                                             data-patrons="<?= $patronsVal ?>"
+                                                             data-organising_committee="<?= $committeeVal ?>"
+                                                             data-registration_guidelines="<?= $regGuidelinesVal ?>"
+                                                             data-training_schedule="<?= $scheduleVal ?>"
+                                                             data-image="<?= $imageVal ?>"
+                                                             data-qr_code_image="<?= $qrVal ?>"
+                                                             data-publish_status="<?= $publishStatus ?>"
+                                                             title="Edit Record">
+                                                         <i class="fa fa-pencil"></i>
+                                                     </button>
+                                                     <button type="button"
+                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
+                                                             data-id="<?= $conf['id'] ?>"
+                                                             data-record-prefix="<?= htmlspecialchars($conf['institute_prefix'] ?? $prefix) ?>"
+                                                             title="Delete Record">
+                                                         <i class="fa fa-trash"></i>
+                                                     </button>
+                                                     <?php endif; ?>
+                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -760,9 +747,11 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -775,6 +764,47 @@ $pageTitle = "Conferences Management | ANRF-PAIR";
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Conference Details',
+                recordTitle: rec.title || 'Untitled Conference',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                publishStatus: rec.publish_status,
+                fields: [
+                    { label: 'Task Number', value: rec.taskno, icon: 'fa-solid fa-list-check' },
+                    { label: 'Conference Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-users-rectangle' },
+                    { label: 'Organizer / Host', value: rec.organizer || rec.organisers, icon: 'fa-solid fa-sitemap' },
+                    { label: 'Location / Venue', value: rec.location, icon: 'fa-solid fa-location-dot' },
+                    { label: 'Start Date', value: (rec.start_date || rec.conf_date) ? formatDate(rec.start_date || rec.conf_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'End Date', value: rec.end_date ? formatDate(rec.end_date) : null, icon: 'fa-solid fa-calendar-check' },
+                    { label: 'Submission Deadline', value: rec.submission_deadline ? formatDate(rec.submission_deadline) : null, icon: 'fa-solid fa-clock-rotate-left' },
+                    { label: 'Website Link', value: rec.website_url, type: 'link', icon: 'fa-solid fa-globe' },
+                    { label: 'Principal Investigator', value: rec.investigator, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Convener', value: rec.convener, icon: 'fa-solid fa-user-pen' },
+                    { label: 'Resource Person', value: rec.resource_person, icon: 'fa-solid fa-chalkboard-user' },
+                    { label: 'Chief Patron', value: rec.chief_patron, icon: 'fa-solid fa-crown' },
+                    { label: 'Patrons', value: rec.patrons, icon: 'fa-solid fa-user-shield' },
+                    { label: 'Organising Committee', value: rec.organising_committee, icon: 'fa-solid fa-users' },
+                    { label: 'Registration Guidelines', value: rec.registration_guidelines, type: 'longtext', icon: 'fa-solid fa-clipboard-list' },
+                    { label: 'Training Schedule', value: rec.training_schedule, type: 'longtext', icon: 'fa-solid fa-calendar-week' },
+                    { label: 'Conference Poster / Image', value: rec.image, type: 'image', icon: 'fa-solid fa-image' },
+                    { label: 'QR Code Image', value: rec.qr_code_image, type: 'image', icon: 'fa-solid fa-qrcode' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('conferenceModalLabel');
@@ -850,7 +880,14 @@ document.addEventListener("DOMContentLoaded", function() {
         triggerBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const recordId = this.getAttribute('data-id');
-            modalDeleteExecutionLink.setAttribute('href', '?action=delete&id=' + recordId);
+            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', recordId);
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });
     });

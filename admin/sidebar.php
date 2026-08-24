@@ -2,19 +2,15 @@
 if (!isset($GLOBALS['__role_access_loaded'])) { require_once 'role_access.php'; $GLOBALS['__role_access_loaded'] = true; }
 $__isSuper = isSuperAdmin();
 $__activePrefix = resolveAdminPrefix();
-$__brandPrefix = $__isSuper ? 'uoh' : $__activePrefix;
-$__brandName = $__isSuper ? 'ANRF-PAIR Portal' : getInstituteFullName($__brandPrefix);
-$__brandLogo = $__isSuper ? 'logo/logo.png' : getInstituteLogo($__brandPrefix);
+$__brandPrefix = $__activePrefix;
+$__brandName = getInstituteFullName($__brandPrefix);
+$__brandLogo = getInstituteLogo($__brandPrefix);
 
 $currentPage = basename($_SERVER['PHP_SELF']);
 
-// Helper to preserve active institute prefix for Super Admin links
-$navUrl = function($targetPage) use ($__isSuper, $__activePrefix) {
-    if ($__isSuper && !empty($__activePrefix)) {
-        return $targetPage . '?prefix=' . urlencode($__activePrefix);
-    }
-    return $targetPage;
-};
+// Helper to preserve active institute prefix and tab_token for navigation links
+$navUrl = 'buildNavUrl';
+
 
 $__pendingCount = 0;
 try {
@@ -54,11 +50,13 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 <!--**********************************
     Nav header start
 ***********************************-->
-<!-- Logo + name reflect global brand for Super Admin / specific institute for regular Admin -->
-<div class="nav-header" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 999;">
-    <a href="<?= $navUrl('publications.php') ?>" class="brand-logo">
-        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img" style="border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">
-        <span class="brand-institute-name" style="font-weight: 700 !important; font-family: 'Poppins', sans-serif !important;"><?= htmlspecialchars($__brandName) ?></span>
+<!-- Logo reflects specific logged-in institute with full clarity and full name -->
+<div class="nav-header" style="background-color: #ffffff; box-shadow: none; z-index: 999;">
+    <a href="<?= $navUrl('publications.php') ?>" class="brand-logo" title="<?= htmlspecialchars($__brandName) ?>">
+        <img src="<?= htmlspecialchars($__brandLogo) ?>" alt="<?= htmlspecialchars($__brandName) ?> Logo" class="logo-img <?= ($__brandPrefix === 'uoh') ? 'logo-img-banner' : 'logo-img-emblem' ?>">
+        <?php if ($__brandPrefix !== 'uoh'): ?>
+        <span class="brand-institute-name"><?= htmlspecialchars($__brandName) ?></span>
+        <?php endif; ?>
     </a>
     <div class="nav-control">
         <div class="hamburger">
@@ -71,38 +69,131 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 ***********************************-->
 
 <style>
-/* --- Global & Header Updates --- */
-.brand-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 100%;
-    overflow: hidden;
+/* --- Active Pagination Background --- */
+.page-item.active .page-link,
+.pagination-theme-sapphire .page-item.active .page-link,
+.pagination .page-item.active .page-link {
+    background-color: #bc2121 !important;
+    border-color: #bc2121 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(188, 33, 33, 0.3) !important;
 }
-.logo-img {
-    max-height: 45px;
-    width: auto;
-    flex-shrink: 0;
-    object-fit: contain;
+.pagination-theme-sapphire .page-link,
+.pagination .page-link {
+    color: #bc2121 !important;
+}
+
+/* --- Global & Header Updates --- */
+.nav-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px 0 16px !important;
+    height: 70px !important;
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    z-index: 999 !important;
+}
+
+/* --- Remove All Sidebar & Nav-Header Shadows --- */
+.dlabnav,
+.custom-sidebar,
+.deznav,
+.nav-header,
+[data-sidebar-style],
+.dlabnav::before, .dlabnav::after,
+.custom-sidebar::before, .custom-sidebar::after,
+.deznav::before, .deznav::after,
+.nav-header::before, .nav-header::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+.brand-logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 2px 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    text-decoration: none !important;
+}
+
+.logo-img-banner {
+    height: 48px !important;
+    max-height: 52px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
     transition: transform 0.3s ease;
 }
-.logo-img:hover {
-    transform: scale(1.03);
+
+.logo-img-emblem {
+    height: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-height: 42px !important;
+    flex-shrink: 0 !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    padding: 0 !important;
+    transition: transform 0.3s ease;
 }
+
 .brand-institute-name {
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #000000;
-    white-space: normal;
-    overflow: visible;
-    word-break: break-word;
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+    color: #0f172a !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    display: inline-block !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    letter-spacing: -0.2px !important;
+}
+.nav-header .nav-control {
+    flex-shrink: 0 !important;
+    margin-left: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+}
+.nav-header .hamburger {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-top: -3px !important; /* Optically levels the hamburger icon with Manage Dashboard title */
+}
+.menu-toggle .brand-institute-name,
+[data-sidebar-style="mini"] .brand-institute-name {
+    display: none !important;
 }
 
 /* --- Sidebar Base --- */
 .custom-sidebar {
     background: #7a0e0e;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
 }
 .custom-sidebar ul.metismenu {
     padding: 15px 10px;
@@ -147,8 +238,9 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 .custom-sidebar ul.metismenu li.mm-active > a {
     background: linear-gradient(135deg, rgba(136,108,192,0.28) 0%, rgba(170,108,192,0.18) 100%) !important;
     color: #ffffff !important;
-    border-left: 3px solid #886cc0;
-    padding-left: 13px !important;
+    border-left: none !important;
+    border: none !important;
+    padding-left: 16px !important;
     position: relative;
     overflow: hidden;
 }
@@ -241,54 +333,177 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 .nav-group-sub li {
     margin-bottom: 2px !important;
 }
-.nav-group-sub li a {
+
+/* ──── KPI Sidebar Submenu Single-Color Identities ──── */
+.kpi-sub-item-publications {
+    --kpi-sub-color: #1E88C7;
+    --kpi-sub-hover-bg: rgba(30, 136, 199, 0.15);
+    --kpi-sub-active-bg: rgba(30, 136, 199, 0.22);
+}
+
+.kpi-sub-item-patents {
+    --kpi-sub-color: #00897B;
+    --kpi-sub-hover-bg: rgba(0, 137, 123, 0.15);
+    --kpi-sub-active-bg: rgba(0, 137, 123, 0.22);
+}
+
+.kpi-sub-item-conferences {
+    --kpi-sub-color: #7E57C2;
+    --kpi-sub-hover-bg: rgba(126, 87, 194, 0.15);
+    --kpi-sub-active-bg: rgba(126, 87, 194, 0.22);
+}
+
+.kpi-sub-item-webinars {
+    --kpi-sub-color: #831843;
+    --kpi-sub-hover-bg: rgba(131, 24, 67, 0.15);
+    --kpi-sub-active-bg: rgba(131, 24, 67, 0.22);
+}
+
+.kpi-sub-item-internships {
+    --kpi-sub-color: #1E88C7;
+    --kpi-sub-hover-bg: rgba(30, 136, 199, 0.15);
+    --kpi-sub-active-bg: rgba(30, 136, 199, 0.22);
+}
+
+.kpi-sub-item-reports {
+    --kpi-sub-color: #0e7490;
+    --kpi-sub-hover-bg: rgba(14, 116, 144, 0.15);
+    --kpi-sub-active-bg: rgba(14, 116, 144, 0.22);
+}
+
+.kpi-sub-item-research {
+    --kpi-sub-color: #00897B;
+    --kpi-sub-hover-bg: rgba(0, 137, 123, 0.15);
+    --kpi-sub-active-bg: rgba(0, 137, 123, 0.22);
+}
+
+.kpi-sub-item-gallery {
+    --kpi-sub-color: #F0932B;
+    --kpi-sub-hover-bg: rgba(240, 147, 43, 0.15);
+    --kpi-sub-active-bg: rgba(240, 147, 43, 0.22);
+}
+
+.kpi-sub-item-calendar {
+    --kpi-sub-color: #7E57C2;
+    --kpi-sub-hover-bg: rgba(126, 87, 194, 0.15);
+    --kpi-sub-active-bg: rgba(126, 87, 194, 0.22);
+}
+
+.kpi-sub-item-collabs {
+    --kpi-sub-color: #1E88C7;
+    --kpi-sub-hover-bg: rgba(30, 136, 199, 0.15);
+    --kpi-sub-active-bg: rgba(30, 136, 199, 0.22);
+}
+
+.kpi-sub-item-banners {
+    --kpi-sub-color: #7E57C2;
+    --kpi-sub-hover-bg: rgba(126, 87, 194, 0.15);
+    --kpi-sub-active-bg: rgba(126, 87, 194, 0.22);
+}
+
+.kpi-sub-item-tickers {
+    --kpi-sub-color: #00897B;
+    --kpi-sub-hover-bg: rgba(0, 137, 123, 0.15);
+    --kpi-sub-active-bg: rgba(0, 137, 123, 0.22);
+}
+
+.kpi-sub-item-team {
+    --kpi-sub-color: #F0932B;
+    --kpi-sub-hover-bg: rgba(240, 147, 43, 0.15);
+    --kpi-sub-active-bg: rgba(240, 147, 43, 0.22);
+}
+
+/* Submenu item link base styling */
+.nav-group-sub li.kpi-sub-link a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 9px 14px !important;
+    color: var(--kpi-sub-color) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.22s ease !important;
+    background: transparent !important;
+    border-left: none !important;
+    border: none !important;
+    transform: none !important;
+}
+
+.nav-group-sub li.kpi-sub-link a i {
+    font-size: 0.95rem !important;
+    margin-right: 9px !important;
+    width: 20px !important;
+    flex-shrink: 0 !important;
+    color: var(--kpi-sub-color) !important;
+    opacity: 1 !important;
+    transition: transform 0.22s ease !important;
+}
+
+/* Submenu hover state with 10-15% tint background (NO side line border) */
+.nav-group-sub li.kpi-sub-link a:hover {
+    background: var(--kpi-sub-hover-bg) !important;
+    color: var(--kpi-sub-color) !important;
+    border-left: none !important;
+    border: none !important;
+    transform: translateX(3px) !important;
+}
+
+.nav-group-sub li.kpi-sub-link a:hover i {
+    transform: scale(1.1) !important;
+    color: var(--kpi-sub-color) !important;
+}
+
+/* Submenu active state with 15-20% tint background (NO side line border) */
+.nav-group-sub li.kpi-sub-link.mm-active > a,
+.nav-group-sub li.kpi-sub-link.mm-active > a:hover {
+    background: var(--kpi-sub-active-bg) !important;
+    color: var(--kpi-sub-color) !important;
+    border-left: none !important;
+    border: none !important;
+    font-weight: 700 !important;
+    transform: none !important;
+}
+
+.nav-group-sub li.kpi-sub-link.mm-active > a i {
+    color: var(--kpi-sub-color) !important;
+    opacity: 1 !important;
+}
+
+/* Standard fallbacks for non-KPI child links */
+.nav-group-sub li:not(.kpi-sub-link) a {
     display: flex !important;
     align-items: center !important;
     padding: 8px 12px 8px 16px !important;
-    color: #94a3b8 !important;         /* Lighter than parent */
-    font-weight: 400 !important;       /* Lighter than parent's 600 */
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
     font-size: 12.5px !important;
     border-radius: 6px !important;
     text-decoration: none !important;
     transition: all 0.22s ease !important;
     background: transparent !important;
-    border-left: 2px solid transparent !important;
-    transform: none !important;
+    border-left: none !important;
+    border: none !important;
 }
-/* Child icon: slightly smaller */
-.nav-group-sub li a i {
+.nav-group-sub li:not(.kpi-sub-link) a i {
     font-size: 0.82rem !important;
     margin-right: 9px !important;
     width: 18px !important;
     flex-shrink: 0 !important;
     opacity: 0.75;
-    transition: opacity 0.22s ease, color 0.22s ease !important;
 }
-
-/* --- Child Hover State --- */
-.nav-group-sub li a:hover {
+.nav-group-sub li:not(.kpi-sub-link) a:hover {
     background: rgba(255,255,255,0.07) !important;
     color: #e2e8f0 !important;
-    border-left-color: rgba(136,108,192,0.5) !important;
-    transform: translateX(2px) !important;
+    border-left: none !important;
+    border: none !important;
 }
-.nav-group-sub li a:hover i {
-    opacity: 1;
-    color: #886cc0 !important;
-}
-
-/* --- Active Child Item --- */
-.nav-group-sub li.mm-active > a,
-.nav-group-sub li.mm-active > a:hover {
+.nav-group-sub li:not(.kpi-sub-link).mm-active > a {
     background: rgba(136,108,192,0.18) !important;
     color: #ffffff !important;
-    border-left-color: #886cc0 !important;
+    border-left: none !important;
+    border: none !important;
     font-weight: 600 !important;
-    transform: none !important;
-}
-.nav-group-sub li.mm-active > a i {
-    opacity: 1;
-    color: #886cc0 !important;
 }
 
 /* --- Logout Button --- */
@@ -417,7 +632,7 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
 
 <!--**********************************
     Sidebar start
-***********************************-->
+**********************************-->
 <!-- Added 'custom-sidebar' class for custom stylings -->
 <div class="dlabnav custom-sidebar">
     <div class="dlabnav-scroll" style="display: flex; flex-direction: column; height: 100%;">
@@ -455,57 +670,61 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <i class="fas fa-chevron-down nav-arrow" id="kpi-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
                 <ul class="nav-group-sub mm-collapse <?= $kpiActive ? 'mm-show' : '' ?>" id="kpi-sub" style="list-style:none; padding: 4px 0 4px 20px;">
-                    <li class="<?= ($currentPage === 'publications.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('publications.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-book-open" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-publications <?= ($currentPage === 'publications.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('publications.php') ?>">
+                            <i class="fas fa-book-open"></i>
                             <span class="nav-text">Publications</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'patents.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('patents.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-certificate" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-patents <?= ($currentPage === 'patents.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('patents.php') ?>">
+                            <i class="fas fa-certificate"></i>
                             <span class="nav-text">Patents</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'conferences.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('conferences.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-users" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-conferences <?= ($currentPage === 'conferences.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('conferences.php') ?>">
+                            <i class="fas fa-users"></i>
                             <span class="nav-text">Conferences</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'webinars.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('webinars.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-video" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-webinars <?= ($currentPage === 'webinars.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('webinars.php') ?>">
+                            <i class="fas fa-video"></i>
                             <span class="nav-text">Webinars</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'internships.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('internships.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-user-graduate" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-internships <?= ($currentPage === 'internships.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('internships.php') ?>">
+                            <i class="fas fa-user-graduate"></i>
                             <span class="nav-text">Internships</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'progress_reports.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('progress_reports.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-chart-line" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-reports <?= ($currentPage === 'progress_reports.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('progress_reports.php') ?>">
+                            <i class="fas fa-chart-line"></i>
                             <span class="nav-text">Progress Reports</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('collaborations_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-handshake" style="font-size:0.95rem;"></i>
+                    <?php if (isSuperAdmin()): ?>
+                    <li class="kpi-sub-link kpi-sub-item-collabs <?= ($currentPage === 'collaborations_management.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('collaborations_management.php') ?>">
+                            <i class="fas fa-handshake"></i>
                             <span class="nav-text">Collaborations</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('research_infrastructure.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-flask" style="font-size:0.95rem;"></i>
+                    <?php endif; ?>
+                    <?php if (isSuperAdmin()): ?>
+                    <li class="kpi-sub-link kpi-sub-item-research <?= ($currentPage === 'research_infrastructure.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('research_infrastructure.php') ?>">
+                            <i class="fas fa-flask"></i>
                             <span class="nav-text">Research &amp; Infrastructure</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'sheets.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('sheets.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-file-excel" style="font-size:0.95rem;"></i>
+                    <?php endif; ?>
+                    <li class="kpi-sub-link kpi-sub-item-patents <?= ($currentPage === 'sheets.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('sheets.php') ?>">
+                            <i class="fas fa-file-excel"></i>
                             <span class="nav-text">Sheets</span>
                         </a>
                     </li>
@@ -522,52 +741,54 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
                     <i class="fas fa-chevron-down nav-arrow" id="pages-arrow" style="margin-left:auto; font-size:0.7rem;"></i>
                 </a>
                 <ul class="nav-group-sub mm-collapse <?= $pagesActive ? 'mm-show' : '' ?>" id="pages-sub" style="list-style:none; padding: 4px 0 4px 20px;">
-                    <li class="<?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('gallery_albums_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-images" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-gallery <?= ($currentPage === 'gallery_albums_management.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('gallery_albums_management.php') ?>">
+                            <i class="fas fa-images"></i>
                             <span class="nav-text">Gallery Albums</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'gallery.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('gallery.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-link" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-gallery <?= ($currentPage === 'gallery.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('gallery.php') ?>">
+                            <i class="fas fa-link"></i>
                             <span class="nav-text">Drive Event Links</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'event_calendar.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('event_calendar.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-calendar-alt" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-calendar <?= ($currentPage === 'event_calendar.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('event_calendar.php') ?>">
+                            <i class="fas fa-calendar-alt"></i>
                             <span class="nav-text">Event Calendar</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'banner_management.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('banner_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-image" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-banners <?= ($currentPage === 'banner_management.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('banner_management.php') ?>">
+                            <i class="fas fa-image"></i>
                             <span class="nav-text">Homepage Banners</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'announcements_management.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('announcements_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-bullhorn" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-tickers <?= ($currentPage === 'announcements_management.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('announcements_management.php') ?>">
+                            <i class="fas fa-bullhorn"></i>
                             <span class="nav-text">Scrolling Ticker</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'team_management.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('team_management.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-user-cog" style="font-size:0.95rem;"></i>
+                    <li class="kpi-sub-link kpi-sub-item-team <?= ($currentPage === 'team_management.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('team_management.php') ?>">
+                            <i class="fas fa-user-cog"></i>
                             <span class="nav-text">Team Management</span>
                         </a>
                     </li>
-                    <li class="<?= ($currentPage === 'manage_admins.php') ? 'mm-active' : '' ?>">
-                        <a href="<?= $navUrl('manage_admins.php') ?>" style="padding: 9px 14px !important; font-size: 13px;">
-                            <i class="fas fa-users-cog" style="font-size:0.95rem;"></i>
-                            <span class="nav-text">Manage Admins</span>
+                    <li class="kpi-sub-link kpi-sub-item-patents <?= ($currentPage === 'manage_admins.php') ? 'mm-active' : '' ?>">
+                        <a href="<?= $navUrl('manage_admins.php') ?>">
+                            <i class="fas fa-users-cog"></i>
+                            <span class="nav-text">Manage Spoke Admins</span>
                         </a>
                     </li>
                 </ul>
             </li>
             <?php endif; /* isSuperAdmin() — Pages group */ ?>
         </ul>
+
+        <!-- Logout Button Section -->
 
 
 

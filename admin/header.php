@@ -1,36 +1,80 @@
+<?php
+if (!isset($GLOBALS['__role_access_loaded'])) {
+    require_once __DIR__ . '/role_access.php';
+    $GLOBALS['__role_access_loaded'] = true;
+}
+$__activeInstContext = getActiveInstituteContext();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <!-- PAGE TITLE HERE -->
-	<title>Management And Administration Website Templates | Fillow : Fillow Saas Admin Bootstrap 5 Template - Empowering Your Administration Work  | Dexignlabs</title>
-
+	<!-- DYNAMIC PAGE TITLE & FAVICON BASED ON ACTIVE INSTITUTE -->
+	<title id="dynamic-title"><?= htmlspecialchars($__activeInstContext['name'] . ' | ANRF-PAIR ' . (isSuperAdmin() ? 'Hub Admin Portal' : 'Spoke Admin Portal')) ?></title>
 
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="author" content="Dexignlabs">
+	<meta name="author" content="ANRF-PAIR Project">
 	<meta name="robots" content="index, follow">
-
-	<meta name="keywords" content="	admin, admin dashboard, admin template, analytics, bootstrap, bootstrap5, bootstrap 5 admin template, modern, responsive admin dashboard, sales dashboard, sass, ui kit, web app, Fillow SaaS, User Interface (UI), User Experience (UX), Dashboard Design, SaaS Application, Web Application, Data Visualization, Analytics, Customization, Responsive Design, Bootstrap Framework, Charts and Graphs, Data Management, Reporting, Dark Mode, Mobile-Friendly, Dashboard Components, Integrations, Analytics Dashboard, API Integration, User Authentication">
-
-
-	<meta name="description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-
-	<meta property="og:title" content="Fillow : Fillow Saas Admin Bootstrap 5 Template | Dexignlabs">
-	<meta property="og:description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-	<meta property="og:image" content="https://fillow.dexignlab.com/xhtml/social-image.png">
-	<meta name="format-detection" content="telephone=no">
-
-	<meta name="twitter:title" content="Fillow : Fillow Saas Admin Bootstrap 5 Template | Dexignlabs">
-	<meta name="twitter:description" content="Elevate your administrative efficiency and enhance productivity with the Fillow SaaS Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
-	<meta name="twitter:image" content="https://fillow.dexignlab.com/xhtml/social-image.png">
-	<meta name="twitter:card" content="summary_large_image">
 
 	<!-- MOBILE SPECIFIC -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+	<!-- DYNAMIC FAVICON -->
+	<link id="dynamic-favicon" rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($__activeInstContext['favicon']) ?>">
+	<link id="dynamic-favicon-icon" rel="icon" type="image/png" href="<?= htmlspecialchars($__activeInstContext['favicon']) ?>">
 	<link href="vendor/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link href="assets/css/confirm-modal.css?v=<?= filemtime(__DIR__ . '/assets/css/confirm-modal.css') ?>" rel="stylesheet">
+
+
+
+
+
+
+	<script>
+	window.INSTITUTE_TAB_DATA = {
+		'cuk':    { name: 'Central University of Karnataka', favicon: 'uploads/institutes/cuk_logo.png' },
+		'kannur': { name: 'Kannur University',               favicon: 'uploads/institutes/kannur_logo.png' },
+		'mgu':    { name: 'Mahatma Gandhi University',       favicon: 'uploads/institutes/mgu_logo.png' },
+		'ou':     { name: 'Osmania University',              favicon: 'uploads/institutes/ou_logo.png' },
+		'svu':    { name: 'Sri Venkateswara University',     favicon: 'uploads/institutes/svu_logo.png' },
+		'uoh':    { name: 'University of Hyderabad',         favicon: 'uploads/institutes/uoh_logo.png' },
+		'yvu':    { name: 'Yogi Vemana University',          favicon: 'uploads/institutes/yvu_logo.png' }
+	};
+
+	function updateTabTitleAndFavicon(prefix) {
+		var data = window.INSTITUTE_TAB_DATA[prefix];
+		if (!data) return;
+
+		// 1. Immediately update document title
+		var portalName = <?= isSuperAdmin() ? "'Hub Admin Portal'" : "'Spoke Admin Portal'" ?>;
+		var fullTitle = data.name + ' | ANRF-PAIR ' + portalName;
+		document.title = fullTitle;
+		var titleElem = document.getElementById('dynamic-title');
+		if (titleElem) titleElem.textContent = fullTitle;
+
+		// 2. Immediately update favicon link tags
+		['dynamic-favicon', 'dynamic-favicon-icon'].forEach(function(id) {
+			var link = document.getElementById(id);
+			if (link) {
+				link.href = data.favicon;
+			}
+		});
+		var allFavicons = document.querySelectorAll("link[rel*='icon']");
+		allFavicons.forEach(function(link) {
+			link.href = data.favicon;
+		});
+	}
+
+	document.addEventListener('DOMContentLoaded', function() {
+		var switcher = document.getElementById('institute-switcher');
+		if (switcher) {
+			switcher.addEventListener('change', function() {
+				updateTabTitleAndFavicon(this.value);
+			});
+		}
+	});
+	</script>
+
 	
     <?php if (!isSuperAdmin()): ?>
     <style>
@@ -364,7 +408,7 @@
             box-shadow: 0 4px 20px rgba(2, 66, 131, 0.04) !important;
         }
         .header .dashboard_bar {
-            color: #024283 !important;
+            color: #bc2121 !important;
             font-weight: 700 !important;
         }
         .input-group.search-area .form-control {
@@ -389,7 +433,7 @@
 
         /* ── 3. Table Headers & Rows: sapphire gradient & soft blue hover ── */
         body.theme-super-admin .table-theme-sapphire thead th {
-            background: #024283 !important;
+            background: #bc2121 !important;
             color: #ffffff !important;
             border-bottom: none !important;
             letter-spacing: 0.6px !important;
@@ -403,31 +447,48 @@
         }
 
         /* ── 4. Titles, Badges & Links ── */
-        .card-title, .registry-task-link {
-            color: #024283 !important;
+        .card-title, .registry-task-link, h4.card-title {
+            color: #bc2121 !important;
+        }
+        .page-titles .breadcrumb li a,
+        .page-titles .breadcrumb li.active,
+        .page-titles .breadcrumb li.active a,
+        .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item::before,
+        .breadcrumb-item.active,
+        .breadcrumb-item a,
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #bc2121 !important;
         }
         .registry-task-link:hover {
-            color: #1e40af !important;
+            color: #991b1b !important;
         }
         .index-badge-circle {
-            background-color: #024283 !important;
-            box-shadow: 0 2px 5px rgba(2, 66, 131, 0.25) !important;
+            background-color: #bc2121 !important;
+            box-shadow: 0 2px 5px rgba(188, 33, 33, 0.25) !important;
         }
         .registry-tag-pill {
-            color: #024283 !important;
-            background-color: #eff6ff !important;
-            border: 1px solid rgba(2, 66, 131, 0.15) !important;
+            color: #bc2121 !important;
+            background-color: #fdf2f2 !important;
+            border: 1px solid rgba(188, 33, 33, 0.15) !important;
+        }
+
+        /* ── 4b. Form Toggle Switch Green (#09BD3C) ── */
+        .form-check-input:checked,
+        .form-switch .form-check-input:checked,
+        input[type="checkbox"].form-check-input:checked {
+            background-color: #09BD3C !important;
+            border-color: #09BD3C !important;
         }
 
         /* ── 5. Pagination ── */
         .pagination-theme-sapphire .page-item.active .page-link {
-            background-color: #024283 !important;
-            border-color: #024283 !important;
+            background-color: #bc2121 !important;
+            border-color: #bc2121 !important;
             color: #fff !important;
-            box-shadow: 0 2px 6px rgba(2, 66, 131, 0.3) !important;
+            box-shadow: 0 2px 6px rgba(188, 33, 33, 0.3) !important;
         }
         .pagination-theme-sapphire .page-link {
-            color: #024283 !important;
+            color: #bc2121 !important;
         }
 
         /* ── 6. KPI Cards: Beautiful Gradient & Glassy Shine ── */
@@ -477,9 +538,9 @@
             echo 'body.theme-super-admin .kpi-widget-card { background: #b71c1c !important; box-shadow: 0 6px 20px rgba(183, 28, 28, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(183, 28, 28, 0.35) !important; }';
         } elseif ($currentPage === 'progress_reports.php') {
-            // Solid PURPLE color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: #5b21b6 !important; box-shadow: 0 6px 20px rgba(124, 58, 237, 0.25) !important; }';
-            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(124, 58, 237, 0.35) !important; }';
+            // Solid Deep Cyan color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #0e7490 !important; box-shadow: 0 6px 20px rgba(14, 116, 144, 0.25) !important; }';
+            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(14, 116, 144, 0.35) !important; }';
         } elseif ($currentPage === 'patents.php') {
             // Solid VIOLET/PURPLE color identity
             echo 'body.theme-super-admin .kpi-widget-card { background: #6d28d9 !important; box-shadow: 0 6px 20px rgba(109, 40, 217, 0.25) !important; }';
@@ -489,9 +550,9 @@
             echo 'body.theme-super-admin .kpi-widget-card { background: #15803d !important; box-shadow: 0 6px 20px rgba(21, 128, 61, 0.25) !important; }';
             echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(21, 128, 61, 0.35) !important; }';
         } elseif ($currentPage === 'webinars.php') {
-            // Solid ROSE/PINK color identity
-            echo 'body.theme-super-admin .kpi-widget-card { background: #be185d !important; box-shadow: 0 6px 20px rgba(190, 24, 93, 0.25) !important; }';
-            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(190, 24, 93, 0.35) !important; }';
+            // Solid Dark Mulberry color identity
+            echo 'body.theme-super-admin .kpi-widget-card { background: #831843 !important; box-shadow: 0 6px 20px rgba(131, 24, 67, 0.25) !important; }';
+            echo 'body.theme-super-admin .kpi-widget-card:hover { box-shadow: 0 10px 28px rgba(131, 24, 67, 0.35) !important; }';
         } elseif ($currentPage === 'internships.php') {
             // Solid INDIGO color identity
             echo 'body.theme-super-admin .kpi-widget-card { background: #3730a3 !important; box-shadow: 0 6px 20px rgba(55, 48, 163, 0.25) !important; }';
@@ -525,8 +586,57 @@
         }
     </style>
     <?php endif; ?>
-    <!-- User Profile Dropdown Styles & Scripts -->
+    <!-- User Profile Dropdown & Header Layout Styles -->
     <style>
+        /* --- HEADER LEFT & TITLE VERTICAL ALIGNMENT --- */
+        .header-left {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+        }
+
+        .dashboard_bar {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+            font-family: 'Poppins', 'Inter', -apple-system, sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 18px !important;
+            line-height: 1 !important;
+            color: #bc2121 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* --- NOTIFICATION BELL BUTTON STYLES --- */
+        .nav-notification-bell-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #C62828;
+            color: #ffffff !important;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(198, 40, 40, 0.2);
+            padding: 0;
+        }
+
+        .nav-notification-bell-btn i {
+            font-size: 18px;
+            color: #ffffff !important;
+        }
+
+        .nav-notification-bell-btn:hover,
+        .nav-notification-bell-btn:focus {
+            background-color: #b71c1c;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.35);
+        }
+
         /* --- PROFILE DROPDOWN CUSTOM STYLES --- */
         .profile-trigger-btn {
             background: none;
@@ -1026,9 +1136,12 @@
 								</div>
 							</li>
 						
-							
-							
-
+							<!-- Notification Bell Icon (between search bar and profile image) -->
+							<li class="nav-item d-flex align-items-center" style="margin-left: 15px;">
+								<button type="button" class="nav-notification-bell-btn" title="Notifications" aria-label="Notifications">
+									<i class="fas fa-bell"></i>
+								</button>
+							</li>
 							
 							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px; position: relative;">
 								<?php
@@ -1038,8 +1151,8 @@
 								
 								// Dynamic display that strictly falls back to requested defaults for Super Admin
 								$headerEmail = $_SESSION['username'] ?? 'admin@uoh.ac.in';
-								$headerRole = $headerIsSuper ? 'Super Admin' : 'Admin';
-								$headerBadge = $headerIsSuper ? 'ANRF Super Admin' : 'ANRF Admin - ' . getInstituteLabel($headerBrandPrefix);
+								$headerRole = $headerIsSuper ? 'Hub Admin' : 'Spoke Admin';
+								$headerBadge = $headerIsSuper ? 'ANRF Hub Admin' : 'ANRF Spoke Admin - ' . getInstituteLabel($headerBrandPrefix);
 								?>
 								<button class="nav-link p-0 profile-trigger-btn" id="profileDropdownTrigger" aria-haspopup="true" aria-expanded="false">
 									<img src="<?= htmlspecialchars($headerProfileLogo) ?>" alt="ANRF-PAIR" style="width: 40px; height: 40px; border-radius: 50%; object-fit: contain; border: 2px solid #e2e8f0; background: #fff; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s ease, border-color 0.2s ease;" class="profile-avatar-img">
@@ -1060,7 +1173,8 @@
 									</div>
 									<div class="dropdown-divider-custom"></div>
 									<!-- Bottom Section (Logout Action) -->
-									<a href="logout.php" class="dropdown-item-custom logout-item" role="menuitem">
+								<?php $logoutUrl = (isset($navUrl) && is_callable($navUrl)) ? $navUrl('logout.php') : 'logout.php'; ?>
+									<a href="<?= $logoutUrl ?>" class="dropdown-item-custom logout-item" role="menuitem">
 										<i class="fas fa-sign-out-alt"></i>
 										<span>Logout</span>
 									</a>

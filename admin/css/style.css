@@ -10426,6 +10426,19 @@ label {
       margin: 0; }
     .footer .copyright a {
       color: var(--primary); }
+    .footer .copyright a.footer-dev-link,
+    .copyright a.footer-dev-link {
+      color: #0066cc;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.2s ease-in-out, text-decoration 0.2s ease-in-out;
+      cursor: pointer; }
+    .footer .copyright a.footer-dev-link:hover,
+    .footer .copyright a.footer-dev-link:focus,
+    .copyright a.footer-dev-link:hover,
+    .copyright a.footer-dev-link:focus {
+      color: #004499;
+      text-decoration: underline; }
 
 .nav-header {
   height: var(--dz-header-height);
@@ -11142,7 +11155,7 @@ label {
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   transition: all .2s ease;
-  box-shadow: 0rem 0.9375rem 1.875rem 0rem rgba(0, 0, 0, 0.02); }
+  box-shadow: none; }
   .dlabnav .dlabnav-scroll {
     position: relative;
     height: 100%;
@@ -21155,16 +21168,16 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
       margin-top: 0;
       margin-bottom: 0; }
       .page-titles .breadcrumb li a {
-        color: #828690; }
+        color: #bc2121; }
         @media only screen and (max-width: 35.9375rem) {
           .page-titles .breadcrumb li a {
             font-size: 0.75rem; } }
       .page-titles .breadcrumb li.active {
-        color: var(--primary); }
+        color: #bc2121; }
         .page-titles .breadcrumb li.active a {
-          color: #FFA7D7; }
+          color: #bc2121; }
     .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item:before {
-      color: var(--primary); }
+      color: #bc2121; }
       @media only screen and (max-width: 35.9375rem) {
         .page-titles .breadcrumb .breadcrumb-item + .breadcrumb-item:before {
           font-size: 11px;

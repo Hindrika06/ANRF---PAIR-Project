@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can access Research & Infrastructure
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {
@@ -67,14 +73,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `research_areas` WHERE id = ?");
                 $stmt->execute([$id]);
-                header("Location: research_infrastructure.php?tab=research&success_msg=deleted");
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete research area: ' . $e->getMessage();
             }
         }
     } elseif ($type === 'facility') {
-        if (!canEditInstitute($prefix)) {
+        $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+        if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
             $error = 'You are not allowed to delete facilities for this institute.';
         } else {
             try {
@@ -88,8 +94,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
                 $stmt = $pdo->prepare("DELETE FROM `infrastructure_facilities` WHERE id = ?");
                 $stmt->execute([$id]);
-                header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=deleted");
-                exit;
+                adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'deleted']);
             } catch (PDOException $e) {
                 $error = 'Failed to delete facility: ' . $e->getMessage();
             }
@@ -158,8 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("INSERT INTO `research_areas` (title, description, image_path, display_order, status) VALUES (:title, :description, :image_path, :display_order, :status)");
                     $stmt->execute([':title' => $title, ':description' => $description, ':image_path' => $imagePath, ':display_order' => $display_order, ':status' => $status]);
                 }
-                header("Location: research_infrastructure.php?tab=research&success_msg=saved");
-                exit;
+                adminRedirect(['tab' => 'research', 'success_msg' => 'saved']);
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }
@@ -218,11 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $edit_id, 'UPDATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `infrastructure_facilities` (name, description, equipment_details, image_path, institute_prefix, display_order, status, approval_status) VALUES (:name, :description, :equipment_details, :image_path, :institute_prefix, :display_order, :status, :approval_status)");
                     $params = [':name' => $name, ':description' => $description, ':equipment_details' => $equipment_details, ':image_path' => $imagePath, ':institute_prefix' => $prefix, ':display_order' => $display_order, ':status' => $status, ':approval_status' => $approvalStatus];
@@ -231,11 +234,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Research Infrastructure', 'infrastructure_facilities', $prefix, $new_id, 'CREATE', $params);
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=submitted");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'submitted']);
                     } else {
-                        header("Location: research_infrastructure.php?prefix=" . $prefix . "&tab=infrastructure&success_msg=saved");
+                        adminRedirect(['tab' => 'infrastructure', 'success_msg' => 'saved']);
                     }
-                    exit;
                 }
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
@@ -259,12 +261,46 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
 <?php include 'sidebar.php'; ?>
 <?php include 'loader.php'; ?>
+
+<style>
+    /* ──── RESEARCH & INFRASTRUCTURE TAB STYLING (#00897B) ──── */
+    .custom-tab-1 .nav-tabs {
+        border-bottom: 2px solid #e2e8f0 !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link {
+        color: #64748b !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        background: transparent !important;
+        padding: 10px 18px !important;
+        transition: all 0.2s ease !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link i {
+        color: #64748b !important;
+        transition: color 0.2s ease !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link:hover {
+        color: #00897B !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link:hover i {
+        color: #00897B !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link.active {
+        color: #00897B !important;
+        border-bottom: 3px solid #00897B !important;
+        background: #ffffff !important;
+    }
+    .custom-tab-1 .nav-tabs .nav-link.active i {
+        color: #00897B !important;
+    }
+</style>
 
 <div id="main-wrapper">
     <div class="content-body default-height">
@@ -315,11 +351,11 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Project Key Research Areas (Global)</h4>
                     <?php if (isSuperAdmin()): ?>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openAddResearchModal()">
+                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openAddResearchModal()">
                         <i class="fa fa-plus me-1"></i> Add Research Area
                     </button>
                     <?php else: ?>
-                    <span class="text-muted" style="font-size: 13px;"><i class="fa fa-lock"></i> Super Admin Only</span>
+                    <span class="text-muted" style="font-size: 13px;"><i class="fa fa-lock"></i> Hub Admin Only</span>
                     <?php endif; ?>
                 </div>
                 <div class="card-body">
@@ -359,15 +395,16 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                                             </span>
                                         </td>
                                         <td class="text-center">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-research-btn" data-record="<?= htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
                                             <?php if (isSuperAdmin()): ?>
-                                                <button class="btn btn-warning btn-xs me-1" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)">
+                                                <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)" title="Edit Record">
                                                     <i class="fa fa-pencil"></i>
                                                 </button>
-                                                <a href="research_infrastructure.php?action=delete&type=research&id=<?= $r['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this research area?');">
+                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                     <i class="fa fa-trash"></i>
                                                 </a>
-                                            <?php else: ?>
-                                                <span class="text-muted" style="font-size:11px;">View Only</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -385,7 +422,7 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Laboratory Infrastructure & Advanced Facilities</h4>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openAddFacilityModal()">
+                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openAddFacilityModal()">
                         <i class="fa fa-plus me-1"></i> Add Facility
                     </button>
                 </div>
@@ -435,12 +472,17 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-facility-btn" data-record="<?= htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <?php if (canEditInstitute($f['institute_prefix'] ?? $prefix)): ?>
+                                            <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)" title="Edit Record">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="research_infrastructure.php?prefix=<?= $prefix ?>&action=delete&type=facility&id=<?= $f['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this facility?');">
+                                            <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -500,7 +542,7 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Research Area</button>
+                    <button type="submit" class="btn text-white" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;">Save Research Area</button>
                 </div>
             </form>
         </div>
@@ -555,7 +597,7 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Facility</button>
+                    <button type="submit" class="btn text-white" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;">Save Facility</button>
                 </div>
             </form>
         </div>
@@ -563,21 +605,20 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
 </div>
 
 <script>
-    var researchModal, facilityModal;
-    document.addEventListener("DOMContentLoaded", function() {
-        researchModal = new bootstrap.Modal(document.getElementById('researchModal'));
-        facilityModal = new bootstrap.Modal(document.getElementById('facilityModal'));
-    });
-
     function openAddResearchModal() {
         document.getElementById('res_edit_id').value = '';
         document.getElementById('res_title').value = '';
         document.getElementById('res_description').value = '';
         document.getElementById('res_display_order').value = '10';
         document.getElementById('res_status').value = 'Active';
-        document.getElementById('resImagePreviewContainer').style.display = 'none';
+        var p = document.getElementById('resImagePreviewContainer');
+        if (p) p.style.display = 'none';
         document.getElementById('resModalTitle').innerText = 'Add Research Area';
-        researchModal.show();
+        var modalEl = document.getElementById('researchModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
     }
 
     function openEditResearchModal(res) {
@@ -586,16 +627,19 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
         document.getElementById('res_description').value = res.description;
         document.getElementById('res_display_order').value = res.display_order;
         document.getElementById('res_status').value = res.status;
-        
+        var p = document.getElementById('resImagePreviewContainer');
         if (res.image_path) {
             document.getElementById('resImagePreview').src = '../' + res.image_path;
-            document.getElementById('resImagePreviewContainer').style.display = 'block';
+            if (p) p.style.display = 'block';
         } else {
-            document.getElementById('resImagePreviewContainer').style.display = 'none';
+            if (p) p.style.display = 'none';
         }
-        
         document.getElementById('resModalTitle').innerText = 'Edit Research Area';
-        researchModal.show();
+        var modalEl = document.getElementById('researchModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
     }
 
     function openAddFacilityModal() {
@@ -605,9 +649,14 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
         document.getElementById('fac_equipment').value = '';
         document.getElementById('fac_display_order').value = '10';
         document.getElementById('fac_status').value = 'Active';
-        document.getElementById('facImagePreviewContainer').style.display = 'none';
+        var p = document.getElementById('facImagePreviewContainer');
+        if (p) p.style.display = 'none';
         document.getElementById('facModalTitle').innerText = 'Add Infrastructure Facility';
-        facilityModal.show();
+        var modalEl = document.getElementById('facilityModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
     }
 
     function openEditFacilityModal(fac) {
@@ -617,17 +666,68 @@ $pageTitle = "Research & Infrastructure Management | ANRF-PAIR";
         document.getElementById('fac_equipment').value = fac.equipment_details || '';
         document.getElementById('fac_display_order').value = fac.display_order;
         document.getElementById('fac_status').value = fac.status;
-        
+        var p = document.getElementById('facImagePreviewContainer');
         if (fac.image_path) {
             document.getElementById('facImagePreview').src = '../' + fac.image_path;
-            document.getElementById('facImagePreviewContainer').style.display = 'block';
+            if (p) p.style.display = 'block';
         } else {
-            document.getElementById('facImagePreviewContainer').style.display = 'none';
+            if (p) p.style.display = 'none';
         }
-        
         document.getElementById('facModalTitle').innerText = 'Edit Infrastructure Facility';
-        facilityModal.show();
+        var modalEl = document.getElementById('facilityModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const viewResBtns = document.querySelectorAll('.view-research-btn');
+        viewResBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const imgUrl = rec.image_path ? ('../' + rec.image_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Research Area Details',
+                    recordTitle: rec.title || 'Untitled Research Area',
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-flask' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Image', value: imgUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+
+        const viewFacBtns = document.querySelectorAll('.view-facility-btn');
+        viewFacBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'all') ?>";
+                const imgUrl = rec.image_path ? ('../' + rec.image_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Infrastructure Facility Details',
+                    recordTitle: rec.name || 'Untitled Facility',
+                    institutePrefix: instPrefix,
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Facility Name', value: rec.name, fullWidth: true, icon: 'fa-solid fa-microscope' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Equipment Details', value: rec.equipment_details, type: 'longtext', icon: 'fa-solid fa-toolbox' },
+                        { label: 'Facility Photo', value: imgUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+    });
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

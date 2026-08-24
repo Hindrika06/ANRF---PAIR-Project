@@ -20,43 +20,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action && $request_id > 0) {
         if (!$is_super) {
-            $error_msg = 'Unauthorized. Only Super Admins can approve or reject requests.';
+            $error_msg = 'Unauthorized. Only Super Admins can approve, reject, or delete requests.';
         } else {
             try {
-                // Fetch the approval request
-                $pdo->bypass_interceptor = true;
-                $stmt = $pdo->prepare("SELECT * FROM `approval_requests` WHERE id = ?");
-                $stmt->execute([$request_id]);
-                $request = $stmt->fetch();
-                $pdo->bypass_interceptor = false;
-
-                if (!$request) {
-                    $error_msg = 'Request not found.';
-                } elseif ($request['status'] !== 'Pending') {
-                    $error_msg = 'This request has already been processed.';
+                if ($action === 'delete_request') {
+                    $pdo->bypass_interceptor = true;
+                    $delStmt = $pdo->prepare("DELETE FROM `approval_requests` WHERE id = ?");
+                    $delStmt->execute([$request_id]);
+                    $pdo->bypass_interceptor = false;
+                    $success_msg = 'Approval history deleted successfully.';
                 } else {
-                    if ($action === 'approve') {
-                        // 1. If deferred query exists, execute it
-                        if (!empty($request['sql_query'])) {
-                            try {
-                                $sql = $request['sql_query'];
-                                $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
-                                $deferredStmt = $pdo->prepare($sql);
-                                $deferredStmt->execute($params);
-                            } catch (Exception $ex) {
-                                // Ignore if record already inserted or query fails
+                    // Fetch the approval request
+                    $pdo->bypass_interceptor = true;
+                    $stmt = $pdo->prepare("SELECT * FROM `approval_requests` WHERE id = ?");
+                    $stmt->execute([$request_id]);
+                    $request = $stmt->fetch();
+                    $pdo->bypass_interceptor = false;
+
+                    if (!$request) {
+                        $error_msg = 'Request not found.';
+                    } elseif ($request['status'] !== 'Pending') {
+                        $error_msg = 'This request has already been processed.';
+                    } else {
+                        if ($action === 'approve') {
+                            // 1. If deferred query exists, execute it
+                            if (!empty($request['sql_query'])) {
+                                try {
+                                    $sql = $request['sql_query'];
+                                    $params = $request['sql_params'] ? json_decode($request['sql_params'], true) : [];
+                                    $deferredStmt = $pdo->prepare($sql);
+                                    $deferredStmt->execute($params);
+                                } catch (Exception $ex) {
+                                    // Ignore if record already inserted or query fails
+                                }
                             }
+                            
+                            // 2. Mark KPI request and target table row as Approved
+                            approveKpiRequest($pdo, $request_id, $_SESSION['username']);
+                            $success_msg = 'Request #' . $request_id . ' approved and changes published successfully.';
+                        } elseif ($action === 'reject') {
+                            $reason = trim($_POST['rejection_reason'] ?? '');
+                            
+                            // Mark KPI request and target table row as Rejected
+                            rejectKpiRequest($pdo, $request_id, $_SESSION['username'], $reason);
+                            $success_msg = 'Request #' . $request_id . ' has been rejected.';
                         }
-                        
-                        // 2. Mark KPI request and target table row as Approved
-                        approveKpiRequest($pdo, $request_id, $_SESSION['username']);
-                        $success_msg = 'Request #' . $request_id . ' approved and changes published successfully.';
-                    } elseif ($action === 'reject') {
-                        $reason = trim($_POST['rejection_reason'] ?? '');
-                        
-                        // Mark KPI request and target table row as Rejected
-                        rejectKpiRequest($pdo, $request_id, $_SESSION['username'], $reason);
-                        $success_msg = 'Request #' . $request_id . ' has been rejected.';
                     }
                 }
             } catch (Exception $e) {
@@ -98,7 +106,6 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
     $indexedRequests[$r['id']] = $r;
 }
 
-$pageTitle = "Approvals & Change Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -140,9 +147,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                 
                 <!-- Pending Approvals Card -->
                 <div class="card mb-4">
-                    <div class="card-header bg-danger text-white py-3 d-flex align-items-center gap-2">
-                        <span style="font-size: 16px;">🔴</span>
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #B71C1C, #C62828) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -179,11 +185,7 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                                                 <td>
                                                     <div class="d-flex gap-2 justify-content-center">
                                                         <button class="btn btn-xs btn-info" onclick="showDetails(<?= $r['id'] ?>)">View Details</button>
-                                                        <form method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to approve this request?');">
-                                                            <input type="hidden" name="action" value="approve">
-                                                            <input type="hidden" name="id" value="<?= $r['id'] ?>">
-                                                            <button type="submit" class="btn btn-xs btn-success text-white">Approve</button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-success btn-xs text-white" onclick="openApproveModal(<?= $r['id'] ?>)">Approve</button>
                                                         <button class="btn btn-xs btn-danger" onclick="openRejectModal(<?= $r['id'] ?>)">Reject</button>
                                                     </div>
                                                 </td>
@@ -198,8 +200,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
 
                 <!-- History Audit Trail Card -->
                 <div class="card">
-                    <div class="card-header bg-dark text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">Audit Trail Log (History)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Approved Logs</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -240,7 +242,10 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                                                 <td><?= htmlspecialchars($r['approved_by'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['approved_at'] ?? '-') ?></td>
                                                 <td>
-                                                    <button class="btn btn-xxs btn-light" onclick="showDetails(<?= $r['id'] ?>)">View Log</button>
+                                                    <div class="d-flex gap-1 justify-content-center">
+                                                        <button class="btn btn-xxs btn-light" onclick="showDetails(<?= $r['id'] ?>)">View Log</button>
+                                                        <button type="button" class="btn btn-xxs btn-danger text-white" onclick="openDeleteModal(<?= $r['id'] ?>)"><i class="fa fa-trash"></i> Delete</button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -257,8 +262,8 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                      ============================================================ -->
                 
                 <div class="card">
-                    <div class="card-header bg-primary text-white py-3">
-                        <h4 class="card-title text-white mb-0" style="font-weight: 700;">My Approval Requests Status Tracker</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #0B4A8B, #1565C0) !important;">
+                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">My Approval Requests Status Tracker</h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -306,7 +311,7 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
                                                             Approved by <?= htmlspecialchars($r['approved_by']) ?>
                                                         </div>
                                                     <?php else: ?>
-                                                        <span class="text-muted">Awaiting Super Admin review</span>
+                                                        <span class="text-muted">Awaiting Hub Admin review</span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -345,32 +350,13 @@ $pageTitle = "Approvals & Change Management | ANRF-PAIR";
     </div>
 </div>
 
-<!-- Reject Modal Prompter -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="POST" action="approvals.php">
-            <input type="hidden" name="action" value="reject">
-            <input type="hidden" name="id" id="rejectRequestId">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" style="font-weight: 700;">Reject Request</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: 0; font-size: 20px;">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to reject this request? Please provide rejection remarks for the Admin.</p>
-                    <div class="mb-3">
-                        <label class="form-label" style="font-weight: 600;">Rejection Reason / Remarks</label>
-                        <textarea class="form-control" name="rejection_reason" rows="3" placeholder="Enter reason for rejection..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Hidden Form for ANRFModal Submissions -->
+<form id="approvalActionForm" method="POST" action="approvals.php" style="display: none;">
+    <input type="hidden" name="action" id="approval_action">
+    <input type="hidden" name="id" id="approval_id">
+    <input type="hidden" name="rejection_reason" id="approval_rejection_reason">
+</form>
+
 
 <script src="vendor/global/global.min.js"></script>
 <script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
@@ -448,10 +434,45 @@ function showDetails(requestId) {
     new bootstrap.Modal(document.getElementById('detailsModal')).show();
 }
 
-function openRejectModal(id) {
-    document.getElementById('rejectRequestId').value = id;
-    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+function openApproveModal(id) {
+    ANRFModal.showApprove({
+        onConfirm: function () {
+            document.getElementById('approval_action').value = 'approve';
+            document.getElementById('approval_id').value = id;
+            document.getElementById('approval_rejection_reason').value = '';
+            document.getElementById('approvalActionForm').submit();
+        }
+    });
 }
+
+function openDeleteModal(id) {
+    ANRFModal.confirm({
+        type: 'reject',
+        title: 'Delete Approval Record?',
+        message: 'This will remove only the approval history entry.\nPublished KPI data will remain unchanged.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        showTextarea: false,
+        onConfirm: function () {
+            document.getElementById('approval_action').value = 'delete_request';
+            document.getElementById('approval_id').value = id;
+            document.getElementById('approval_rejection_reason').value = '';
+            document.getElementById('approvalActionForm').submit();
+        }
+    });
+}
+
+function openRejectModal(id) {
+    ANRFModal.showReject({
+        onConfirm: function (reason) {
+            document.getElementById('approval_action').value = 'reject';
+            document.getElementById('approval_id').value = id;
+            document.getElementById('approval_rejection_reason').value = reason;
+            document.getElementById('approvalActionForm').submit();
+        }
+    });
+}
+
 
 function escapeHtml(text) {
     if (text === null || text === undefined) return '';

@@ -266,19 +266,19 @@
         <div class="topbar-inner">
             <ul class="topbar-left">
                 <li>
+                    <a href="tel:04023132316">
+                        <span class="topbar-icon-badge">
+                            <i class="fa fa-phone" aria-hidden="true"></i>
+                        </span>
+                        <span>040-23132316</span>
+                    </a>
+                </li>
+                <li>
                     <a href="mailto:pairdirecorate@uohyd.ac.in">
                         <span class="topbar-icon-badge">
                             <i class="fa fa-envelope" aria-hidden="true"></i>
                         </span>
                         <span>pairdirecorate@uohyd.ac.in</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="tel:914023134546">
-                        <span class="topbar-icon-badge">
-                            <i class="fa fa-phone" aria-hidden="true"></i>
-                        </span>
-                        <span>040 2313 2309</span>
                     </a>
                 </li>
             </ul>
@@ -290,7 +290,7 @@
                     </a>
                     <ul class="topbar-dropdown-menu">
                         <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Hub Admin</a></li>
-                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Admin</a></li>
+                        <li><a href="login.php"><i class="fa fa-user" aria-hidden="true"></i> Spoke Admin</a></li>
                     </ul>
                 </li>
             </ul>

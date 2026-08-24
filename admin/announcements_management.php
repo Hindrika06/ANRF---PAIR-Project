@@ -34,8 +34,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     try {
         $stmt = $pdo->prepare("DELETE FROM `announcements` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: announcements_management.php?success_msg=deleted");
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete ticker: ' . $e->getMessage();
     }
@@ -66,8 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':is_active' => $is_active,
                     ':id'        => $edit_id
                 ]);
-                header("Location: announcements_management.php?success_msg=updated");
-                exit;
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 // Insert
                 $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active) VALUES (:title, :link, :is_active)");
@@ -76,8 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':link'      => $link,
                     ':is_active' => $is_active
                 ]);
-                header("Location: announcements_management.php?success_msg=inserted");
-                exit;
+                adminRedirect(['success_msg' => 'inserted']);
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -94,7 +91,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Announcements Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -171,7 +167,7 @@ $pageTitle = "Announcements Management | ANRF-PAIR";
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($a)) ?>)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="announcements_management.php?action=delete&id=<?= $a['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this ticker?');">
+                                            <a href="<?= $navUrl('announcements_management.php?action=delete&id=' . $a['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Ticker?', message: 'Are you sure you want to delete this ticker?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>

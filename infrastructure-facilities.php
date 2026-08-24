@@ -79,9 +79,9 @@ $bodyClass = 'page-homepage-courses'; include 'header.php';?>
                                     background: #0a3d75;
                                 }
                                 .category-header-static {
-                                    background: #002b5c;
+                                    background: #024283;
                                     color: #ffffff;
-                                    padding: 18px 24px;
+                                    padding: 12px 24px;
                                     display: flex;
                                     justify-content: space-between;
                                     align-items: center;
@@ -394,10 +394,10 @@ $bodyClass = 'page-homepage-courses'; include 'header.php';?>
 
 
                             <!-- Infrastructure Documentation Categories -->
-                            <div class="category-row" style="margin-top: 25px; border-top: 4px solid #002b5c;">
+                            <div class="category-row" style="margin-top: 25px; border-top: 4px solid #024283;">
                                 <div class="category-header-static">
                                     <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 12px; line-height: 1.4;">
-                                        <i class="fa fa-file-text" style="color: #ffc107; font-size: 18px;"></i>
+                                        <i class="fa fa-file-text" style="color: #ffffff; font-size: 18px;"></i>
                                         Infrastructure Documentation & Downloads
                                     </h3>
                                 </div>

@@ -784,13 +784,158 @@
     font-size: 12px;
 }
 
-/* ---- Copyright bottom bar ---- */
+/* ---- Footer Bottom Centered Stacked Layout (100% Viewport Alignment) ---- */
 #page-footer #footer-bottom {
-    padding: 14px 0;      /* was 20px — slightly tighter */
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    background-color: #012447 !important;
+    padding: 18px 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    clear: both !important;
+    overflow: hidden !important;
+}
+
+#page-footer #footer-bottom .footer-bottom-wrapper,
+#page-footer #footer-bottom .footer-bottom-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 15px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+    float: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Line 1: Copyright text */
+#page-footer #footer-bottom .footer-copyright {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    float: none !important;
+}
+
+#page-footer #footer-bottom .footer-copyright .nowrap {
+    white-space: nowrap;
+}
+
+/* ---- About ANRF-PAIR Column Visitor Counter & Read More Alignment ---- */
+.footer-about-visitor {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 7px;
+    margin: 16px auto 14px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    width: fit-content;
+    max-width: 100%;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.footer-about-visitor:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.footer-about-visitor .visitor-icon {
+    color: #bc2121; /* ANRF/UoH Brand Red Accent */
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-about-visitor .visitor-number {
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+
+.footer-about-visitor .visitor-label {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12.5px;
+}
+
+.footer-about-readmore {
+    width: 100%;
+    text-align: center;
+}
+
+.footer-about-readmore .read-more {
+    margin-top: 0;
+}
+
+/* Line 2: Developer Credit */
+#page-footer #footer-bottom .footer-dev {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    display: block !important;
+    float: none !important;
+    white-space: nowrap;
+}
+
+#page-footer #footer-bottom .footer-dev-link {
+    color: #38bdf8 !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease-in-out, text-decoration 0.2s ease-in-out !important;
+    cursor: pointer !important;
+    margin-left: 3px !important;
+    display: inline-block !important;
+}
+
+#page-footer #footer-bottom .footer-dev-link i {
+    font-size: 10px !important;
+    margin-left: 2px !important;
+    vertical-align: baseline !important;
+}
+
+#page-footer #footer-bottom .footer-dev-link:hover,
+#page-footer #footer-bottom .footer-dev-link:focus {
+    color: #93c5fd !important;
+    text-decoration: underline !important;
 }
 
 /* ---- Responsive: tablet ---- */
 @media (max-width: 991px) {
+    #page-footer #footer-bottom .footer-bottom-wrapper,
+    #page-footer #footer-bottom .footer-bottom-inner {
+        gap: 6px !important;
+    }
+    #page-footer #footer-bottom .footer-copyright,
+    #page-footer #footer-bottom .footer-dev {
+        font-size: 11.5px !important;
+    }
+
     #page-footer #footer-content > .container > .row {
         /* Stack into 2-column layout */
         display: flex;
@@ -808,6 +953,25 @@
 
 /* ---- Responsive: mobile ---- */
 @media (max-width: 767px) {
+    #page-footer #footer-bottom .footer-bottom-wrapper,
+    #page-footer #footer-bottom .footer-bottom-inner {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 6px !important;
+    }
+    #page-footer #footer-bottom .footer-copyright {
+        text-align: center !important;
+    }
+    #page-footer #footer-bottom .footer-copyright .nowrap {
+        white-space: normal !important;
+    }
+    #page-footer #footer-bottom .footer-dev {
+        text-align: center !important;
+        white-space: normal !important;
+    }
+
     #page-footer #footer-content > .container > .row > .col-md-3:first-child,
     #page-footer #footer-content > .container > .row > .col-md-3:nth-child(2),
     #page-footer #footer-content > .container > .row > .col-md-3:nth-child(3),
@@ -825,4 +989,44 @@
     #page-footer #footer-top {
         padding: 10px 0;
     }
+}
+
+/* ============================================================
+   GLOBAL REMOVAL OF DECORATIVE GRAY HEADINGS DIVIDERS & LINES
+   ============================================================ */
+h1::after, h1::before,
+h2::after, h2::before,
+h3::after, h3::before,
+h4::after, h4::before,
+h5::after, h5::before,
+h6::after, h6::before,
+.section-title::after, .section-title::before,
+.section-head::after, .section-head::before,
+.page-title::after, .page-title::before,
+.anrf-intro-heading-row h4::after, .anrf-intro-heading-row h4::before,
+.anrf-intro-heading-row h2::after, .anrf-intro-heading-row h2::before,
+.anrf-intro-text h3::after, .anrf-intro-text h3::before,
+header h1::after, header h2::after, header h3::after, header h4::after,
+.title::after, .title::before,
+.heading-line, .title-line, .heading-divider, .section-divider,
+.no-theme-underline::after,
+.no-theme-underline::before,
+h1.no-theme-underline::after,
+h1.no-theme-underline::before,
+h2.no-theme-underline::after,
+h2.no-theme-underline::before,
+h3.no-theme-underline::after,
+h3.no-theme-underline::before {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    background: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.section-title, .section-head, .page-title,
+.anrf-intro-heading-row h4, .anrf-intro-text h3 {
+    border-bottom: none !important;
 }

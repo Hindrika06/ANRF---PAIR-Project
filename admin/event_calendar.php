@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage event calendar
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $is_super = isSuperAdmin();
 $user_prefix = $_SESSION['institute_prefix'];
 
@@ -27,8 +33,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: event_calendar.php?success_msg=deleted");
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -172,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute($binds);
 
-                    header("Location: event_calendar.php?success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `events` (
                         title, description, university_id, event_date, end_date, start_time, end_time, venue, 
@@ -211,9 +216,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':training_schedule'       => $training_schedule,
                         ':created_by'              => $_SESSION['username']
                     ]);
-                    header("Location: event_calendar.php?success_msg=added");
+                    adminRedirect(['success_msg' => 'added']);
                 }
-                exit;
             } catch (Exception $e) {
                 $error = 'Database error: ' . $e->getMessage();
             }
@@ -386,12 +390,12 @@ include 'loader.php';
         color: #ffffff;
     }
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #ffffff !important;
     }
     .pagination-theme-sapphire .page-link {
-        color: #024283;
+        color: #bc2121;
     }
     /* Unified KPI styling */
     .kpi-widget-card {
@@ -885,7 +889,7 @@ include 'loader.php';
 
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -962,7 +966,10 @@ include 'loader.php';
     }
 
     function confirmDelete(id) {
-        modalDeleteExecutionLink.href = 'event_calendar.php?action=delete&id=' + id;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('action', 'delete');
+        urlParams.set('id', id);
+        modalDeleteExecutionLink.href = 'event_calendar.php?' + urlParams.toString();
         bootstrapDeleteInstance.show();
     }
     <?php endif; ?>

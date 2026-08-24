@@ -142,8 +142,8 @@ try {
 
     /* ── Image strip ── */
     .conf-card-image {
-        width: 340px;
-        min-width: 340px;
+        width: 380px;
+        min-width: 380px;
         min-height: 240px;
         background: #f8fafc;
         position: relative;
@@ -151,12 +151,14 @@ try {
         display: flex;
         align-items: center;
         justify-content: center;
+        border-right: 1px solid #f1f5f9;
     }
 
     .conf-card-image img {
         width: 100%;
         height: 100%;
         object-fit: contain;
+        object-position: center;
         display: block;
     }
 
@@ -324,6 +326,8 @@ try {
             width: 100%;
             min-width: unset;
             height: 320px;
+            border-right: none;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .conf-card-body {

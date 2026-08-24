@@ -26,8 +26,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
         $stmt = $pdo->prepare("DELETE FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: team_management.php?success_msg=deleted");
-        exit;
+        adminRedirect(['success_msg' => 'deleted']);
     } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
     }
@@ -141,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':id'             => $edit_id
                     ]);
                 }
-                header("Location: team_management.php?success_msg=updated");
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 // Insert
                 $stmt = $pdo->prepare("INSERT INTO `team` (full_name, designation, department, university, profile_image, biography, email, phone, linkedin, google_scholar, orcid, research_area, display_order, status) VALUES (:full_name, :designation, :department, :university, :profile_image, :biography, :email, :phone, :linkedin, :google_scholar, :orcid, :research_area, :display_order, :status)");
@@ -161,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':display_order'  => $display_order,
                     ':status'         => $status
                 ]);
-                header("Location: team_management.php?success_msg=added");
+                adminRedirect(['success_msg' => 'added']);
             }
             exit;
         } catch (Exception $e) {
@@ -294,12 +293,12 @@ include 'loader.php';
         color: #64748b !important;
     }
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #ffffff !important;
     }
     .pagination-theme-sapphire .page-link {
-        color: #024283;
+        color: #bc2121;
     }
     /* Unified KPI widgets style */
     .kpi-widget-card {
@@ -365,7 +364,7 @@ include 'loader.php';
 
             <div class="page-titles">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">Super Admin Control</a></li>
+                    <li class="breadcrumb-item"><a href="#">Hub Admin Control</a></li>
                     <li class="breadcrumb-item active">Team Management</li>
                 </ol>
             </div>
@@ -694,7 +693,7 @@ include 'loader.php';
 
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -742,7 +741,10 @@ include 'loader.php';
     }
 
     function confirmDelete(id) {
-        modalDeleteExecutionLink.href = 'team_management.php?action=delete&id=' + id;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('action', 'delete');
+        urlParams.set('id', id);
+        modalDeleteExecutionLink.href = 'team_management.php?' + urlParams.toString();
         bootstrapDeleteInstance.show();
     }
 </script>

@@ -19,17 +19,18 @@ $error   = '';
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
-    try {
-        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-        exit;
-    } catch (PDOException $e) {
-        $error = 'Failed to delete record: ' . $e->getMessage();
-    }
+        try {
+            $deleteTable = "{$deletePrefix}_internships";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            adminRedirect(['success_msg' => 'deleted']);
+        } catch (PDOException $e) {
+            $error = 'Failed to delete record: ' . $e->getMessage();
+        }
     }
 }
 
@@ -85,11 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $edit_id, 'UPDATE', $payload);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
+                adminRedirect(['success_msg' => 'updated']);
             }
-            exit;
         } else {
             $stmt = $pdo->prepare("
                 INSERT INTO `$table`
@@ -104,11 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$is_super) {
                 submitKpiApprovalRequest($pdo, 'Internships', $table, $prefix, $new_id, 'CREATE', $payload);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=submitted");
+                adminRedirect(['success_msg' => 'submitted']);
             } else {
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
+                adminRedirect(['success_msg' => 'inserted']);
             }
-            exit;
         }
     } catch (PDOException $e) {
         $error = 'Database error: ' . $e->getMessage();
@@ -204,7 +203,7 @@ $total_pis = count($unique_investigators);
     .registry-task-link {
         font-size: 12px;
         font-weight: 700;
-        color: #024283;
+        color: #bc2121;
         text-decoration: none;
         display: inline-block;
         margin-bottom: 2px;
@@ -314,12 +313,12 @@ $total_pis = count($unique_investigators);
     }
 
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #ffffff !important;
     }
     .pagination-theme-sapphire .page-link {
-        color: #024283;
+        color: #bc2121;
     }
 
     /* Students names truncation inside registry row */
@@ -335,14 +334,25 @@ $total_pis = count($unique_investigators);
         vertical-align: middle;
     }
 
-    /* ──── UNIFIED ORANGE KPI WIDGET STYLES (unchanged for internships) ──── */
+    /* ──── KPI CARD COLORS (#1E88C7, #00897B, #F0932B, #7E57C2) ──── */
     .kpi-widget-card {
-        border-radius: 20px !important;
+        border-radius: 6px !important;
         padding: 20px 24px;
         color: #ffffff;
         border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        background-color: #FFA500 !important;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+        transform: translateY(-4px);
+    }
+    .kpi-color-1,
+    .kpi-color-2,
+    .kpi-color-3,
+    .kpi-color-4 {
+        background-color: #1E88C7 !important;
+        box-shadow: 0 6px 18px rgba(30, 136, 199, 0.3) !important;
     }
     .kpi-card-body {
         display: flex;
@@ -387,6 +397,20 @@ $total_pis = count($unique_investigators);
         opacity: 0.8;
         font-weight: 400;
     }
+
+    #modalForm .form-label-grey {
+        color: #666 !important;
+        font-weight: 500;
+    }
+    #modalForm .form-control {
+        color: #1a1a1a !important;
+        font-weight: 500;
+        border-color: #cbd5e1;
+    }
+    #modalForm .form-control:focus {
+        color: #000 !important;
+        border-color: #666;
+    }
 </style>
 
 
@@ -399,8 +423,8 @@ $total_pis = count($unique_investigators);
 
             <div class="page-titles">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">IPR &amp; Research</a></li>
-                    <li class="breadcrumb-item active">Internships Dashboard</li>
+                    <li class="breadcrumb-item"><a href="#">IPR Management</a></li>
+                    <li class="breadcrumb-item active">Internships Directory</li>
                 </ol>
             </div>
 
@@ -422,7 +446,7 @@ $total_pis = count($unique_investigators);
 
             <div class="row mb-4">
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-graduation-cap"></i></div>
                             <span class="kpi-title-text">Total Programs</span>
@@ -435,7 +459,7 @@ $total_pis = count($unique_investigators);
                 </div>
 
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-users"></i></div>
                             <span class="kpi-title-text">Students Trained</span>
@@ -448,7 +472,7 @@ $total_pis = count($unique_investigators);
                 </div>
 
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-clock"></i></div>
                             <span class="kpi-title-text">Total Days</span>
@@ -461,7 +485,7 @@ $total_pis = count($unique_investigators);
                 </div>
 
                 <div class="col-xl-3 col-sm-6 mb-3">
-                    <div class="card kpi-widget-card">
+                    <div class="card kpi-widget-card kpi-color-1">
                         <div class="kpi-card-body">
                             <div class="kpi-icon-circle"><i class="fa-solid fa-user-tie"></i></div>
                             <span class="kpi-title-text">Investigators</span>
@@ -478,7 +502,7 @@ $total_pis = count($unique_investigators);
             <div class="col-lg-12 px-0">
                 <div class="card registry-card">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 bg-white border-0">
-                        <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
+                        <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-graduation-cap me-2"></i>INTERNSHIPS &amp; TRAINING RECORDS
                         </h4>
                         <?php if (canEditInstitute($prefix)): ?>
@@ -539,6 +563,12 @@ $total_pis = count($unique_investigators);
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -558,25 +588,9 @@ $total_pis = count($unique_investigators);
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $item['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($item['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#internshipModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $item['id'] ?>"
-                                                            data-task="<?= htmlspecialchars($item['task_no'] ?? '') ?>"
-                                                            data-title="<?= htmlspecialchars($item['title']) ?>"
-                                                            data-pi="<?= htmlspecialchars($item['project_investigator']) ?>"
-                                                            data-trained="<?= (int)$item['no_students_trained'] ?>"
-                                                            data-days="<?= $item['no_days_trained'] ?? '' ?>"
-                                                            data-names="<?= htmlspecialchars($item['students_names'] ?? '') ?>"
-                                                            data-content="<?= htmlspecialchars($item['content'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -688,9 +702,11 @@ $total_pis = count($unique_investigators);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -703,6 +719,36 @@ $total_pis = count($unique_investigators);
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Internship / Training Details',
+                recordTitle: rec.title || 'Untitled Internship Program',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                approvalStatus: rec.approval_status || 'Approved',
+                fields: [
+                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
+                    { label: 'Program Title', value: rec.title, fullWidth: true, icon: 'fa-solid fa-graduation-cap' },
+                    { label: 'Project Investigator / Mentor', value: rec.project_investigator, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Students Trained', value: (rec.no_students_trained !== null && rec.no_students_trained !== undefined) ? `${rec.no_students_trained} Students` : null, icon: 'fa-solid fa-user-group' },
+                    { label: 'Duration in Days', value: rec.no_days_trained ? `${rec.no_days_trained} Days` : null, icon: 'fa-solid fa-hourglass-half' },
+                    { label: 'Trained Students List', value: rec.students_names, type: 'longtext', icon: 'fa-solid fa-users-line' },
+                    { label: 'Program Details / Content', value: rec.content, type: 'longtext', icon: 'fa-solid fa-file-lines' },
+                    { label: 'Submission Date', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn = document.getElementById('addNewBtn');
     const editButtons = document.querySelectorAll('.edit-btn');
     const modalTitle = document.getElementById('internshipModalLabel');
@@ -840,7 +886,14 @@ document.addEventListener("DOMContentLoaded", function() {
         triggerBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const recordId = this.getAttribute('data-id');
-            modalDeleteExecutionLink.setAttribute('href', '?action=delete&id=' + recordId);
+            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', recordId);
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });
     });

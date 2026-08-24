@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage collaborations
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {
@@ -36,7 +42,8 @@ try {
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete collaborations for this institute.';
     } else {
         try {
@@ -50,8 +57,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 
             $stmt = $pdo->prepare("DELETE FROM `collaborations` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=deleted");
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete collaboration: ' . $e->getMessage();
         }
@@ -65,6 +71,8 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("[Collaborations POST] Received request. Raw POST: " . json_encode($_POST) . " FILES: " . json_encode($_FILES));
+
     $partner_name        = trim($_POST['partner_name'] ?? '');
     $profile_description = trim($_POST['profile_description'] ?? '');
     $collab_type         = $_POST['collab_type'] ?? 'Academic';
@@ -73,15 +81,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status              = $_POST['status'] ?? 'Active';
     $edit_id             = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
 
+    if (!empty($website_url) && !preg_match("~^(?:f|ht)tps?://~i", $website_url)) {
+        $website_url = "https://" . $website_url;
+    }
+
     if (empty($partner_name)) {
         $error = 'Partner Name is required.';
+        error_log("[Collaborations POST Error] Partner name is empty.");
     } elseif (!canEditInstitute($prefix)) {
         $error = 'You are not allowed to edit collaborations for this institute.';
+        error_log("[Collaborations POST Error] Permission check failed for prefix: $prefix");
     } else {
         try {
             $uploadDir = '../uploads/collaborations/';
             if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                if (!@mkdir($uploadDir, 0755, true)) {
+                    throw new RuntimeException("Failed to create upload directory: $uploadDir");
+                }
             }
             $logoPath = null;
 
@@ -90,25 +106,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $f = $_FILES['logo'];
 
                 if ($f['error'] !== UPLOAD_ERR_OK) {
-                    throw new RuntimeException("File upload failed with error code: " . $f['error']);
+                    $uploadErrors = [
+                        UPLOAD_ERR_INI_SIZE   => "The uploaded file exceeds the upload_max_filesize directive in php.ini",
+                        UPLOAD_ERR_FORM_SIZE  => "The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form",
+                        UPLOAD_ERR_PARTIAL    => "The uploaded file was only partially uploaded",
+                        UPLOAD_ERR_NO_FILE    => "No file was uploaded",
+                        UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder",
+                        UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk",
+                        UPLOAD_ERR_EXTENSION  => "A PHP extension stopped the file upload"
+                    ];
+                    $errMsg = $uploadErrors[$f['error']] ?? ("Unknown upload error code: " . $f['error']);
+                    throw new RuntimeException("Logo upload error: " . $errMsg);
                 }
 
                 if ($f['size'] > 3 * 1024 * 1024) {
-                    throw new RuntimeException("Logo file size exceeds 3 MB limit.");
+                    throw new RuntimeException("Logo file size exceeds 3 MB limit (" . round($f['size'] / (1024 * 1024), 2) . " MB uploaded).");
                 }
 
                 $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
                 if (!in_array($ext, ['jpg', 'jpeg', 'png', 'svg', 'webp'])) {
-                    throw new RuntimeException("Invalid file type. Only JPG, JPEG, PNG, SVG, and WEBP are allowed.");
+                    throw new RuntimeException("Invalid file type (.$ext). Only JPG, JPEG, PNG, SVG, and WEBP are allowed.");
                 }
 
                 $destFileName = uniqid('collab_', true) . '.' . $ext;
                 $destFullPath = $uploadDir . $destFileName;
 
                 if (!move_uploaded_file($f['tmp_name'], $destFullPath)) {
-                    throw new RuntimeException("Could not save the uploaded logo file.");
+                    throw new RuntimeException("Could not save the uploaded logo file to: $destFullPath");
                 }
                 $logoPath = 'uploads/collaborations/' . $destFileName;
+                error_log("[Collaborations POST] Uploaded logo saved to: $logoPath");
 
                 // Delete old logo file if editing
                 if ($edit_id) {
@@ -157,11 +184,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $edit_id, 'UPDATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=updated");
+                    adminRedirect(['success_msg' => 'updated']);
                 }
-                exit;
             } else {
                 // Insert
                 if (!$logoPath) {
@@ -180,18 +206,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':approval_status'     => $approvalStatus
                 ];
                 $stmt->execute($params);
-                $new_id = $pdo->lastInsertId();
+                $new_id = (int)$pdo->lastInsertId();
+                error_log("[Collaborations POST] INSERT success. new_id: $new_id");
 
                 if (!$is_super) {
                     submitKpiApprovalRequest($pdo, 'Collaborations', 'collaborations', $prefix, $new_id, 'CREATE', $params);
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=submitted");
+                    adminRedirect(['success_msg' => 'submitted']);
                 } else {
-                    header("Location: collaborations_management.php?prefix=" . $prefix . "&success_msg=inserted");
+                    adminRedirect(['success_msg' => 'inserted']);
                 }
-                exit;
             }
+        } catch (PDOException $e) {
+            $error = "Database Error: " . $e->getMessage();
+            error_log("[Collaborations PDOException] " . $e->getMessage());
         } catch (Exception $e) {
             $error = $e->getMessage();
+            error_log("[Collaborations Exception] " . $e->getMessage());
         }
     }
 }
@@ -207,7 +237,6 @@ try {
     // Ignore error
 }
 
-$pageTitle = "Collaborations Management | ANRF-PAIR";
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -229,7 +258,21 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
 
             <?php if ($success): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Success!</strong> Collaborations updated successfully.
+                <strong>Success!</strong>
+                <?php
+                $msg = $_GET['success_msg'] ?? '';
+                if ($msg === 'inserted') {
+                    echo ' Collaboration partner created successfully.';
+                } elseif ($msg === 'submitted') {
+                    echo ' Collaboration partner submitted for approval successfully.';
+                } elseif ($msg === 'updated') {
+                    echo ' Collaboration partner updated successfully.';
+                } elseif ($msg === 'deleted') {
+                    echo ' Collaboration partner deleted successfully.';
+                } else {
+                    echo ' Collaborations updated successfully.';
+                }
+                ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
@@ -244,7 +287,7 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Institutional Partners & Industry Collaborations</h4>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#collabModal" data-toggle="modal" data-target="#collabModal" onclick="openAddModal()">
                         <i class="fa fa-plus me-1"></i> Add Collaboration
                     </button>
                 </div>
@@ -288,10 +331,13 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)">
+                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-kpi-btn" data-record="<?= htmlspecialchars(json_encode($c), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($c)) ?>)" title="Edit Record">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <a href="collaborations_management.php?prefix=<?= $prefix ?>&action=delete&id=<?= $c['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure you want to delete this collaboration?');">
+                                            <a href="<?= $navUrl('collaborations_management.php?action=delete&id=' . $c['id'] . '&record_prefix=' . urlencode($c['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Collaboration?', message: 'Are you sure you want to delete this collaboration?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i>
                                             </a>
                                         </td>
@@ -312,11 +358,11 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
 <div class="modal fade" id="collabModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" action="collaborations_management.php?prefix=<?= urlencode($prefix) ?>" enctype="multipart/form-data">
                 <input type="hidden" name="edit_id" id="edit_id" value="">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Add Collaboration</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
@@ -349,7 +395,7 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Website / Partner Link URL</label>
-                            <input type="url" name="website_url" id="website_url" class="form-control" placeholder="https://partner-website.org">
+                            <input type="text" name="website_url" id="website_url" class="form-control" placeholder="https://partner-website.org">
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Display Order</label>
@@ -365,7 +411,7 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Partner</button>
                 </div>
             </form>
@@ -373,11 +419,21 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
     </div>
 </div>
 
+<script src="vendor/global/global.min.js"></script>
+<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
+<script src="js/custom.min.js"></script>
+<script src="js/dlabnav-init.js"></script>
+
 <script>
-    var collabModal;
-    document.addEventListener("DOMContentLoaded", function() {
-        collabModal = new bootstrap.Modal(document.getElementById('collabModal'));
-    });
+    function showCollabModal() {
+        var modalEl = document.getElementById('collabModal');
+        if (window.bootstrap && window.bootstrap.Modal) {
+            var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            instance.show();
+        } else if (window.jQuery && jQuery.fn.modal) {
+            jQuery(modalEl).modal('show');
+        }
+    }
 
     function openAddModal() {
         document.getElementById('edit_id').value = '';
@@ -387,21 +443,23 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
         document.getElementById('website_url').value = '';
         document.getElementById('display_order').value = '10';
         document.getElementById('status').value = 'Active';
+        document.getElementById('logo').value = '';
         document.getElementById('logo').required = true;
         document.getElementById('logoLabel').innerText = 'Upload Logo Image *';
         document.getElementById('logoPreviewContainer').style.display = 'none';
         document.getElementById('modalTitle').innerText = 'Add Collaboration Partner';
-        collabModal.show();
+        showCollabModal();
     }
 
     function openEditModal(collab) {
         document.getElementById('edit_id').value = collab.id;
-        document.getElementById('partner_name').value = collab.partner_name;
-        document.getElementById('profile_description').value = collab.profile_description;
-        document.getElementById('collab_type').value = collab.collab_type;
-        document.getElementById('website_url').value = collab.website_url;
-        document.getElementById('display_order').value = collab.display_order;
-        document.getElementById('status').value = collab.status;
+        document.getElementById('partner_name').value = collab.partner_name || '';
+        document.getElementById('profile_description').value = collab.profile_description || '';
+        document.getElementById('collab_type').value = collab.collab_type || 'Academic';
+        document.getElementById('website_url').value = collab.website_url || '';
+        document.getElementById('display_order').value = collab.display_order || 10;
+        document.getElementById('status').value = collab.status || 'Active';
+        document.getElementById('logo').value = '';
         document.getElementById('logo').required = false;
         document.getElementById('logoLabel').innerText = 'Replace Logo Image';
         
@@ -413,8 +471,36 @@ $pageTitle = "Collaborations Management | ANRF-PAIR";
         }
         
         document.getElementById('modalTitle').innerText = 'Edit Collaboration Partner';
-        collabModal.show();
+        showCollabModal();
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+        viewKpiBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.dataset.record) return;
+                const rec = JSON.parse(this.dataset.record);
+                const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'all') ?>";
+                const logoUrl = rec.logo_path ? ('../' + rec.logo_path) : null;
+
+                openKpiRecordViewModal({
+                    moduleTitle: 'Collaboration Details',
+                    recordTitle: rec.partner_name || 'Untitled Partner',
+                    institutePrefix: instPrefix,
+                    extraStatus: rec.status ? `Status: ${rec.status}` : null,
+                    fields: [
+                        { label: 'Partner Name', value: rec.partner_name, fullWidth: true, icon: 'fa-solid fa-handshake' },
+                        { label: 'Collaboration Type', value: rec.collab_type, icon: 'fa-solid fa-tag' },
+                        { label: 'Website URL', value: rec.website_url, type: 'link', icon: 'fa-solid fa-globe' },
+                        { label: 'Display Order', value: rec.display_order, icon: 'fa-solid fa-sort' },
+                        { label: 'Profile Description', value: rec.profile_description, type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Partner Logo', value: logoUrl, type: 'image', icon: 'fa-solid fa-image' }
+                    ]
+                });
+            });
+        });
+    });
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

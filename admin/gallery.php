@@ -2,6 +2,12 @@
 require_once 'auth_check.php';
 require_once 'role_access.php';
 
+// Auth Guard: Only Super Admin / Hub Admin can manage drive event links
+if (!isSuperAdmin()) {
+    header("Location: dashboard.php");
+    exit();
+}
+
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {
@@ -53,14 +59,15 @@ try {
 
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!canEditInstitute($prefix)) {
+    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
         try {
-            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id");
+            $deleteTable = "{$deletePrefix}_gallery_events";
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
-            header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=deleted");
-            exit;
+            adminRedirect(['success_msg' => 'deleted']);
         } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
@@ -106,8 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':description'       => $description,
                     ':id'                => $edit_id,
                 ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=updated");
-                exit;
+                adminRedirect(['success_msg' => 'updated']);
             } else {
                 $stmt = $pdo->prepare("
                     INSERT INTO `$table`
@@ -123,8 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':category'          => $category,
                     ':description'       => $description,
                 ]);
-                header("Location: " . strtok($_SERVER["REQUEST_URI"], '?') . "?success_msg=inserted");
-                exit;
+                adminRedirect(['success_msg' => 'inserted']);
             }
         } catch (PDOException $e) {
             $error = 'Database error: ' . $e->getMessage();
@@ -280,11 +285,11 @@ $total_categories   = count($categories_count);
 
     /* Pagination */
     .pagination-theme-sapphire .page-item.active .page-link {
-        background-color: #024283 !important;
-        border-color: #024283 !important;
+        background-color: #bc2121 !important;
+        border-color: #bc2121 !important;
         color: #fff !important;
     }
-    .pagination-theme-sapphire .page-link { color: #024283; }
+    .pagination-theme-sapphire .page-link { color: #bc2121; }
 
     /* KPI cards – teal-green theme */
     .kpi-widget-card {
@@ -486,6 +491,12 @@ $total_categories   = count($categories_count);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button"
+                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
+                                                            data-record="<?= htmlspecialchars(json_encode($ev), ENT_QUOTES, 'UTF-8') ?>"
+                                                            title="View Details">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
                                                     <?php if (canEditInstitute($prefix)): ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
@@ -504,24 +515,9 @@ $total_categories   = count($categories_count);
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $ev['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($ev['institute_prefix'] ?? $prefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php else: ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#galleryModal"
-                                                            data-view-only="true"
-                                                            data-id="<?= $ev['id'] ?>"
-                                                            data-event="<?= htmlspecialchars($ev['event_name']) ?>"
-                                                            data-coordinator="<?= htmlspecialchars($ev['coordinator_name'] ?? '') ?>"
-                                                            data-date="<?= $ev['event_date'] ?? '' ?>"
-                                                            data-drive="<?= htmlspecialchars($ev['photos_drive_link'] ?? '') ?>"
-                                                            data-category="<?= htmlspecialchars($ev['category'] ?? 'General') ?>"
-                                                            data-description="<?= htmlspecialchars($ev['description'] ?? '') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -641,9 +637,11 @@ $total_categories   = count($categories_count);
         </div>
     </div>
 
+    <?php include 'includes/view_modal.php'; ?>
+
     <div class="footer">
         <div class="copyright">
-            <p>Copyright &copy; Designed &amp; Developed by <a href="https://bhimavaramdigitals.com/" target="_blank">Bhimavaram Digitals</a> 2026</p>
+            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved. Developed by <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link">Bhimavaram Digitals ↗</a></p>
         </div>
     </div>
 </div>
@@ -656,6 +654,34 @@ $total_categories   = count($categories_count);
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ── READ-ONLY VIEW MODAL TRIGGER
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (!this.dataset.record) return;
+            const rec = JSON.parse(this.dataset.record);
+            const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
+
+            openKpiRecordViewModal({
+                moduleTitle: 'Gallery Event Details',
+                recordTitle: rec.event_name || 'Untitled Event',
+                institutePrefix: instPrefix,
+                instituteName: instName,
+                extraStatus: rec.category ? `Category: ${rec.category}` : null,
+                fields: [
+                    { label: 'Event Name', value: rec.event_name, fullWidth: true, icon: 'fa-solid fa-camera' },
+                    { label: 'Coordinator Name', value: rec.coordinator_name, icon: 'fa-solid fa-user-tie' },
+                    { label: 'Category', value: rec.category, icon: 'fa-solid fa-folder' },
+                    { label: 'Event Date', value: rec.event_date ? formatDate(rec.event_date) : null, icon: 'fa-solid fa-calendar-days' },
+                    { label: 'Google Drive Photos Folder', value: rec.photos_drive_link, type: 'link', linkText: 'Open Photos Drive Folder', icon: 'fa-brands fa-google-drive' },
+                    { label: 'Description', value: rec.description, type: 'longtext', icon: 'fa-solid fa-align-left' }
+                ]
+            });
+        });
+    });
+
     const addNewBtn    = document.getElementById('addNewBtn');
     const editButtons  = document.querySelectorAll('.edit-btn');
     const modalTitle   = document.getElementById('galleryModalLabel');
@@ -733,7 +759,14 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             const id = this.getAttribute('data-id');
-            modalDeleteLink.setAttribute('href', '?action=delete&id=' + id);
+            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('action', 'delete');
+            urlParams.set('id', id);
+            if (recordPrefix) {
+                urlParams.set('record_prefix', recordPrefix);
+            }
+            modalDeleteLink.setAttribute('href', '?' + urlParams.toString());
             bsDeleteModal.show();
         });
     });

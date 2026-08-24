@@ -149,7 +149,7 @@ function renderTeamCard($m) {
                         <div style="background:#f9fafb; border-radius:12px; border: 2px dashed #d1d5db; padding: 60px 20px; text-align:center; margin-top:20px;">
                             <i class="fa fa-users" style="font-size:2.8rem; color:#9ca3af;"></i>
                             <h5 style="color:#6b7280; margin-top: 16px;">No team members added yet.</h5>
-                            <p style="color:#9ca3af; font-size:14px;">Members added via the Super Admin portal will display here.</p>
+                            <p style="color:#9ca3af; font-size:14px;">Members added via the Hub Admin portal will display here.</p>
                         </div>
                         <?php endif; ?>
 
@@ -209,7 +209,7 @@ function renderTeamCard($m) {
                             <address>
                                 <strong>PAIR Directorate</strong><br>
                                 University of Hyderabad<br>
-                                <abbr title="Phone">P:</abbr> 914023134546<br>
+                                <abbr title="Landline">Landline:</abbr> <a href="tel:04023132316">040-23132316</a><br>
                                 <abbr title="Email">E:</abbr> <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
                             </address>
                         </div>
