@@ -54,7 +54,8 @@ try {
         }
     }
 } catch (PDOException $e) {
-    echo "<div class='container' style='margin-top:20px;'><div class='alert alert-danger'>Database Error: " . htmlspecialchars($e->getMessage()) . "</div></div>";
+    error_log("Internships database error: " . $e->getMessage());
+    echo "<div class='container' style='margin-top:20px;'><div class='alert alert-warning'>Unable to load internship records at this time. Please try again later.</div></div>";
 }
 ?>
 

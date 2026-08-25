@@ -82,14 +82,24 @@ $uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
                            national-level initiative supporting multi-institutional collaborations in health
                            and medical technology research.</p>
 
-                        <div class="footer-about-visitor" aria-label="Website visitor count" title="Total Visitors">
-                            <span class="visitor-icon"><i class="fa fa-users" aria-hidden="true"></i></span>
-                            <span class="visitor-number"><?php echo number_format($uniqueVisitorsCount); ?></span>
-                            <span class="visitor-label">Visitors</span>
-                        </div>
-
                         <div class="footer-about-readmore">
                             <a href="about-us.php" class="read-more">Read More</a>
+                        </div>
+
+                        <div class="footer-visitor-container" style="margin-top: 14px;">
+                            <div class="footer-visitor-box" style="background: #012447; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px 14px; display: inline-flex; align-items: center; gap: 10px; color: #ffffff;">
+                                <div style="font-size: 18px; color: #ffffff; display: flex; align-items: center;">
+                                    <i class="fa fa-users" aria-hidden="true"></i>
+                                </div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 15px; font-weight: 700; color: #ffffff; line-height: 1.1; letter-spacing: 0.5px;">
+                                        <?php echo number_format($uniqueVisitorsCount); ?>
+                                    </div>
+                                    <div style="font-size: 9px; font-weight: 600; text-transform: uppercase; color: #ffffff; opacity: 0.9; letter-spacing: 0.8px; margin-top: 2px;">
+                                        TOTAL VISITORS
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </aside>
                 </div><!-- /.col-md-3 -->
@@ -102,22 +112,21 @@ $uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
         </div>
     </section><!-- /#footer-content -->
 
-    <!-- Bottom bar: copyright + developer credit -->
-    <section id="footer-bottom" style="position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; width: 100vw; max-width: 100vw; background-color: #012447; padding: 18px 0; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; box-sizing: border-box; clear: both; overflow: hidden;">
-        <div class="footer-bottom-wrapper" style="width: 100%; max-width: 100%; margin: 0 auto; padding: 0 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; box-sizing: border-box;">
-            <!-- Line 1: Copyright Info -->
-            <div class="footer-copyright" style="width: 100%; text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.5; display: block;">
-                &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. <span class="nowrap">All rights reserved.</span>
+    <!-- Bottom bar: copyright + developer credit (Centered) -->
+    <section id="footer-bottom" style="position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; width: 100vw; max-width: 100vw; background-color: #012447; padding: 16px 0; border-top: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; clear: both; overflow: hidden; text-align: center;">
+        <div class="container" style="max-width: 1170px; margin: 0 auto; padding: 0 15px; text-align: center;">
+            <div class="footer-bottom-info" style="text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+                <div>
+                    &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. <span class="nowrap">All rights reserved.</span>
+                </div>
+                <div>
+                    <span>Developed by</span>
+                    <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link" style="color: #ffffff; font-weight: 700; text-decoration: none; cursor: pointer; margin-left: 3px; display: inline-block;">
+                        Bhimavaram Digitals
+                    </a>
+                </div>
             </div>
-
-            <!-- Line 2: Developer Credit -->
-            <div class="footer-dev" style="width: 100%; text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.5; display: block;">
-                <span>Developed by</span>
-                <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link" title="Visits Bhimavaram Digitals website (opens in a new tab)" style="color: #38bdf8; font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 3px; display: inline-block;">
-                    Bhimavaram Digitals <i class="fa fa-external-link" aria-hidden="true" style="font-size: 10px; margin-left: 2px; vertical-align: baseline;"></i>
-                </a>
-            </div>
-        </div><!-- /.footer-bottom-wrapper -->
+        </div><!-- /.container -->
     </section><!-- /#footer-bottom -->
 
 </footer>

@@ -16,46 +16,55 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
+    $cols = $pdo->query("SHOW COLUMNS FROM `homepage_banners`")->fetchAll(PDO::FETCH_COLUMN);
+    $hasStart  = in_array('start_datetime', $cols, true);
+    $hasEnd    = in_array('end_datetime', $cols, true);
+    $hasPrefix = in_array('institute_prefix', $cols, true);
+
     $reqPrefix = isset($_GET['prefix']) ? strtolower(trim($_GET['prefix'])) : null;
     $validPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    $usePrefix = ($reqPrefix && in_array($reqPrefix, $validPrefixes, true) && $hasPrefix);
 
-    if ($reqPrefix && in_array($reqPrefix, $validPrefixes, true)) {
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-              AND (institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)
-              AND (start_datetime IS NULL OR start_datetime <= :now1)
-              AND (end_datetime IS NULL OR end_datetime >= :now2)
-            ORDER BY display_order ASC, start_datetime DESC, id DESC
-        ");
-        $stmt->execute([':prefix' => $reqPrefix, ':now1' => $nowStr, ':now2' => $nowStr]);
-    } else {
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-              AND (start_datetime IS NULL OR start_datetime <= :now1)
-              AND (end_datetime IS NULL OR end_datetime >= :now2)
-            ORDER BY display_order ASC, start_datetime DESC, id DESC
-        ");
-        $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+    $whereClauses = ["status = 'Active'"];
+    $params = [];
+
+    if ($usePrefix) {
+        $whereClauses[] = "(institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)";
+        $params[':prefix'] = $reqPrefix;
     }
+
+    if ($hasStart && $hasEnd) {
+        $whereClauses[] = "(start_datetime IS NULL OR start_datetime <= :now1)";
+        $whereClauses[] = "(end_datetime IS NULL OR end_datetime >= :now2)";
+        $params[':now1'] = $nowStr;
+        $params[':now2'] = $nowStr;
+        $orderBy = "ORDER BY display_order ASC, start_datetime DESC, id DESC";
+    } else {
+        $orderBy = "ORDER BY display_order ASC, id DESC";
+    }
+
+    $sql = "SELECT * FROM `homepage_banners` WHERE " . implode(' AND ', $whereClauses) . " " . $orderBy;
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($banners)) {
-        $sliderImages = [];
+        $activeSlides = [];
         foreach ($banners as $b) {
-            $sliderImages[] = [
+            $titleText = !empty($b['title']) ? $b['title'] : (!empty($b['caption']) ? $b['caption'] : 'ANRF PAIR Event Poster');
+            $activeSlides[] = [
                 'src' => $b['image_path'],
-                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
-                'caption' => '',
+                'alt' => $titleText,
+                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
                 'is_poster' => true
             ];
         }
+        $sliderImages = array_merge($defaultSlide, $activeSlides);
     } else {
-        $sliderImages = [];
+        $sliderImages = $defaultSlide;
     }
 } catch (PDOException $e) {
-    $sliderImages = [];
+    $sliderImages = $defaultSlide;
 }
 ?>
 

@@ -515,6 +515,153 @@ $total_records = count($reports);
         border-radius: 12px;
         font-weight: 600;
     }
+    .btn-action-compact {
+        padding: 3px 9px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        height: 26px !important;
+        border-radius: 4px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        white-space: nowrap !important;
+    }
+    .btn-purple-primary {
+        background-color: #6b21a8 !important;
+        color: #ffffff !important;
+        border: 1px solid #6b21a8 !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        padding: 6px 14px !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 6px rgba(107, 33, 168, 0.25) !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    .btn-purple-primary:hover {
+        background-color: #581c87 !important;
+        border-color: #581c87 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(107, 33, 168, 0.4) !important;
+    }
+    .btn-green-primary {
+        background-color: #16a34a !important;
+        color: #ffffff !important;
+        border: 1px solid #15803d !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 1px 3px rgba(22, 163, 74, 0.2) !important;
+        text-decoration: none !important;
+    }
+    .btn-green-primary:hover {
+        background-color: #15803d !important;
+        border-color: #166534 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 6px rgba(21, 128, 61, 0.35) !important;
+    }
+    .btn-purple-outline {
+        background-color: #ffffff !important;
+        color: #6b21a8 !important;
+        border: 1px solid #6b21a8 !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+    }
+    .btn-purple-outline:hover {
+        background-color: #6b21a8 !important;
+        color: #ffffff !important;
+        border-color: #6b21a8 !important;
+        box-shadow: 0 2px 6px rgba(107, 33, 168, 0.25) !important;
+    }
+    .btn-purple-edit {
+        background-color: #f3e8ff !important;
+        color: #6b21a8 !important;
+        border: 1px solid #d8b4fe !important;
+        padding: 3px 8px !important;
+        transition: all 0.2s ease !important;
+    }
+    .btn-purple-edit:hover {
+        background-color: #6b21a8 !important;
+        color: #ffffff !important;
+        border-color: #6b21a8 !important;
+    }
+    .btn-action-delete-red {
+        background-color: #fef2f2 !important;
+        color: #dc2626 !important;
+        border: 1px solid #fca5a5 !important;
+        padding: 3px 8px !important;
+        transition: all 0.2s ease !important;
+    }
+    .btn-action-delete-red:hover {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+        border-color: #dc2626 !important;
+    }
+    .btn-close-green {
+        background-color: #16a34a !important;
+        color: #ffffff !important;
+        border: 1px solid #15803d !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        padding: 7px 18px !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 1px 3px rgba(22, 163, 74, 0.2) !important;
+    }
+    .btn-close-green:hover {
+        background-color: #15803d !important;
+        border-color: #166534 !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 8px rgba(21, 128, 61, 0.35) !important;
+    }
+    .table-header-maroon th {
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+        padding: 11px 14px !important;
+        border: none !important;
+    }
+    .pr-overview-card {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;
+    }
+    .pr-label-title {
+        color: #6b21a8 !important;
+        font-weight: 800 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+        margin-bottom: 4px !important;
+        display: block !important;
+    }
+    .pr-value-text {
+        color: #1e293b !important;
+        font-weight: 400 !important;
+        font-size: 13.5px !important;
+        line-height: 1.6 !important;
+    }
+    .pr-empty-table-cell {
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        font-style: italic !important;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+        padding: 14px 16px !important;
+    }
+    .pr-badge-purple {
+        background-color: #6b21a8 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border: 1px solid #581c87 !important;
+        border-radius: 6px !important;
+    }
 </style>
 
 <div id="main-wrapper">
@@ -623,30 +770,30 @@ $total_records = count($reports);
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <span class="text-dark font-w600" style="font-size: 12px;">
+                                            <td style="white-space: nowrap;">
+                                                <span class="text-dark font-w600" style="font-size: 12px; white-space: nowrap;">
                                                     <?= date('d M Y', strtotime($report['created_at'])) ?>
                                                 </span>
                                             </td>
-                                            <td style="text-align: center;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <!-- Export PDF Button -->
+                                            <td style="white-space: nowrap; text-align: center;">
+                                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                                    <!-- Export PDF Button (Primary Action) -->
                                                     <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $report['id'] . '&prefix=' . htmlspecialchars($report['institute_prefix'] ?? $prefix)) ?>"
                                                        target="_blank"
-                                                       class="btn btn-action-compact btn-danger text-white"
+                                                       class="btn btn-action-compact btn-green-primary"
                                                        title="Export PDF Report">
-                                                        <i class="fa fa-file-pdf-o me-1"></i> PDF
+                                                        <i class="fa fa-file-pdf-o me-1"></i> Export PDF
                                                     </a>
-                                                    <!-- View & Manage Sub-records Button -->
+                                                    <!-- View & Manage Sub-records Button (Secondary Action) -->
                                                     <button type="button"
-                                                            class="btn btn-action-compact btn-primary text-white open-manage-modal-btn"
+                                                            class="btn btn-action-compact btn-purple-outline open-manage-modal-btn"
                                                             data-report="<?= htmlspecialchars(json_encode($report), ENT_QUOTES, 'UTF-8') ?>"
                                                             title="View Details & Manage Sections">
                                                         <i class="fa fa-folder-open me-1"></i> Manage
                                                     </button>
                                                     <?php if (canEditInstitute($report['institute_prefix'] ?? $prefix)): ?>
                                                     <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
+                                                            class="btn btn-action-compact btn-purple-edit edit-btn"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#reportModal"
                                                             data-id="<?= $report['id'] ?>"
@@ -693,7 +840,7 @@ $total_records = count($reports);
 <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header text-white" style="background-color: #6b21a8 !important;">
                 <h5 class="modal-title text-white" id="reportModalLabel">Project Progress Report Form</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -747,8 +894,8 @@ $total_records = count($reports);
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Submit Report</button>
+                    <button type="button" class="btn btn-close-green" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-purple-primary" id="modalSubmitBtn"><i class="fa fa-save me-1"></i> Submit Report</button>
                 </div>
             </form>
         </div>
@@ -759,13 +906,13 @@ $total_records = count($reports);
 <div class="modal fade" id="manageReportDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
+            <div class="modal-header text-white" style="background-color: #024283 !important;">
                 <div>
                     <h5 class="modal-title text-white mb-0" id="manageModalTitle">Progress Report & Associated Sections</h5>
                     <small class="text-light opacity-75" id="manageModalSubtitle">Task & Project Details</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="#" id="manageExportPdfBtn" target="_blank" class="btn btn-sm btn-danger text-white">
+                    <a href="#" id="manageExportPdfBtn" target="_blank" class="btn btn-green-primary btn-sm">
                         <i class="fa fa-file-pdf-o me-1"></i> Export PDF
                     </a>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -774,36 +921,36 @@ $total_records = count($reports);
 
             <div class="modal-body p-4">
                 <!-- Overview Cards -->
-                <div class="card bg-light border-0 mb-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-primary mb-2"><i class="fa fa-info-circle me-1"></i> Core Report Overview</h6>
+                <div class="card pr-overview-card mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3" style="color: #6b21a8 !important; font-size: 14px;"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> Core Report Overview</h6>
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <small class="text-muted d-block">PI Name:</small>
-                                <strong id="detPiName" class="text-dark">—</strong>
+                                <small class="pr-label-title d-block mb-1">PI NAME:</small>
+                                <div id="detPiName" class="pr-value-text">—</div>
                             </div>
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Co-PI Name:</small>
-                                <strong id="detCoPiName" class="text-dark">—</strong>
+                                <small class="pr-label-title d-block mb-1">CO-PI NAME:</small>
+                                <div id="detCoPiName" class="pr-value-text">—</div>
                             </div>
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Work Package:</small>
-                                <strong id="detWpNo" class="text-dark">—</strong>
+                                <small class="pr-label-title d-block mb-1">WORK PACKAGE:</small>
+                                <div id="detWpNo" class="pr-value-text">—</div>
                             </div>
                         </div>
-                        <hr class="my-3">
+                        <hr class="my-3" style="border-color: #cbd5e1;">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Approved Objectives:</small>
-                                <div id="detObjects" class="small text-dark text-break">—</div>
+                                <small class="pr-label-title d-block mb-1">APPROVED OBJECTIVES:</small>
+                                <div id="detObjects" class="pr-value-text text-break">—</div>
                             </div>
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Methodology:</small>
-                                <div id="detMethodology" class="small text-dark text-break">—</div>
+                                <small class="pr-label-title d-block mb-1">METHODOLOGY:</small>
+                                <div id="detMethodology" class="pr-value-text text-break">—</div>
                             </div>
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Summary Progress:</small>
-                                <div id="detProgress" class="small text-dark text-break">—</div>
+                                <small class="pr-label-title d-block mb-1">SUMMARY PROGRESS:</small>
+                                <div id="detProgress" class="pr-value-text text-break">—</div>
                             </div>
                         </div>
                     </div>
@@ -815,9 +962,9 @@ $total_records = count($reports);
                      SECTION: PUBLICATIONS
                 ══════════════════════════════════════════════════════ -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0"><i class="fa fa-book text-danger me-2"></i> PUBLICATIONS</h5>
+                    <h5 class="fw-bold text-dark mb-0"><i class="fa fa-book me-2" style="color: #6b21a8;"></i> PUBLICATIONS</h5>
                     <?php if (canEditInstitute($prefix)): ?>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="openAddPubModal()">
+                    <button type="button" class="btn btn-green-primary btn-sm" onclick="openAddPubModal()">
                         <i class="fa fa-plus me-1"></i> Add Publication Details
                     </button>
                     <?php endif; ?>
@@ -825,7 +972,7 @@ $total_records = count($reports);
 
                 <div class="table-responsive mb-4">
                     <table class="table table-bordered table-striped align-middle">
-                        <thead class="bg-light">
+                        <thead class="table-header-maroon">
                             <tr>
                                 <th>Task No</th>
                                 <th>Publication Title</th>
@@ -847,14 +994,14 @@ $total_records = count($reports);
                 <!-- ══════════════════════════════════════════════════════
                      SECTION: CAPACITY BUILDING
                 ══════════════════════════════════════════════════════ -->
-                <h5 class="fw-bold text-dark mb-3"><i class="fa fa-chalkboard-user text-primary me-2"></i> CAPACITY BUILDING</h5>
+                <h5 class="fw-bold text-dark mb-3"><i class="fa fa-chalkboard-user me-2" style="color: #6b21a8;"></i> CAPACITY BUILDING</h5>
 
                 <!-- A. Workshops / Conferences Conducted -->
                 <div class="card mb-4 border border-light">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                         <h6 class="fw-bold mb-0 text-dark">A. Workshops / Conferences Conducted</h6>
                         <?php if (canEditInstitute($prefix)): ?>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAddEventModal('Workshop_Conference')">
+                        <button type="button" class="btn btn-purple-outline btn-sm" onclick="openAddEventModal('Workshop_Conference')">
                             <i class="fa fa-plus me-1"></i> Add Workshop / Conference
                         </button>
                         <?php endif; ?>
@@ -862,7 +1009,7 @@ $total_records = count($reports);
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
-                                <thead>
+                                <thead class="table-header-maroon">
                                     <tr>
                                         <th>Event Name</th>
                                         <th>Date</th>
@@ -886,7 +1033,7 @@ $total_records = count($reports);
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                         <h6 class="fw-bold mb-0 text-dark">B. Training Programs Conducted</h6>
                         <?php if (canEditInstitute($prefix)): ?>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAddEventModal('Training_Program')">
+                        <button type="button" class="btn btn-purple-outline btn-sm" onclick="openAddEventModal('Training_Program')">
                             <i class="fa fa-plus me-1"></i> Add Training Program
                         </button>
                         <?php endif; ?>
@@ -894,7 +1041,7 @@ $total_records = count($reports);
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
-                                <thead>
+                                <thead class="table-header-maroon">
                                     <tr>
                                         <th>Program Name</th>
                                         <th>Date / Duration</th>
@@ -920,9 +1067,9 @@ $total_records = count($reports);
                             <small class="text-muted">Total number of students and researchers trained during this progress report period.</small>
                         </div>
                         <div class="d-flex align-items-center gap-3">
-                            <span class="badge bg-success fs-5 px-3 py-2" id="detInternsBadge">0</span>
+                            <span class="badge fs-5 px-3 py-2 pr-badge-purple" id="detInternsBadge">0</span>
                             <?php if (canEditInstitute($prefix)): ?>
-                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="openUpdateInternsModal()">
+                            <button type="button" class="btn btn-purple-outline btn-sm" onclick="openUpdateInternsModal()">
                                 <i class="fa fa-pencil me-1"></i> Edit Count
                             </button>
                             <?php endif; ?>
@@ -933,7 +1080,7 @@ $total_records = count($reports);
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-close-green" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -943,7 +1090,7 @@ $total_records = count($reports);
 <div class="modal fade" id="pubModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
+            <div class="modal-header text-white" style="background-color: #024283 !important;">
                 <h5 class="modal-title text-white" id="pubModalTitle">Add Publication Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -991,8 +1138,8 @@ $total_records = count($reports);
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger"><i class="fa fa-save me-1"></i> Save Publication</button>
+                    <button type="button" class="btn btn-close-green" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-purple-primary"><i class="fa fa-save me-1"></i> Save Publication</button>
                 </div>
             </form>
         </div>
@@ -1003,7 +1150,7 @@ $total_records = count($reports);
 <div class="modal fade" id="capacityEventModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header text-white" style="background-color: #024283 !important;">
                 <h5 class="modal-title text-white" id="capacityEventModalTitle">Add Capacity Building Event</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -1050,8 +1197,8 @@ $total_records = count($reports);
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Save Event Record</button>
+                    <button type="button" class="btn btn-close-green" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-purple-primary"><i class="fa fa-save me-1"></i> Save Event Record</button>
                 </div>
             </form>
         </div>
@@ -1062,7 +1209,7 @@ $total_records = count($reports);
 <div class="modal fade" id="internsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white py-2">
+            <div class="modal-header text-white py-2" style="background-color: #024283 !important;">
                 <h6 class="modal-title text-white" id="internsModalTitle">Number of Interns Trained</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -1078,8 +1225,8 @@ $total_records = count($reports);
                 </div>
 
                 <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-save me-1"></i> Save Count</button>
+                    <button type="button" class="btn btn-sm btn-close-green" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-sm btn-purple-primary"><i class="fa fa-save me-1"></i> Save Count</button>
                 </div>
             </form>
         </div>
@@ -1098,7 +1245,7 @@ $total_records = count($reports);
                 Are you sure you want to permanently delete this progress report? This operation cannot be rolled back.
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-close-green" data-bs-dismiss="modal">Close</button>
                 <a href="#" id="modalDeleteExecutionLink" class="btn btn-sm btn-danger text-white">
                     Delete Record
                 </a>
@@ -1230,7 +1377,7 @@ function renderManageModal(rep) {
     const pubs = rep.publications || [];
 
     if (pubs.length === 0) {
-        pubTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No publication details added yet.</td></tr>';
+        pubTbody.innerHTML = '<tr><td colspan="7" class="text-center pr-empty-table-cell"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No publication details added yet.</td></tr>';
     } else {
         pubs.forEach(p => {
             var tr = document.createElement('tr');
@@ -1258,7 +1405,7 @@ function renderManageModal(rep) {
     const workshops = rep.workshops || [];
 
     if (workshops.length === 0) {
-        wsTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No workshops or conferences recorded yet.</td></tr>';
+        wsTbody.innerHTML = '<tr><td colspan="7" class="text-center pr-empty-table-cell"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No workshops or conferences recorded yet.</td></tr>';
     } else {
         workshops.forEach(w => {
             var tr = document.createElement('tr');
@@ -1286,7 +1433,7 @@ function renderManageModal(rep) {
     const trainings = rep.trainings || [];
 
     if (trainings.length === 0) {
-        trTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No training programs recorded yet.</td></tr>';
+        trTbody.innerHTML = '<tr><td colspan="7" class="text-center pr-empty-table-cell"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No training programs recorded yet.</td></tr>';
     } else {
         trainings.forEach(t => {
             var tr = document.createElement('tr');
