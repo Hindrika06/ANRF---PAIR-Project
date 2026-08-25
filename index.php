@@ -16,24 +16,38 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
-    // Fetch active banners from database matching Asia/Kolkata server time
-    $stmt = $pdo->prepare("
-        SELECT * FROM `homepage_banners`
-        WHERE status = 'Active'
-          AND (start_datetime IS NULL OR start_datetime <= :now1)
-          AND (end_datetime IS NULL OR end_datetime >= :now2)
-        ORDER BY display_order ASC, start_datetime DESC, id DESC
-    ");
-    $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+    $cols = $pdo->query("SHOW COLUMNS FROM `homepage_banners`")->fetchAll(PDO::FETCH_COLUMN);
+    $hasStart = in_array('start_datetime', $cols, true);
+    $hasEnd   = in_array('end_datetime', $cols, true);
+
+    if ($hasStart && $hasEnd) {
+        $stmt = $pdo->prepare("
+            SELECT * FROM `homepage_banners`
+            WHERE status = 'Active'
+              AND (start_datetime IS NULL OR start_datetime <= :now1)
+              AND (end_datetime IS NULL OR end_datetime >= :now2)
+            ORDER BY display_order ASC, start_datetime DESC, id DESC
+        ");
+        $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT * FROM `homepage_banners`
+            WHERE status = 'Active'
+            ORDER BY display_order ASC, id DESC
+        ");
+        $stmt->execute();
+    }
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($banners)) {
         $activeSlides = [];
         foreach ($banners as $b) {
+            $titleText = !empty($b['title']) ? $b['title'] : (!empty($b['caption']) ? $b['caption'] : 'ANRF PAIR Event Poster');
+            $captionText = !empty($b['caption']) ? $b['caption'] : (!empty($b['title']) ? $b['title'] : '');
             $activeSlides[] = [
                 'src' => $b['image_path'],
-                'alt' => htmlspecialchars(!empty($b['title']) ? $b['title'] : ($b['caption'] ?: 'ANRF PAIR Event Poster')),
-                'caption' => $b['caption'] ?: $b['title']
+                'alt' => htmlspecialchars($titleText),
+                'caption' => $captionText
             ];
         }
         // Combine default group photo slide + scheduled active posters
