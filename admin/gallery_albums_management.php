@@ -51,52 +51,68 @@ $album_id = isset($_GET['album_id']) ? (int)$_GET['album_id'] : null;
 
 // 1. HANDLE ALBUM DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET['id'])) {
-    $del_id = (int)$_GET['id'];
-    try {
-        $token = $_GET['csrf_token'] ?? '';
-        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
-        }
+    $userCsrf = $_GET['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
+    } else {
+        $del_id = (int)$_GET['id'];
+        try {
+            $stmtCheck = $pdo->prepare("SELECT institute_prefix FROM `gallery_albums` WHERE id = ?");
+            $stmtCheck->execute([$del_id]);
+            $albPfx = $stmtCheck->fetchColumn();
 
-        // Fetch all photos in album to delete files from server
-        $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE album_id = ?");
-        $stmt->execute([$del_id]);
-        $photos = $stmt->fetchAll();
-        foreach ($photos as $ph) {
-            if (!empty($ph['photo_path']) && file_exists('../' . $ph['photo_path'])) {
-                @unlink('../' . $ph['photo_path']);
+            if ($albPfx !== false && !canEditInstitute($albPfx)) {
+                $error = 'Security Error: You are not authorized to delete albums belonging to ' . strtoupper($albPfx);
+            } else {
+                // Fetch all photos in album to delete files from server
+                $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE album_id = ?");
+                $stmt->execute([$del_id]);
+                $photos = $stmt->fetchAll();
+                foreach ($photos as $ph) {
+                    if (!empty($ph['photo_path']) && file_exists('../' . $ph['photo_path'])) {
+                        @unlink('../' . $ph['photo_path']);
+                    }
+                }
+
+                $stmt = $pdo->prepare("DELETE FROM `gallery_albums` WHERE id = ?");
+                $stmt->execute([$del_id]);
+                adminRedirect(['success_msg' => 'album_deleted']);
             }
+        } catch (PDOException $e) {
+            $error = 'Failed to delete album: ' . $e->getMessage();
         }
-
-        $stmt = $pdo->prepare("DELETE FROM `gallery_albums` WHERE id = ?");
-        $stmt->execute([$del_id]);
-        adminRedirect(['success_msg' => 'album_deleted']);
-    } catch (Exception $e) {
-        $error = 'Failed to delete album: ' . $e->getMessage();
     }
 }
 
 // 2. HANDLE PHOTO DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET['photo_id'])) {
-    $del_photo_id = (int)$_GET['photo_id'];
-    try {
-        $token = $_GET['csrf_token'] ?? '';
-        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
-        }
+    $userCsrf = $_GET['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
+    } else {
+        $del_photo_id = (int)$_GET['photo_id'];
+        try {
+            $stmtCheck = $pdo->prepare("SELECT a.institute_prefix FROM `gallery_photos` p JOIN `gallery_albums` a ON p.album_id = a.id WHERE p.id = ?");
+            $stmtCheck->execute([$del_photo_id]);
+            $albPfx = $stmtCheck->fetchColumn();
 
-        $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE id = ?");
-        $stmt->execute([$del_photo_id]);
-        $p_path = $stmt->fetchColumn();
-        if ($p_path && file_exists('../' . $p_path)) {
-            @unlink('../' . $p_path);
-        }
+            if ($albPfx !== false && !canEditInstitute($albPfx)) {
+                $error = 'Security Error: You are not authorized to delete photos from albums belonging to ' . strtoupper($albPfx);
+            } else {
+                $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE id = ?");
+                $stmt->execute([$del_photo_id]);
+                $p_path = $stmt->fetchColumn();
+                if ($p_path && file_exists('../' . $p_path)) {
+                    @unlink('../' . $p_path);
+                }
 
-        $stmt = $pdo->prepare("DELETE FROM `gallery_photos` WHERE id = ?");
-        $stmt->execute([$del_photo_id]);
-        adminRedirect(['success_msg' => 'photo_deleted']);
-    } catch (Exception $e) {
-        $error = 'Failed to delete photo: ' . $e->getMessage();
+                $stmt = $pdo->prepare("DELETE FROM `gallery_photos` WHERE id = ?");
+                $stmt->execute([$del_photo_id]);
+                adminRedirect(['success_msg' => 'photo_deleted']);
+            }
+        } catch (PDOException $e) {
+            $error = 'Failed to delete photo: ' . $e->getMessage();
+        }
     }
 }
 
@@ -111,7 +127,7 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 // 4. HANDLE ALBUM SUBMISSIONS (ADD / UPDATE)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'album') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'album') {
     $userCsrf = $_POST['csrf_token'] ?? '';
     if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
         $error = 'Security Error: Invalid or missing CSRF token.';
@@ -126,9 +142,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
         } else {
             try {
                 if ($edit_album_id) {
-                    $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
-                    $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
-                    adminRedirect(['success_msg' => 'album_updated']);
+                    $stmtCheck = $pdo->prepare("SELECT institute_prefix FROM `gallery_albums` WHERE id = ?");
+                    $stmtCheck->execute([$edit_album_id]);
+                    $albPfx = $stmtCheck->fetchColumn();
+
+                    if ($albPfx !== false && !canEditInstitute($albPfx)) {
+                        $error = 'Security Error: You are not authorized to edit albums belonging to ' . strtoupper($albPfx);
+                    } else {
+                        $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
+                        $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
+                        adminRedirect(['success_msg' => 'album_updated']);
+                    }
                 } else {
                     $stmt = $pdo->prepare("INSERT INTO `gallery_albums` (album_name, album_date, description, institute_prefix) VALUES (:name, :date, :desc, :prefix)");
                     $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':prefix' => $prefix]);
@@ -142,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
 }
 
 // 5. HANDLE PHOTO UPLOAD SUBMISSIONS
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'photos') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'photos') {
     $userCsrf = $_POST['csrf_token'] ?? '';
     if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
         $error = 'Security Error: Invalid or missing CSRF token.';
@@ -281,9 +305,10 @@ if ($album_id) {
                                                 <h5 class="mb-1" style="font-weight: 700; color: #1e3a8a;"><?= htmlspecialchars($al['album_name']) ?></h5>
                                                 <small class="text-muted"><i class="fa fa-calendar-o mr-1"></i> <?= $al['album_date'] ? date('M d, Y', strtotime($al['album_date'])) : 'No Date' ?></small>
                                             </a>
-                                            <div class="ms-2">
-                                                <button class="btn btn-warning btn-xs" onclick="openEditAlbumModal(<?= htmlspecialchars(json_encode($al)) ?>)"><i class="fa fa-pencil"></i></button>
-                                                <a href="<?= $navUrl('gallery_albums_management.php?action=delete_album&id=' . $al['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Album?', message: 'Deleting this album will permanently delete all its photos! Continue?', confirmText: 'Delete Album', onConfirm: function() { window.location.href = targetUrl; } });"><i class="fa fa-trash"></i></a>
+                                            <div class="ms-2 d-flex gap-1">
+                                                <button type="button" class="btn btn-info btn-xs" onclick="viewAlbum(<?= htmlspecialchars(json_encode($al)) ?>)"><i class="fa fa-eye"></i> View</button>
+                                                <button type="button" class="btn btn-warning btn-xs" onclick="openEditAlbumModal(<?= htmlspecialchars(json_encode($al)) ?>)"><i class="fa fa-pencil"></i> Edit</button>
+                                                <a href="<?= buildNavUrl('gallery_albums_management.php?action=delete_album&id=' . $al['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Album?', message: 'Deleting this album will permanently delete all its photos! Continue?', confirmText: 'Delete Album', onConfirm: function() { window.location.href = targetUrl; } });"><i class="fa fa-trash"></i> Delete</a>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -313,7 +338,7 @@ if ($album_id) {
                                 </div>
                             </div>
                             <div class="card-body">
-                                <form method="POST" enctype="multipart/form-data" class="row align-items-end g-3 mb-4 bg-light p-3 rounded border">
+                                <form method="POST" action="<?= buildNavUrl('gallery_albums_management.php?album_id=' . $album_id) ?>" enctype="multipart/form-data" class="row align-items-end g-3 mb-4 bg-light p-3 rounded border">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="form_type" value="photos">
                                     <div class="col-md-5">
@@ -341,7 +366,7 @@ if ($album_id) {
                                                     <div class="p-2" style="font-size: 11px;">
                                                         <span class="text-truncate d-block text-muted"><?= htmlspecialchars($p['caption'] ?: '(No Caption)') ?></span>
                                                     </div>
-                                                    <a href="<?= $navUrl('gallery_albums_management.php?album_id=' . $album_id . '&action=delete_photo&photo_id=' . $p['id']) ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Photo?', message: 'Are you sure you want to delete this photo?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                    <a href="<?= buildNavUrl('gallery_albums_management.php?album_id=' . $album_id . '&action=delete_photo&photo_id=' . $p['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-2" style="padding: 2px 6px; border-radius: 50%; opacity: 0.85;" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Photo?', message: 'Are you sure you want to delete this photo?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
                                                         <i class="fa fa-trash"></i>
                                                     </a>
                                                 </div>
@@ -363,7 +388,7 @@ if ($album_id) {
 <div class="modal fade" id="albumModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST">
+            <form method="POST" action="<?= buildNavUrl('gallery_albums_management.php') ?>">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="form_type" value="album">
                 <input type="hidden" name="edit_album_id" id="edit_album_id" value="">
@@ -417,6 +442,23 @@ if ($album_id) {
         document.getElementById('albumModalTitle').innerText = 'Edit Gallery Album';
         albumModal.show();
     }
+
+    function viewAlbum(album) {
+        openKpiRecordViewModal({
+            moduleTitle: 'Gallery Album Details',
+            recordTitle: album.album_name,
+            institutePrefix: album.institute_prefix || 'all',
+            extraStatus: 'Album #' + album.id,
+            fields: [
+                { label: 'Album Name', value: album.album_name, type: 'text', icon: 'fa-solid fa-folder-open' },
+                { label: 'Album Date', value: album.album_date || 'No Date Specified', icon: 'fa-solid fa-calendar' },
+                { label: 'Description', value: album.description || 'None', type: 'longtext', icon: 'fa-solid fa-align-left' },
+                { label: 'Institute Context', value: (album.institute_prefix || 'all').toUpperCase(), type: 'badge', icon: 'fa-solid fa-building-columns' },
+                { label: 'Created At', value: album.created_at || 'N/A', icon: 'fa-solid fa-clock' }
+            ]
+        });
+    }
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

@@ -47,13 +47,15 @@ try {
 }
 
 // Helper to map status -> a CSS state class
-function patentStatusClass($status) {
-    switch ($status) {
-        case 'Granted':   return 'is-granted';
-        case 'Rejected':  return 'is-rejected';
-        case 'Pending':   return 'is-pending';
-        case 'Published': return 'is-published';
-        default:          return 'is-filed';
+if (!function_exists('patentStatusClass')) {
+    function patentStatusClass($status) {
+        switch ($status) {
+            case 'Granted':   return 'is-granted';
+            case 'Rejected':  return 'is-rejected';
+            case 'Pending':   return 'is-pending';
+            case 'Published': return 'is-published';
+            default:          return 'is-filed';
+        }
     }
 }
 ?>

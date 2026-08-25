@@ -32,10 +32,12 @@ $prefix_map = [
 ];
 $prefix = $prefix_map[$institute_name] ?? 'uoh_';
 
-function fetchRows($pdo, $sql, $params = []) {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll();
+if (!function_exists('fetchRows')) {
+    function fetchRows($pdo, $sql, $params = []) {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
 }
 
 // 3. Inject the safe prefix into your queries dynamically

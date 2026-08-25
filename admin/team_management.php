@@ -16,11 +16,6 @@ $error   = '';
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     try {
-        $token = $_GET['csrf_token'] ?? '';
-        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
-        }
-
         // Fetch image path first to delete the file
         $stmt = $pdo->prepare("SELECT profile_image FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
@@ -32,7 +27,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         $stmt = $pdo->prepare("DELETE FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
         adminRedirect(['success_msg' => 'deleted']);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
     }
 }
@@ -48,7 +43,7 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) || $_POST['action'] !== 'delete')) {
     $userCsrf = $_POST['csrf_token'] ?? '';
     if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
         $error = 'Security Error: Invalid or missing CSRF token.';
@@ -534,14 +529,17 @@ include 'loader.php';
                                     </td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <button type="button" class="btn btn-primary btn-xs sharp" 
+                                            <button type="button" class="btn btn-info btn-xs" onclick='viewMember(<?= json_encode($row) ?>)'>
+                                                <i class="fa fa-eye"></i> View
+                                            </button>
+                                            <button type="button" class="btn btn-warning btn-xs" 
                                                     data-bs-toggle="modal" data-bs-target="#memberModal"
                                                     onclick='editMember(<?= json_encode($row) ?>)'>
-                                                <i class="fa fa-pencil"></i>
+                                                <i class="fa fa-pencil"></i> Edit
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-xs sharp"
+                                            <button type="button" class="btn btn-danger btn-xs"
                                                     onclick="confirmDelete(<?= $row['id'] ?>)">
-                                                <i class="fa fa-trash"></i>
+                                                <i class="fa fa-trash"></i> Delete
                                             </button>
                                         </div>
                                     </td>
@@ -593,7 +591,7 @@ include 'loader.php';
                 <h5 class="modal-title" id="memberModalLabel">Member Registration Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" id="modalForm" enctype="multipart/form-data">
+            <form method="POST" id="modalForm" action="<?= buildNavUrl('team_management.php') ?>" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="modal-body">
                     <input type="hidden" name="edit_id" id="modal_edit_id">
@@ -763,6 +761,33 @@ include 'loader.php';
         modalDeleteExecutionLink.href = 'team_management.php?' + urlParams.toString();
         bootstrapDeleteInstance.show();
     }
+
+    function viewMember(row) {
+        openKpiRecordViewModal({
+            moduleTitle: 'Team Directory Member Details',
+            recordTitle: row.full_name,
+            instituteName: row.university,
+            extraStatus: row.status ? row.status.toUpperCase() : 'ACTIVE',
+            fields: [
+                { label: 'Full Name', value: row.full_name, type: 'text', icon: 'fa-solid fa-user-gear' },
+                { label: 'Designation', value: row.designation, icon: 'fa-solid fa-briefcase' },
+                { label: 'Department', value: row.department || 'None', icon: 'fa-solid fa-building' },
+                { label: 'University / Institution', value: row.university || 'None', icon: 'fa-solid fa-university' },
+                { label: 'Email Address', value: row.email || 'None', type: row.email ? 'link' : 'text', linkText: row.email, icon: 'fa-solid fa-envelope' },
+                { label: 'Phone Number', value: row.phone || 'None', icon: 'fa-solid fa-phone' },
+                { label: 'Profile Photo', value: row.profile_image, type: 'image', icon: 'fa-solid fa-image' },
+                { label: 'Research Area', value: row.research_area || 'None', icon: 'fa-solid fa-flask' },
+                { label: 'Biography / Notes', value: row.biography || 'None', type: 'longtext', icon: 'fa-solid fa-quote-left' },
+                { label: 'LinkedIn Profile', value: row.linkedin || 'None', type: row.linkedin ? 'link' : 'text', icon: 'fa-brands fa-linkedin' },
+                { label: 'Google Scholar', value: row.google_scholar || 'None', type: row.google_scholar ? 'link' : 'text', icon: 'fa-solid fa-graduation-cap' },
+                { label: 'ORCID iD', value: row.orcid || 'None', icon: 'fa-solid fa-id-badge' },
+                { label: 'Display Order', value: row.display_order || 10, icon: 'fa-solid fa-arrow-down-short-wide' },
+                { label: 'Status', value: row.status || 'Active', type: 'badge', icon: 'fa-solid fa-toggle-on' }
+            ]
+        });
+    }
 </script>
+
+<?php include 'includes/view_modal.php'; ?>
 </body>
 </html>

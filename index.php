@@ -42,27 +42,26 @@ try {
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($banners)) {
-        $activeSlides = [];
+        $sliderImages = [];
         foreach ($banners as $b) {
-            $activeSlides[] = [
+            $sliderImages[] = [
                 'src' => $b['image_path'],
                 'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
-                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
+                'caption' => '',
                 'is_poster' => true
             ];
         }
-        // Combine default group photo slide + scheduled active posters
-        $sliderImages = array_merge($defaultSlide, $activeSlides);
     } else {
-        $sliderImages = $defaultSlide;
+        $sliderImages = [];
     }
 } catch (PDOException $e) {
-    $sliderImages = $defaultSlide;
+    $sliderImages = [];
 }
 ?>
 
 <?php include 'header.php'; ?>
 
+<?php if (!empty($sliderImages)): ?>
 <!-- MAIN HOME SLIDER (EXACT ORIGINAL DESIGN SYSTEM) -->
 <section id="homepage-slider">
     <div class="main-slider">
@@ -106,6 +105,7 @@ try {
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <?php include 'whatsnew.php'; ?>
 

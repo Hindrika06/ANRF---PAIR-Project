@@ -38,19 +38,29 @@ try {
     // Ignore error
 }
 
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
-    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
-        $error = 'You are not allowed to delete records for this institute.';
+    $userCsrf = $_GET['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        try {
-            $deleteTable = "{$deletePrefix}_conferences";
-            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
-            $stmt->execute([':id' => (int)$_GET['id']]);
-            adminRedirect(['success_msg' => 'deleted']);
-        } catch (PDOException $e) {
-            $error = 'Failed to delete record: ' . $e->getMessage();
+        $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+        if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
+            $error = 'You are not allowed to delete records for this institute.';
+        } else {
+            try {
+                $deleteTable = "{$deletePrefix}_conferences";
+                $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
+                $stmt->execute([':id' => (int)$_GET['id']]);
+                adminRedirect(['success_msg' => 'deleted']);
+            } catch (PDOException $e) {
+                $error = 'Failed to delete record: ' . $e->getMessage();
+            }
         }
     }
 }
@@ -884,6 +894,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
             urlParams.set('action', 'delete');
             urlParams.set('id', recordId);
+            urlParams.set('csrf_token', '<?= $_SESSION['csrf_token'] ?>');
             if (recordPrefix) {
                 urlParams.set('record_prefix', recordPrefix);
             }

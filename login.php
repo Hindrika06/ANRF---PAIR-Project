@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === '' || $password === '') {
         $error = "Please fill in all fields.";
     } else {
-        $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE username = ?");
-        $stmt->execute([$username]);
+        $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE LOWER(username) = LOWER(?) OR username = ?");
+        $stmt->execute([$username, $username]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 

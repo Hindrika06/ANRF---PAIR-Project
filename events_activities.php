@@ -45,6 +45,15 @@ include 'header.php';
                                         $organizer = !empty($event['organizer']) ? $event['organizer'] : 'ANRF-PAIR Project';
 
                                         $detailMeta = "{$startDateFormatted}{$endDateFormatted} | {$timePart}{$venuePart}{$organizer}";
+
+                                        $evtStatus = getEventStatus($event);
+                                        $statusLabel = strtoupper($evtStatus);
+                                        $badgeStyle = 'background-color: #dbeafe; color: #1e40af;'; // upcoming
+                                        if ($evtStatus === 'ongoing') {
+                                            $badgeStyle = 'background-color: #fef3c7; color: #92400e;';
+                                        } elseif ($evtStatus === 'completed') {
+                                            $badgeStyle = 'background-color: #d1fae5; color: #065f46;';
+                                        }
                                     ?>
                                     <article class="event">
                                         <figure class="date">
@@ -52,8 +61,11 @@ include 'header.php';
                                             <div class="day"><?= $dayStr ?></div>
                                         </figure>
                                         <aside>
-                                            <header style="margin-bottom: 4px;">
+                                            <header style="margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                                                 <a href="event-detail.php?id=<?= $event['id'] ?>"><b><?= htmlspecialchars($event['title']) ?></b></a>
+                                                <span style="font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; <?= $badgeStyle ?>">
+                                                    <?= $statusLabel ?>
+                                                </span>
                                             </header>
                                             <div class="event-details-line" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: #767676; margin-top: 6px;" title="<?= htmlspecialchars($detailMeta) ?>">
                                                 <?= htmlspecialchars($detailMeta) ?>
