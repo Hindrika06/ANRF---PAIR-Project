@@ -209,7 +209,7 @@ function renderTeamCard($m) {
                             <address>
                                 <strong>PAIR Directorate</strong><br>
                                 University of Hyderabad<br>
-                                <abbr title="Landline">Landline:</abbr> <a href="tel:04023132316">040-23132316</a><br>
+                                <abbr title="Landline">Landline:</abbr> <a href="tel:04023132309">040-23132309</a><br>
                                 <abbr title="Email">E:</abbr> <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
                             </address>
                         </div>

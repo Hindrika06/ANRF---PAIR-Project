@@ -16,11 +16,28 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
+<<<<<<< HEAD
     $cols = $pdo->query("SHOW COLUMNS FROM `homepage_banners`")->fetchAll(PDO::FETCH_COLUMN);
     $hasStart = in_array('start_datetime', $cols, true);
     $hasEnd   = in_array('end_datetime', $cols, true);
 
     if ($hasStart && $hasEnd) {
+=======
+    $reqPrefix = isset($_GET['prefix']) ? strtolower(trim($_GET['prefix'])) : null;
+    $validPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+
+    if ($reqPrefix && in_array($reqPrefix, $validPrefixes, true)) {
+        $stmt = $pdo->prepare("
+            SELECT * FROM `homepage_banners`
+            WHERE status = 'Active'
+              AND (institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)
+              AND (start_datetime IS NULL OR start_datetime <= :now1)
+              AND (end_datetime IS NULL OR end_datetime >= :now2)
+            ORDER BY display_order ASC, start_datetime DESC, id DESC
+        ");
+        $stmt->execute([':prefix' => $reqPrefix, ':now1' => $nowStr, ':now2' => $nowStr]);
+    } else {
+>>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
         $stmt = $pdo->prepare("
             SELECT * FROM `homepage_banners`
             WHERE status = 'Active'
@@ -29,6 +46,7 @@ try {
             ORDER BY display_order ASC, start_datetime DESC, id DESC
         ");
         $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+<<<<<<< HEAD
     } else {
         $stmt = $pdo->prepare("
             SELECT * FROM `homepage_banners`
@@ -36,6 +54,8 @@ try {
             ORDER BY display_order ASC, id DESC
         ");
         $stmt->execute();
+=======
+>>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
     }
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -46,8 +66,14 @@ try {
             $captionText = !empty($b['caption']) ? $b['caption'] : (!empty($b['title']) ? $b['title'] : '');
             $activeSlides[] = [
                 'src' => $b['image_path'],
+<<<<<<< HEAD
                 'alt' => htmlspecialchars($titleText),
                 'caption' => $captionText
+=======
+                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
+                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
+                'is_poster' => true
+>>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
             ];
         }
         // Combine default group photo slide + scheduled active posters
@@ -67,14 +93,26 @@ try {
     <div class="main-slider">
         <?php foreach ($sliderImages as $idx => $slide): ?>
             <div class="slide <?= $idx === 0 ? 'active' : '' ?>">
-                <img src="<?= htmlspecialchars($slide['src']) ?>"
-                     alt="<?= htmlspecialchars($slide['alt']) ?>"
-                     <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
-                     decoding="async"
-                     style="object-fit: contain; background: #090f1d;">
+                <?php if (!empty($slide['is_poster'])): ?>
+                    <div class="poster-slide-wrapper" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+                        <div class="poster-slide-bg" style="position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; background-image: url('<?= htmlspecialchars($slide['src']) ?>'); background-size: cover; background-position: center; filter: blur(22px) brightness(0.4); transform: scale(1.1);"></div>
+                        <img src="<?= htmlspecialchars($slide['src']) ?>"
+                             alt="<?= htmlspecialchars($slide['alt']) ?>"
+                             <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
+                             decoding="async"
+                             style="position: relative; z-index: 2; max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; display: block; margin: 0 auto;">
+                    </div>
+                <?php else: ?>
+                    <img src="<?= htmlspecialchars($slide['src']) ?>"
+                         alt="<?= htmlspecialchars($slide['alt']) ?>"
+                         <?= $idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?>
+                         decoding="async"
+                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                <?php endif; ?>
+
                 <?php if (!empty($slide['caption'])): ?>
                     <div class="slide-overlay">
-                        <h5 style="text-transform:none; font-size:2.5rem; margin-top:-50px;"><?= htmlspecialchars($slide['caption']) ?></h5>
+                        <h2><?= htmlspecialchars($slide['caption']) ?></h2>
                     </div>
                 <?php endif; ?>
             </div>

@@ -1,6 +1,11 @@
 <?php
-require_once __DIR__ . '/../config.php';
+require_once 'config.php';
+echo "=== HOMEPAGE BANNERS SCHEMA ===\n";
+$cols = $pdo->query("DESCRIBE `homepage_banners`")->fetchAll(PDO::FETCH_ASSOC);
+foreach ($cols as $c) {
+    echo "- {$c['Field']} ({$c['Type']})\n";
+}
 
-echo "=== USERS TABLE COLUMNS & DATA ===\n";
-$stmt = $pdo->query("SELECT * FROM users");
-print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
+echo "\n=== HOMEPAGE BANNERS CONTENT ===\n";
+$rows = $pdo->query("SELECT * FROM `homepage_banners`")->fetchAll(PDO::FETCH_ASSOC);
+print_r($rows);

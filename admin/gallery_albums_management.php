@@ -53,6 +53,11 @@ $album_id = isset($_GET['album_id']) ? (int)$_GET['album_id'] : null;
 if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET['id'])) {
     $del_id = (int)$_GET['id'];
     try {
+        $token = $_GET['csrf_token'] ?? '';
+        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
+        }
+
         // Fetch all photos in album to delete files from server
         $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE album_id = ?");
         $stmt->execute([$del_id]);
@@ -66,7 +71,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET[
         $stmt = $pdo->prepare("DELETE FROM `gallery_albums` WHERE id = ?");
         $stmt->execute([$del_id]);
         adminRedirect(['success_msg' => 'album_deleted']);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         $error = 'Failed to delete album: ' . $e->getMessage();
     }
 }
@@ -75,6 +80,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_album' && isset($_GET[
 if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET['photo_id'])) {
     $del_photo_id = (int)$_GET['photo_id'];
     try {
+        $token = $_GET['csrf_token'] ?? '';
+        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
+        }
+
         $stmt = $pdo->prepare("SELECT photo_path FROM `gallery_photos` WHERE id = ?");
         $stmt->execute([$del_photo_id]);
         $p_path = $stmt->fetchColumn();
@@ -85,7 +95,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_photo' && isset($_GET[
         $stmt = $pdo->prepare("DELETE FROM `gallery_photos` WHERE id = ?");
         $stmt->execute([$del_photo_id]);
         adminRedirect(['success_msg' => 'photo_deleted']);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         $error = 'Failed to delete photo: ' . $e->getMessage();
     }
 }
@@ -95,80 +105,95 @@ if (isset($_GET['success_msg'])) {
     $success = true;
 }
 
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // 4. HANDLE ALBUM SUBMISSIONS (ADD / UPDATE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'album') {
-    $album_name = trim($_POST['album_name'] ?? '');
-    $album_date = $_POST['album_date'] ?? '';
-    $description = trim($_POST['description'] ?? '');
-    $edit_album_id = !empty($_POST['edit_album_id']) ? (int)$_POST['edit_album_id'] : null;
-
-    if (empty($album_name)) {
-        $error = 'Album Name is required.';
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        try {
-            if ($edit_album_id) {
-                $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
-                $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
-                adminRedirect(['success_msg' => 'album_updated']);
-            } else {
-                $stmt = $pdo->prepare("INSERT INTO `gallery_albums` (album_name, album_date, description, institute_prefix) VALUES (:name, :date, :desc, :prefix)");
-                $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':prefix' => $prefix]);
-                adminRedirect(['success_msg' => 'album_created']);
+        $album_name = trim($_POST['album_name'] ?? '');
+        $album_date = $_POST['album_date'] ?? '';
+        $description = trim($_POST['description'] ?? '');
+        $edit_album_id = !empty($_POST['edit_album_id']) ? (int)$_POST['edit_album_id'] : null;
+
+        if (empty($album_name)) {
+            $error = 'Album Name is required.';
+        } else {
+            try {
+                if ($edit_album_id) {
+                    $stmt = $pdo->prepare("UPDATE `gallery_albums` SET album_name = :name, album_date = :date, description = :desc WHERE id = :id");
+                    $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':id' => $edit_album_id]);
+                    adminRedirect(['success_msg' => 'album_updated']);
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO `gallery_albums` (album_name, album_date, description, institute_prefix) VALUES (:name, :date, :desc, :prefix)");
+                    $stmt->execute([':name' => $album_name, ':date' => $album_date ?: null, ':desc' => $description, ':prefix' => $prefix]);
+                    adminRedirect(['success_msg' => 'album_created']);
+                }
+            } catch (PDOException $e) {
+                $error = 'Database error: ' . $e->getMessage();
             }
-        } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
         }
     }
 }
 
 // 5. HANDLE PHOTO UPLOAD SUBMISSIONS
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POST['form_type'] === 'photos') {
-    $caption = trim($_POST['caption'] ?? '');
-    if (!$album_id) {
-        $error = 'No active album selected.';
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        try {
-            $uploadDir = '../uploads/gallery/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+        $caption = trim($_POST['caption'] ?? '');
+        if (!$album_id) {
+            $error = 'No active album selected.';
+        } else {
+            try {
+                $uploadDir = '../uploads/gallery/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
 
-            if (empty($_FILES['photos']['name'][0])) {
-                throw new RuntimeException("Please select at least one photo to upload.");
-            }
+                if (empty($_FILES['photos']['name'][0])) {
+                    throw new RuntimeException("Please select at least one photo to upload.");
+                }
 
-            $filesCount = count($_FILES['photos']['name']);
-            $uploadedCount = 0;
+                $filesCount = count($_FILES['photos']['name']);
+                $uploadedCount = 0;
 
-            for ($i = 0; $i < $filesCount; $i++) {
-                $fName = $_FILES['photos']['name'][$i];
-                $fTmp  = $_FILES['photos']['tmp_name'][$i];
-                $fError = $_FILES['photos']['error'][$i];
-                $fSize = $_FILES['photos']['size'][$i];
+                for ($i = 0; $i < $filesCount; $i++) {
+                    $fName = $_FILES['photos']['name'][$i];
+                    $fTmp  = $_FILES['photos']['tmp_name'][$i];
+                    $fError = $_FILES['photos']['error'][$i];
+                    $fSize = $_FILES['photos']['size'][$i];
 
-                if ($fError === UPLOAD_ERR_OK) {
-                    if ($fSize > 5 * 1024 * 1024) {
-                        continue; // Skip oversized files
-                    }
+                    if ($fError === UPLOAD_ERR_OK) {
+                        if ($fSize > 5 * 1024 * 1024) {
+                            continue; // Skip oversized files
+                        }
 
-                    $ext = strtolower(pathinfo($fName, PATHINFO_EXTENSION));
-                    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                        continue; // Skip invalid extensions
-                    }
+                        $ext = strtolower(pathinfo($fName, PATHINFO_EXTENSION));
+                        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            continue; // Skip invalid extensions
+                        }
 
-                    $destFileName = uniqid('img_', true) . '.' . $ext;
-                    if (move_uploaded_file($fTmp, $uploadDir . $destFileName)) {
-                        $pPath = 'uploads/gallery/' . $destFileName;
-                        $stmt = $pdo->prepare("INSERT INTO `gallery_photos` (album_id, photo_path, caption) VALUES (?, ?, ?)");
-                        $stmt->execute([$album_id, $pPath, $caption]);
-                        $uploadedCount++;
+                        $destFileName = uniqid('img_', true) . '.' . $ext;
+                        if (move_uploaded_file($fTmp, $uploadDir . $destFileName)) {
+                            $pPath = 'uploads/gallery/' . $destFileName;
+                            $stmt = $pdo->prepare("INSERT INTO `gallery_photos` (album_id, photo_path, caption) VALUES (?, ?, ?)");
+                            $stmt->execute([$album_id, $pPath, $caption]);
+                            $uploadedCount++;
+                        }
                     }
                 }
-            }
 
-            adminRedirect(['album_id' => $album_id, 'success_msg' => 'uploaded_' . $uploadedCount]);
-        } catch (Exception $e) {
-            $error = $e->getMessage();
+                adminRedirect(['album_id' => $album_id, 'success_msg' => 'uploaded_' . $uploadedCount]);
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
         }
     }
 }
@@ -176,8 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type']) && $_POS
 // Fetch active albums list
 $albums = [];
 try {
-    $where = isSuperAdmin() ? "1=1" : "(institute_prefix = '$prefix' OR institute_prefix = 'all')";
-    $stmt = $pdo->query("SELECT * FROM `gallery_albums` WHERE $where ORDER BY album_date DESC, id DESC");
+    if ($prefix === 'all') {
+        $stmt = $pdo->query("SELECT * FROM `gallery_albums` ORDER BY album_date DESC, id DESC");
+    } else {
+        $stmt = $pdo->prepare("SELECT * FROM `gallery_albums` WHERE institute_prefix = :prefix OR institute_prefix = 'all' ORDER BY album_date DESC, id DESC");
+        $stmt->execute([':prefix' => $prefix]);
+    }
     $albums = $stmt->fetchAll();
 } catch (PDOException $e) {
     // ignore
@@ -285,6 +314,7 @@ if ($album_id) {
                             </div>
                             <div class="card-body">
                                 <form method="POST" enctype="multipart/form-data" class="row align-items-end g-3 mb-4 bg-light p-3 rounded border">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="form_type" value="photos">
                                     <div class="col-md-5">
                                         <label class="form-label" style="font-weight:600;">Select Photos *</label>
@@ -334,6 +364,7 @@ if ($album_id) {
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="form_type" value="album">
                 <input type="hidden" name="edit_album_id" id="edit_album_id" value="">
                 <div class="modal-header">

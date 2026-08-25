@@ -14,7 +14,16 @@ if (!isValidPrefix($prefix)) {
     die('Invalid institute configuration. Please contact admin.');
 }
 
-$table = "{$prefix}_gallery_events";
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
+
+if (!isValidPrefix($prefix)) {
+    die('Invalid institute configuration. Please contact admin.');
+}
 
 // ── Database ────────────────────────────────────────────────────────────────
 require_once 'config/db.php';
@@ -22,24 +31,27 @@ require_once 'config/db.php';
 $success = false;
 $error   = '';
 
-// Self-healing: create table if not exists
+// Self-healing: create table for all allowed prefixes if not exists
 try {
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `$table` (
-            `id`                INT AUTO_INCREMENT PRIMARY KEY,
-            `event_name`        VARCHAR(300) NOT NULL,
-            `coordinator_name`  VARCHAR(200) DEFAULT '',
-            `event_date`        DATE NULL,
-            `photos_drive_link` VARCHAR(1000) DEFAULT '',
-            `category`          VARCHAR(100)  DEFAULT 'General',
-            `description`       TEXT,
-            `created_at`        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
+    foreach ($adminAllowedPrefixes as $pfx) {
+        $pfxTable = "{$pfx}_gallery_events";
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `$pfxTable` (
+                `id`                INT AUTO_INCREMENT PRIMARY KEY,
+                `event_name`        VARCHAR(300) NOT NULL,
+                `coordinator_name`  VARCHAR(200) DEFAULT '',
+                `event_date`        DATE NULL,
+                `photos_drive_link` VARCHAR(1000) DEFAULT '',
+                `category`          VARCHAR(100)  DEFAULT 'General',
+                `description`       TEXT,
+                `created_at`        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+    }
 
-    // Seed sample data if table is empty
-    $count = $pdo->query("SELECT COUNT(*) FROM `$table`")->fetchColumn();
-    if ((int)$count === 0) {
+    // Seed sample data for default uoh table if empty
+    $uohCount = $pdo->query("SELECT COUNT(*) FROM `uoh_gallery_events`")->fetchColumn();
+    if ((int)$uohCount === 0) {
         $seeds = [
             ['Annual Research Symposium 2024', 'Dr. Meena Iyer',     '2024-11-15', 'https://drive.google.com/drive/folders/sample1', 'Symposium',  'Annual research showcase bringing together all project PIs.'],
             ['Lab Inauguration Ceremony',       'Prof. K. Ramachandran', '2024-09-02', 'https://drive.google.com/drive/folders/sample2', 'Ceremony',   'Inauguration of the new Biomedical Instrumentation Lab.'],
@@ -48,7 +60,7 @@ try {
             ['Project Review Meeting – Q2 2025', 'Prof. Ishaan Gupta', '2025-04-05', 'https://drive.google.com/drive/folders/sample5', 'Meeting', 'Quarterly review with ANRF–PAIR project committee.'],
             ['Field Visit – AIIMS Delhi',         'Dr. Sanya Mehta',   '2025-02-22', 'https://drive.google.com/drive/folders/sample6', 'Field Visit', 'Team visit to AIIMS for collaborative clinical research.'],
         ];
-        $ins = $pdo->prepare("INSERT INTO `$table` (event_name, coordinator_name, event_date, photos_drive_link, category, description) VALUES (?,?,?,?,?,?)");
+        $ins = $pdo->prepare("INSERT INTO `uoh_gallery_events` (event_name, coordinator_name, event_date, photos_drive_link, category, description) VALUES (?,?,?,?,?,?)");
         foreach ($seeds as $s) {
             $ins->execute($s);
         }
@@ -57,9 +69,13 @@ try {
     // ignore table creation errors silently
 }
 
+$targetPrefix = ($prefix === 'all') ? 'uoh' : $prefix;
+$table = "{$targetPrefix}_gallery_events";
+
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    if ($deletePrefix === 'all') { $deletePrefix = 'uoh'; }
     if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
@@ -81,58 +97,65 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $event_name        = trim($_POST['event_name']        ?? '');
-    $coordinator_name  = trim($_POST['coordinator_name']  ?? '');
-    $event_date        = $_POST['event_date']             ?? '';
-    $photos_drive_link = trim($_POST['photos_drive_link'] ?? '');
-    $category          = trim($_POST['category']          ?? 'General');
-    $description       = trim($_POST['description']       ?? '');
-    $edit_id           = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
-
-    if (!canEditInstitute($prefix)) {
-        $error = 'You are not allowed to update records for this institute.';
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        try {
-            if ($edit_id) {
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        event_name        = :event_name,
-                        coordinator_name  = :coordinator_name,
-                        event_date        = :event_date,
-                        photos_drive_link = :photos_drive_link,
-                        category          = :category,
-                        description       = :description
-                    WHERE id = :id
-                ");
-                $stmt->execute([
-                    ':event_name'        => $event_name,
-                    ':coordinator_name'  => $coordinator_name,
-                    ':event_date'        => $event_date ?: null,
-                    ':photos_drive_link' => $photos_drive_link,
-                    ':category'          => $category,
-                    ':description'       => $description,
-                    ':id'                => $edit_id,
-                ]);
-                adminRedirect(['success_msg' => 'updated']);
-            } else {
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (event_name, coordinator_name, event_date, photos_drive_link, category, description, created_at)
-                    VALUES
-                        (:event_name, :coordinator_name, :event_date, :photos_drive_link, :category, :description, NOW())
-                ");
-                $stmt->execute([
-                    ':event_name'        => $event_name,
-                    ':coordinator_name'  => $coordinator_name,
-                    ':event_date'        => $event_date ?: null,
-                    ':photos_drive_link' => $photos_drive_link,
-                    ':category'          => $category,
-                    ':description'       => $description,
-                ]);
-                adminRedirect(['success_msg' => 'inserted']);
+        $event_name        = trim($_POST['event_name']        ?? '');
+        $coordinator_name  = trim($_POST['coordinator_name']  ?? '');
+        $event_date        = $_POST['event_date']             ?? '';
+        $photos_drive_link = trim($_POST['photos_drive_link'] ?? '');
+        $category          = trim($_POST['category']          ?? 'General');
+        $description       = trim($_POST['description']       ?? '');
+        $edit_id           = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+
+        $formPrefix = !empty($_POST['target_institute']) && isValidPrefix($_POST['target_institute']) ? $_POST['target_institute'] : $targetPrefix;
+        if (!canEditInstitute($formPrefix)) {
+            $error = 'You are not allowed to update records for this institute.';
+        } else {
+            try {
+                $postTable = "{$formPrefix}_gallery_events";
+                if ($edit_id) {
+                    $stmt = $pdo->prepare("
+                        UPDATE `$postTable` SET
+                            event_name        = :event_name,
+                            coordinator_name  = :coordinator_name,
+                            event_date        = :event_date,
+                            photos_drive_link = :photos_drive_link,
+                            category          = :category,
+                            description       = :description
+                        WHERE id = :id
+                    ");
+                    $stmt->execute([
+                        ':event_name'        => $event_name,
+                        ':coordinator_name'  => $coordinator_name,
+                        ':event_date'        => $event_date ?: null,
+                        ':photos_drive_link' => $photos_drive_link,
+                        ':category'          => $category,
+                        ':description'       => $description,
+                        ':id'                => $edit_id,
+                    ]);
+                    adminRedirect(['success_msg' => 'updated']);
+                } else {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO `$postTable`
+                            (event_name, coordinator_name, event_date, photos_drive_link, category, description, created_at)
+                        VALUES
+                            (:event_name, :coordinator_name, :event_date, :photos_drive_link, :category, :description, NOW())
+                    ");
+                    $stmt->execute([
+                        ':event_name'        => $event_name,
+                        ':coordinator_name'  => $coordinator_name,
+                        ':event_date'        => $event_date ?: null,
+                        ':photos_drive_link' => $photos_drive_link,
+                        ':category'          => $category,
+                        ':description'       => $description,
+                    ]);
+                    adminRedirect(['success_msg' => 'inserted']);
+                }
+            } catch (PDOException $e) {
+                $error = 'Database error: ' . $e->getMessage();
             }
-        } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
         }
     }
 }
@@ -140,8 +163,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 4. FETCH ALL RECORDS
 $events = [];
 try {
-    $stmt   = $pdo->query("SELECT * FROM `$table` ORDER BY id DESC");
-    $events = $stmt->fetchAll();
+    if ($prefix === 'all') {
+        $unionQueries = [];
+        foreach ($adminAllowedPrefixes as $pfx) {
+            $unionQueries[] = "SELECT *, '$pfx' AS institute_prefix FROM `{$pfx}_gallery_events`";
+        }
+        $sql = implode(" UNION ALL ", $unionQueries) . " ORDER BY event_date DESC, id DESC";
+        $stmt   = $pdo->query($sql);
+        $events = $stmt->fetchAll();
+    } else {
+        $stmt   = $pdo->query("SELECT *, '$prefix' AS institute_prefix FROM `$table` ORDER BY id DESC");
+        $events = $stmt->fetchAll();
+    }
 } catch (PDOException $e) {
     $error = 'Could not load data records: ' . $e->getMessage();
 }
@@ -556,6 +589,7 @@ $total_categories   = count($categories_count);
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" id="modalForm">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
 

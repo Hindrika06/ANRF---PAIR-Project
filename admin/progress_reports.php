@@ -14,51 +14,76 @@ $eventsTable = "{$prefix}_progress_report_capacity_events";
 
 require_once 'config/db.php';
 
-// Self-healing DB check for columns and child tables across active prefix
+// Self-healing DB check for columns and child tables across all university prefixes
 try {
-    $checkCol = $pdo->query("SHOW COLUMNS FROM `$table` LIKE 'work_package_no'");
-    if ($checkCol->rowCount() === 0) {
-        $pdo->exec("ALTER TABLE `$table` ADD COLUMN `work_package_no` VARCHAR(100) NULL AFTER `task_no`");
-    }
-    $checkInterns = $pdo->query("SHOW COLUMNS FROM `$table` LIKE 'interns_trained_count'");
-    if ($checkInterns->rowCount() === 0) {
-        $pdo->exec("ALTER TABLE `$table` ADD COLUMN `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `summary_progress`");
-    }
+    $allPrefixesToCheck = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    foreach ($allPrefixesToCheck as $pCheck) {
+        $pTbl   = "{$pCheck}_progress_reports";
+        $pPubs  = "{$pCheck}_progress_report_publications";
+        $pEvts  = "{$pCheck}_progress_report_capacity_events";
 
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `$pubsTable` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `progress_report_id` INT NOT NULL,
-            `task_no` VARCHAR(50) DEFAULT NULL,
-            `publication_title` VARCHAR(500) NOT NULL,
-            `author_name` VARCHAR(255) NOT NULL,
-            `doi_number` VARCHAR(255) DEFAULT NULL,
-            `publication_date` DATE DEFAULT NULL,
-            `publication_journal` VARCHAR(300) NOT NULL,
-            `impact_factor` DECIMAL(6,3) DEFAULT NULL,
-            `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
-            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            KEY `idx_pr_id` (`progress_report_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-    ");
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `$pTbl` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `project_title` VARCHAR(255) NOT NULL,
+                `pi_name` VARCHAR(255) NOT NULL,
+                `co_pi_name` VARCHAR(255) DEFAULT NULL,
+                `task_no` VARCHAR(50) NOT NULL,
+                `work_package_no` VARCHAR(100) DEFAULT NULL,
+                `approved_objects` TEXT DEFAULT NULL,
+                `methodology` TEXT DEFAULT NULL,
+                `summary_progress` TEXT DEFAULT NULL,
+                `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
+                `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        ");
 
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `$eventsTable` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `progress_report_id` INT NOT NULL,
-            `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
-            `title` VARCHAR(255) NOT NULL,
-            `event_date` DATE DEFAULT NULL,
-            `duration` VARCHAR(100) DEFAULT NULL,
-            `venue_mode` VARCHAR(255) DEFAULT NULL,
-            `organizing_institution` VARCHAR(255) DEFAULT NULL,
-            `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
-            `description` TEXT DEFAULT NULL,
-            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            KEY `idx_pr_events_id` (`progress_report_id`),
-            KEY `idx_category` (`category`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-    ");
+        $chkC = $pdo->query("SHOW COLUMNS FROM `$pTbl` LIKE 'work_package_no'");
+        if ($chkC->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE `$pTbl` ADD COLUMN `work_package_no` VARCHAR(100) NULL AFTER `task_no`");
+        }
+
+        $chkI = $pdo->query("SHOW COLUMNS FROM `$pTbl` LIKE 'interns_trained_count'");
+        if ($chkI->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE `$pTbl` ADD COLUMN `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `summary_progress`");
+        }
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `$pPubs` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `progress_report_id` INT NOT NULL,
+                `task_no` VARCHAR(50) DEFAULT NULL,
+                `publication_title` VARCHAR(500) NOT NULL,
+                `author_name` VARCHAR(255) NOT NULL,
+                `doi_number` VARCHAR(255) DEFAULT NULL,
+                `publication_date` DATE DEFAULT NULL,
+                `publication_journal` VARCHAR(300) NOT NULL,
+                `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+                `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                KEY `idx_pr_id` (`progress_report_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `$pEvts` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `progress_report_id` INT NOT NULL,
+                `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+                `title` VARCHAR(255) NOT NULL,
+                `event_date` DATE DEFAULT NULL,
+                `duration` VARCHAR(100) DEFAULT NULL,
+                `venue_mode` VARCHAR(255) DEFAULT NULL,
+                `organizing_institution` VARCHAR(255) DEFAULT NULL,
+                `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+                `description` TEXT DEFAULT NULL,
+                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                KEY `idx_pr_events_id` (`progress_report_id`),
+                KEY `idx_category` (`category`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        ");
+    }
 } catch (PDOException $e) {
     // Failsafe
 }
@@ -129,6 +154,7 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE ALL FORM SUBMISSIONS (MAIN REPORT, PUBLICATIONS, CAPACITY EVENTS, INTERNS COUNT)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrfToken();
     $formType = $_POST['form_type'] ?? 'main_report';
 
     if (!canEditInstitute($prefix)) {
@@ -604,6 +630,13 @@ $total_records = count($reports);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
+                                                    <!-- Export PDF Button -->
+                                                    <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $report['id'] . '&prefix=' . htmlspecialchars($report['institute_prefix'] ?? $prefix)) ?>"
+                                                       target="_blank"
+                                                       class="btn btn-action-compact btn-danger text-white"
+                                                       title="Export PDF Report">
+                                                        <i class="fa fa-file-pdf-o me-1"></i> PDF
+                                                    </a>
                                                     <!-- View & Manage Sub-records Button -->
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-primary text-white open-manage-modal-btn"
@@ -665,6 +698,7 @@ $total_records = count($reports);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="modalForm">
+                <?= getCsrfInputField() ?>
                 <input type="hidden" name="form_type" value="main_report">
                 <input type="hidden" name="edit_id" id="modal_edit_id">
 
@@ -730,7 +764,12 @@ $total_records = count($reports);
                     <h5 class="modal-title text-white mb-0" id="manageModalTitle">Progress Report & Associated Sections</h5>
                     <small class="text-light opacity-75" id="manageModalSubtitle">Task & Project Details</small>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="#" id="manageExportPdfBtn" target="_blank" class="btn btn-sm btn-danger text-white">
+                        <i class="fa fa-file-pdf-o me-1"></i> Export PDF
+                    </a>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             </div>
 
             <div class="modal-body p-4">
@@ -909,6 +948,7 @@ $total_records = count($reports);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
+                <?= getCsrfInputField() ?>
                 <input type="hidden" name="form_type" value="publication_details">
                 <input type="hidden" name="progress_report_id" id="pub_pr_id">
                 <input type="hidden" name="pub_edit_id" id="pub_edit_id">
@@ -968,6 +1008,7 @@ $total_records = count($reports);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
+                <?= getCsrfInputField() ?>
                 <input type="hidden" name="form_type" value="capacity_building_event">
                 <input type="hidden" name="progress_report_id" id="event_pr_id">
                 <input type="hidden" name="event_edit_id" id="event_edit_id">
@@ -1026,6 +1067,7 @@ $total_records = count($reports);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
+                <?= getCsrfInputField() ?>
                 <input type="hidden" name="form_type" value="update_interns_count">
                 <input type="hidden" name="progress_report_id" id="interns_pr_id">
 
@@ -1168,6 +1210,12 @@ document.addEventListener("DOMContentLoaded", function() {
 function renderManageModal(rep) {
     document.getElementById('manageModalTitle').innerText = (rep.task_no ? rep.task_no + ': ' : '') + (rep.project_title || 'Progress Report');
     document.getElementById('manageModalSubtitle').innerText = 'PI: ' + (rep.pi_name || '—') + ' | Institute: ' + (rep.institute_prefix || '').toUpperCase();
+
+    var pdfUrl = 'export_progress_report_pdf.php?id=' + rep.id + '&prefix=' + encodeURIComponent(rep.institute_prefix || '');
+    var tabToken = new URLSearchParams(window.location.search).get('tab_token');
+    if (tabToken) pdfUrl += '&tab_token=' + encodeURIComponent(tabToken);
+    var exportPdfBtn = document.getElementById('manageExportPdfBtn');
+    if (exportPdfBtn) exportPdfBtn.setAttribute('href', pdfUrl);
 
     document.getElementById('detPiName').innerText = rep.pi_name || '—';
     document.getElementById('detCoPiName').innerText = rep.co_pi_name || '—';

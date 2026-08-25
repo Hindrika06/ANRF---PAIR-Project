@@ -16,6 +16,11 @@ $error   = '';
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     try {
+        $token = $_GET['csrf_token'] ?? '';
+        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
+        }
+
         // Fetch image path first to delete the file
         $stmt = $pdo->prepare("SELECT profile_image FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
@@ -27,7 +32,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         $stmt = $pdo->prepare("DELETE FROM `team` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
         adminRedirect(['success_msg' => 'deleted']);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         $error = 'Failed to delete record: ' . $e->getMessage();
     }
 }
@@ -37,9 +42,18 @@ if (isset($_GET['success_msg'])) {
     $success = true;
 }
 
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $full_name      = trim($_POST['full_name'] ?? '');
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
+    } else {
+        $full_name      = trim($_POST['full_name'] ?? '');
     $designation    = trim($_POST['designation'] ?? '');
     $department     = trim($_POST['department'] ?? '');
     $university     = trim($_POST['university'] ?? '');
@@ -167,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Execution Error: ' . $e->getMessage();
         }
     }
+}
 }
 
 // 4. PREPARE SELECT FILTERS AND SEARCH
@@ -579,6 +594,7 @@ include 'loader.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="modalForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="modal-body">
                     <input type="hidden" name="edit_id" id="modal_edit_id">
                     

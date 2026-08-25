@@ -32,12 +32,21 @@ try {
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     try {
+        $token = $_GET['csrf_token'] ?? '';
+        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
+        }
         $stmt = $pdo->prepare("DELETE FROM `announcements` WHERE id = :id");
         $stmt->execute([':id' => (int)$_GET['id']]);
         adminRedirect(['success_msg' => 'deleted']);
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         $error = 'Failed to delete ticker: ' . $e->getMessage();
     }
+}
+
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // 2. SHOW QUICK SUCCESS MESSAGES POST-REDIRECT
@@ -47,37 +56,42 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title     = trim($_POST['title'] ?? '');
-    $link      = trim($_POST['link'] ?? '');
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    $edit_id   = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
-
-    if (empty($title)) {
-        $error = 'Announcement text/title is required.';
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        try {
-            if ($edit_id) {
-                // Update
-                $stmt = $pdo->prepare("UPDATE `announcements` SET title = :title, link = :link, is_active = :is_active WHERE id = :id");
-                $stmt->execute([
-                    ':title'     => $title,
-                    ':link'      => $link,
-                    ':is_active' => $is_active,
-                    ':id'        => $edit_id
-                ]);
-                adminRedirect(['success_msg' => 'updated']);
-            } else {
-                // Insert
-                $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active) VALUES (:title, :link, :is_active)");
-                $stmt->execute([
-                    ':title'     => $title,
-                    ':link'      => $link,
-                    ':is_active' => $is_active
-                ]);
-                adminRedirect(['success_msg' => 'inserted']);
+        $title     = trim($_POST['title'] ?? '');
+        $link      = trim($_POST['link'] ?? '');
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        $edit_id   = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+
+        if (empty($title)) {
+            $error = 'Announcement text/title is required.';
+        } else {
+            try {
+                if ($edit_id) {
+                    // Update
+                    $stmt = $pdo->prepare("UPDATE `announcements` SET title = :title, link = :link, is_active = :is_active WHERE id = :id");
+                    $stmt->execute([
+                        ':title'     => $title,
+                        ':link'      => $link,
+                        ':is_active' => $is_active,
+                        ':id'        => $edit_id
+                    ]);
+                    adminRedirect(['success_msg' => 'updated']);
+                } else {
+                    // Insert
+                    $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active) VALUES (:title, :link, :is_active)");
+                    $stmt->execute([
+                        ':title'     => $title,
+                        ':link'      => $link,
+                        ':is_active' => $is_active
+                    ]);
+                    adminRedirect(['success_msg' => 'inserted']);
+                }
+            } catch (PDOException $e) {
+                $error = 'Database error: ' . $e->getMessage();
             }
-        } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
         }
     }
 }
@@ -189,6 +203,7 @@ try {
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="edit_id" id="edit_id" value="">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Add Announcement</h5>
