@@ -8,25 +8,35 @@ if (!isSuperAdmin()) {
     exit();
 }
 
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $institute_prefix = trim($_POST['institute_prefix'] ?? '');
-
-    if ($username === '' || $password === '' || !isValidPrefix($institute_prefix)) {
-        $message = 'Please enter a valid username, password, and institute.';
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $message = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        $checkStmt = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-        $checkStmt->execute([$username]);
-        if ($checkStmt->fetch()) {
-            $message = 'This username is already registered.';
+        $username = trim($_POST['username'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $institute_prefix = trim($_POST['institute_prefix'] ?? '');
+
+        if ($username === '' || $password === '' || !isValidPrefix($institute_prefix)) {
+            $message = 'Please enter a valid username, password, and institute.';
         } else {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare('INSERT INTO users (username, password, institute_prefix, role, created_at) VALUES (?, ?, ?, ?, NOW())');
-            $stmt->execute([$username, $hashedPassword, $institute_prefix, 'admin']);
-            $message = 'Spoke Admin account created successfully.';
+            $checkStmt = $pdo->prepare('SELECT id FROM users WHERE username = ?');
+            $checkStmt->execute([$username]);
+            if ($checkStmt->fetch()) {
+                $message = 'This username is already registered.';
+            } else {
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare('INSERT INTO users (username, password, institute_prefix, role, created_at) VALUES (?, ?, ?, ?, NOW())');
+                $stmt->execute([$username, $hashedPassword, $institute_prefix, 'admin']);
+                $message = 'Spoke Admin account created successfully.';
+            }
         }
     }
 }
@@ -54,6 +64,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card-body">
                 <?php if ($message !== ''): ?><div class="alert alert-info"><?= htmlspecialchars($message) ?></div><?php endif; ?>
                 <form method="post" class="row g-3">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="col-md-4">
                         <label class="form-label">Username</label>
                         <input type="text" name="username" class="form-control" required>

@@ -10,6 +10,12 @@ if (!isSuperAdmin()) {
 
 $is_super = isSuperAdmin();
 $user_prefix = $_SESSION['institute_prefix'];
+$active_prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
+
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
@@ -23,6 +29,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         $error = 'Only Super Admins are allowed to delete events.';
     } else {
         try {
+            $token = $_GET['csrf_token'] ?? '';
+            if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+                throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
+            }
+
             // Fetch image path first to delete the file from the server
             $stmt = $pdo->prepare("SELECT image FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
@@ -34,7 +45,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $stmt = $pdo->prepare("DELETE FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
             adminRedirect(['success_msg' => 'deleted']);
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
     }
@@ -50,7 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$is_super) {
         $error = 'Only Super Admins are allowed to edit or add events.';
     } else {
-        $title                   = trim($_POST['title'] ?? '');
+        $userCsrf = $_POST['csrf_token'] ?? '';
+        if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+            $error = 'Security Error: Invalid or missing CSRF token.';
+        } else {
+            $title                   = trim($_POST['title'] ?? '');
         $description             = trim($_POST['description'] ?? '');
         $university_id           = trim($_POST['university_id'] ?? 'all');
         $event_date              = $_POST['event_date'] ?? '';
@@ -223,6 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+}
 }
 
 // 4. PREPARE SELECT FILTERS AND SEARCH
@@ -722,6 +738,7 @@ include 'loader.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="modalForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="modal-body">
                     <input type="hidden" name="edit_id" id="modal_edit_id">
                     

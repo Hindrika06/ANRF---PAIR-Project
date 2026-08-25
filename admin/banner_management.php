@@ -65,9 +65,14 @@ try {
     // Silently handle schema check
 }
 
-// 1. HANDLE DELETE ACTION WITH SERVER-SIDE AUTHORIZATION
+// 1. HANDLE DELETE ACTION WITH SERVER-SIDE AUTHORIZATION & CSRF VALIDATION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     try {
+        $token = $_GET['csrf_token'] ?? '';
+        if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException("Security Error: Invalid or missing CSRF token. Request rejected.");
+        }
+
         $deleteId = (int)$_GET['id'];
         $stmt = $pdo->prepare("SELECT * FROM `homepage_banners` WHERE id = :id");
         $stmt->execute([':id' => $deleteId]);
@@ -583,10 +588,10 @@ $nowStr = date('Y-m-d H:i:s');
                                         <td class="text-center">
                                             <?php if ($canModify): ?>
                                                 <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($b)) ?>)">
-                                                    <i class="fa fa-pencil"></i>
+                                                    <i class="fa fa-pencil"></i> Edit
                                                 </button>
-                                                <a href="<?= $navUrl('banner_management.php?action=delete&id=' . $b['id']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Poster?', message: 'Are you sure you want to delete this event poster? It will immediately disappear from the website.', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
-                                                    <i class="fa fa-trash"></i>
+                                                <a href="<?= buildNavUrl('banner_management.php?action=delete&id=' . $b['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Poster?', message: 'Are you sure you want to delete this event poster? It will immediately disappear from the website.', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                    <i class="fa fa-trash"></i> Delete
                                                 </a>
                                             <?php else: ?>
                                                 <span class="text-muted small"><i class="fa fa-lock me-1"></i> Read-Only</span>
@@ -612,6 +617,9 @@ $nowStr = date('Y-m-d H:i:s');
             <form method="POST" enctype="multipart/form-data" id="posterForm">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="edit_id" id="edit_id" value="">
+                <?php if (!$isSuper): ?>
+                <input type="hidden" name="institute_prefix" value="<?= htmlspecialchars($_SESSION['institute_prefix'] ?? $prefix) ?>">
+                <?php endif; ?>
 
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title text-white" id="modalTitle">Configure Event Poster / Slide</h5>
@@ -619,6 +627,13 @@ $nowStr = date('Y-m-d H:i:s');
                 </div>
 
                 <div class="modal-body">
+                    <div id="editModeHeader" class="alert alert-info d-flex align-items-center justify-content-between mb-3 py-2 px-3" style="display: none;">
+                        <div>
+                            <i class="fa fa-edit me-1"></i> <strong>EDIT MODE:</strong> Editing Banner Record #<span id="editModeIdDisplay"></span>
+                        </div>
+                        <span class="badge bg-primary">Existing Image Preserved If No File Uploaded</span>
+                    </div>
+
                     <div class="row">
                         <!-- Left Column: Form Controls -->
                         <div class="col-lg-7">
@@ -715,7 +730,7 @@ $nowStr = date('Y-m-d H:i:s');
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Save Poster Schedule</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fa fa-save me-1"></i> Save Banner</button>
                 </div>
             </form>
         </div>
@@ -745,6 +760,9 @@ $nowStr = date('Y-m-d H:i:s');
 
     function openAddModal() {
         document.getElementById('edit_id').value = '';
+        var editHeader = document.getElementById('editModeHeader');
+        if (editHeader) editHeader.style.display = 'none';
+
         document.getElementById('title').value = '';
         document.getElementById('short_description').value = '';
         document.getElementById('target_url').value = '';
@@ -760,7 +778,9 @@ $nowStr = date('Y-m-d H:i:s');
 
         document.getElementById('image').required = true;
         document.getElementById('imageLabel').innerText = 'Upload Poster Image *';
-        document.getElementById('modalTitle').innerText = 'Add Event Poster / Slide';
+        document.getElementById('modalTitle').innerText = 'Add Homepage Banner / Poster';
+        var submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.innerHTML = '<i class="fa fa-plus-circle me-1"></i> Save Banner';
 
         document.getElementById('previewImg').src = '../assets/img/1.jpg';
         document.getElementById('previewBg').src = '../assets/img/1.jpg';
@@ -776,6 +796,12 @@ $nowStr = date('Y-m-d H:i:s');
 
     function openEditModal(slide) {
         document.getElementById('edit_id').value = slide.id;
+        var editHeader = document.getElementById('editModeHeader');
+        if (editHeader) {
+            editHeader.style.display = 'flex';
+            document.getElementById('editModeIdDisplay').innerText = slide.id;
+        }
+
         document.getElementById('title').value = slide.title || slide.caption || '';
         document.getElementById('short_description').value = slide.short_description || '';
         document.getElementById('target_url').value = slide.target_url || '';
@@ -792,7 +818,9 @@ $nowStr = date('Y-m-d H:i:s');
         document.getElementById('status').value = slide.status;
         document.getElementById('image').required = false;
         document.getElementById('imageLabel').innerText = 'Replace Poster Image (Optional)';
-        document.getElementById('modalTitle').innerText = 'Edit Event Poster Schedule';
+        document.getElementById('modalTitle').innerText = 'Edit Homepage Banner / Poster (ID: #' + slide.id + ')';
+        var submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.innerHTML = '<i class="fa fa-sync-alt me-1"></i> Update Banner';
 
         if (slide.image_path) {
             var fullImgSrc = '../' + slide.image_path;

@@ -16,15 +16,29 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
-    // Fetch active banners from database matching Asia/Kolkata server time
-    $stmt = $pdo->prepare("
-        SELECT * FROM `homepage_banners`
-        WHERE status = 'Active'
-          AND (start_datetime IS NULL OR start_datetime <= :now1)
-          AND (end_datetime IS NULL OR end_datetime >= :now2)
-        ORDER BY display_order ASC, start_datetime DESC, id DESC
-    ");
-    $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+    $reqPrefix = isset($_GET['prefix']) ? strtolower(trim($_GET['prefix'])) : null;
+    $validPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+
+    if ($reqPrefix && in_array($reqPrefix, $validPrefixes, true)) {
+        $stmt = $pdo->prepare("
+            SELECT * FROM `homepage_banners`
+            WHERE status = 'Active'
+              AND (institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)
+              AND (start_datetime IS NULL OR start_datetime <= :now1)
+              AND (end_datetime IS NULL OR end_datetime >= :now2)
+            ORDER BY display_order ASC, start_datetime DESC, id DESC
+        ");
+        $stmt->execute([':prefix' => $reqPrefix, ':now1' => $nowStr, ':now2' => $nowStr]);
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT * FROM `homepage_banners`
+            WHERE status = 'Active'
+              AND (start_datetime IS NULL OR start_datetime <= :now1)
+              AND (end_datetime IS NULL OR end_datetime >= :now2)
+            ORDER BY display_order ASC, start_datetime DESC, id DESC
+        ");
+        $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
+    }
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($banners)) {
