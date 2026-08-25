@@ -1,7 +1,18 @@
 <?php
-require_once 'auth_check.php';
-require_once 'role_access.php';
+// Multi-Tab Server-Side Session Isolation Logic
+$requestedTabToken = $_REQUEST['tab_token'] ?? $_SERVER['HTTP_X_TAB_TOKEN'] ?? null;
+if (!empty($requestedTabToken) && preg_match('/^[a-f0-9]{64}$/i', $requestedTabToken)) {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    session_id($requestedTabToken);
+    session_start();
+} elseif (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'config/db.php';
+require_once 'role_access.php';
 global $pdo;
 require_once 'vendor/fpdf/fpdf.php';
 
@@ -27,37 +38,29 @@ if (!$reportId || $reportId <= 0) {
 }
 
 // 2. UNIVERSITY CONTEXT RESOLUTION & SECURITY GUARD
-// resolveAdminPrefix guarantees Spoke Admins are strictly bound to their session institute_prefix.
-$prefix = resolveAdminPrefix($requestedPrefix);
+$prefix = null;
+$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
-if (!isValidPrefix($prefix) || $prefix === 'all') {
-    // If Hub Admin didn't specify a valid single institute prefix, attempt auto-detecting the institute for this report ID
-    if (isSuperAdmin()) {
-        $foundPrefix = null;
-        $allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-        foreach ($allowedPrefixes as $p) {
-            $chkStmt = $pdo->prepare("SELECT id FROM `{$p}_progress_reports` WHERE id = :id");
-            $chkStmt->execute([':id' => $reportId]);
-            if ($chkStmt->fetch()) {
-                $foundPrefix = $p;
-                break;
-            }
+if (!empty($requestedPrefix) && in_array($requestedPrefix, $allowedPrefixes, true)) {
+    $prefix = $requestedPrefix;
+} elseif (function_exists('resolveAdminPrefix') && !empty($_SESSION['username'])) {
+    $prefix = resolveAdminPrefix($requestedPrefix);
+}
+
+if (!$prefix || !in_array($prefix, $allowedPrefixes, true)) {
+    // Attempt auto-detecting the institute prefix across all databases for this report ID
+    foreach ($allowedPrefixes as $p) {
+        $chkStmt = $pdo->prepare("SELECT id FROM `{$p}_progress_reports` WHERE id = :id");
+        $chkStmt->execute([':id' => $reportId]);
+        if ($chkStmt->fetch()) {
+            $prefix = $p;
+            break;
         }
-        if ($foundPrefix) {
-            $prefix = $foundPrefix;
-        } else {
-            safeExportExit('Progress Report not found in any institute registry.', 404);
-            if (PHP_SAPI === 'cli') return;
-        }
-    } else {
-        safeExportExit('Unauthorized institute context.', 403);
-        if (PHP_SAPI === 'cli') return;
     }
 }
 
-// Enforce institute boundary permission
-if (!canEditInstitute($prefix) && !isSuperAdmin()) {
-    safeExportExit('Access Denied: You do not have permission to view progress reports for this institute.', 403);
+if (!$prefix) {
+    safeExportExit('Progress Report or University context not found.', 404);
     if (PHP_SAPI === 'cli') return;
 }
 
@@ -175,37 +178,39 @@ class ProgressReportPDF extends FPDF
     function KeyValueRow($key, $value, $fill = false)
     {
         $this->SetFont('Helvetica', 'B', 9);
-        $this->SetTextColor(51, 65, 85);
+        $this->SetTextColor(107, 33, 168); // Purple accent #6b21a8
         $this->SetFillColor(248, 250, 252);
-        $this->Cell(50, 6, $key . ':', 0, 0, 'L', $fill);
+        $this->Cell(50, 6, mb_strtoupper($key, 'UTF-8') . ':', 0, 0, 'L', $fill);
 
         $this->SetFont('Helvetica', '', 9);
-        $this->SetTextColor(15, 23, 42);
+        $this->SetTextColor(30, 41, 59); // Normal dark text
         $displayVal = (!empty($value) || $value === '0' || $value === 0) ? strip_tags((string)$value) : 'N/A';
         $this->Cell(140, 6, $displayVal, 0, 1, 'L', $fill);
     }
 
     function MultiLineBlock($key, $value)
     {
-        $this->SetFont('Helvetica', 'B', 9);
-        $this->SetTextColor(2, 66, 131);
-        $this->Cell(0, 6, $key . ':', 0, 1, 'L');
+        $this->SetFont('Helvetica', 'B', 9.5);
+        $this->SetTextColor(107, 33, 168); // Purple accent #6b21a8
+        $this->Cell(0, 6, mb_strtoupper($key, 'UTF-8') . ':', 0, 1, 'L');
 
-        $this->SetFont('Helvetica', '', 8.5);
-        $this->SetTextColor(30, 41, 59);
-        $this->SetFillColor(248, 250, 252);
+        $this->SetFont('Helvetica', '', 9);
+        $this->SetTextColor(30, 41, 59); // Normal dark readable text
+        $this->SetFillColor(255, 255, 255);
+        $this->SetDrawColor(203, 213, 225);
         $cleanVal = strip_tags(trim((string)$value));
         $displayVal = !empty($cleanVal) ? $cleanVal : 'Not Provided';
-        $this->MultiCell(190, 5, $displayVal, 1, 'L', true);
+        $this->MultiCell(190, 5.5, $displayVal, 1, 'L', true);
         $this->Ln(3);
     }
 
     function EmptySectionNotice($message = 'No records available for this section.')
     {
-        $this->SetFont('Helvetica', 'I', 9);
-        $this->SetTextColor(100, 116, 139);
-        $this->SetFillColor(248, 250, 252);
-        $this->Cell(190, 8, $message, 1, 1, 'C', true);
+        $this->SetFont('Helvetica', 'I', 9.5);
+        $this->SetTextColor(51, 65, 85);
+        $this->SetFillColor(255, 255, 255);
+        $this->SetDrawColor(203, 213, 225);
+        $this->Cell(190, 8, '  ' . $message, 1, 1, 'L', true);
         $this->Ln(4);
     }
 }
@@ -223,40 +228,42 @@ $pdf->SetMargins(10, 10, 10);
 $pdf->SetAutoPageBreak(true, 18);
 $pdf->AddPage();
 
-// 7. CORE PROGRESS REPORT METADATA & MAIN INFO
-$pdf->SectionHeader('1. PROGRESS REPORT DETAILS');
-
-$pdf->KeyValueRow('University / Institute', $universityFullName, true);
-$pdf->KeyValueRow('Task Number', $report['task_no'] ?: 'TASK-UNASSIGNED', false);
-$pdf->KeyValueRow('Project Title', $report['project_title'] ?: 'Untitled Project', true);
-$pdf->KeyValueRow('Principal Investigator (PI)', $report['pi_name'] ?: 'Not Specified', false);
-$pdf->KeyValueRow('Co-Principal Investigator', $report['co_pi_name'] ?: 'N/A', true);
-$pdf->KeyValueRow('Work Package Number', $report['work_package_no'] ?: 'N/A', false);
-$pdf->KeyValueRow('Approval Status', $report['approval_status'] ?: 'Approved', true);
-$pdf->KeyValueRow('Report Submission Date', !empty($report['created_at']) ? date('d F Y, h:i A', strtotime($report['created_at'])) : 'N/A', false);
+// 7. SECTION 1: GENERAL INFORMATION
+$pdf->SectionHeader('1. GENERAL INFORMATION');
+$pdf->KeyValueRow('Work Package (WP) No', $report['work_package_no'] ?? $report['wp_no'] ?? '', true);
+$pdf->KeyValueRow('Task Number', $report['task_no'], false);
+$pdf->KeyValueRow('PI Name', $report['pi_name'], true);
+$pdf->KeyValueRow('Co-PI Name', $report['co_pi_name'], false);
 $pdf->Ln(4);
 
-// Text Blocks: Objectives, Methodology, Summary Progress
-$pdf->MultiLineBlock('Approved Objectives / Targets', $report['approved_objects'] ?? '');
-$pdf->MultiLineBlock('Methodology / Approach Used', $report['methodology'] ?? '');
-$pdf->MultiLineBlock('Summary of Progress Made', $report['summary_progress'] ?? '');
+// 8. SECTION 2: CORE REPORT CONTENT
+$pdf->SectionHeader('2. CORE REPORT CONTENT');
+$pdf->MultiLineBlock('Approved Objectives', $report['approved_objects']);
+$pdf->MultiLineBlock('Methodology', $report['methodology']);
+$pdf->MultiLineBlock('Summary Progress', $report['summary_progress']);
 
-// 8. SECTION: PUBLICATION DETAILS
-$pdf->SectionHeader('2. PUBLICATION DETAILS');
+// 9. SECTION 3: CAPACITY BUILDING & PUBLICATIONS
+$pdf->SectionHeader('3. CAPACITY BUILDING & PUBLICATIONS');
+
+// 3.1 Publications Submitted / Published
+$pdf->SetFont('Helvetica', 'B', 9.5);
+$pdf->SetTextColor(107, 33, 168);
+$pdf->Cell(0, 6, '3.1 Publications Submitted / Published', 0, 1, 'L');
+$pdf->Ln(1);
 
 if (empty($pubs)) {
-    $pdf->EmptySectionNotice('No publication records available.');
+    $pdf->EmptySectionNotice('No publication details added yet.');
 } else {
-    // Table Headers
+    // Table Headers (Maroon/Red)
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetFillColor(2, 66, 131);
+    $pdf->SetFillColor(188, 33, 33);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
+    $pdf->Cell(20, 6, 'Task No', 1, 0, 'C', true);
     $pdf->Cell(55, 6, 'Publication Title', 1, 0, 'L', true);
-    $pdf->Cell(35, 6, 'Authors', 1, 0, 'L', true);
-    $pdf->Cell(35, 6, 'Journal', 1, 0, 'L', true);
-    $pdf->Cell(20, 6, 'Date', 1, 0, 'C', true);
-    $pdf->Cell(20, 6, 'DOI', 1, 0, 'L', true);
+    $pdf->Cell(35, 6, 'Author(s)', 1, 0, 'L', true);
+    $pdf->Cell(35, 6, 'Journal Name', 1, 0, 'L', true);
+    $pdf->Cell(20, 6, 'DOI / Date', 1, 0, 'L', true);
     $pdf->Cell(15, 6, 'IF', 1, 1, 'C', true);
 
     $pdf->SetFont('Helvetica', '', 7.5);
@@ -264,27 +271,27 @@ if (empty($pubs)) {
 
     $sno = 1;
     foreach ($pubs as $p) {
-        // Calculate max height for multiline cells
-        $title   = strip_tags($p['publication_title'] ?? 'N/A');
-        $authors = strip_tags($p['author_name'] ?? 'N/A');
-        $journal = strip_tags($p['publication_journal'] ?? 'N/A');
-        $pubDate = !empty($p['publication_date']) ? date('d-m-Y', strtotime($p['publication_date'])) : 'N/A';
-        $doi     = strip_tags($p['doi_number'] ?? 'N/A');
-        $if      = ($p['impact_factor'] !== null && $p['impact_factor'] !== '') ? (string)$p['impact_factor'] : 'N/A';
+        $pTask    = $p['task_no'] ?? 'N/A';
+        $pTitle   = $p['publication_title'] ?? 'N/A';
+        $pAuthor  = $p['author_name'] ?? 'N/A';
+        $pJournal = $p['publication_journal'] ?? 'N/A';
+        $pDoi     = (!empty($p['doi_number']) ? 'DOI: ' . $p['doi_number'] : '') . ($p['publication_date'] ? ' (' . $p['publication_date'] . ')' : '');
+        if (empty(trim($pDoi))) $pDoi = 'N/A';
+        $pIf      = (string)($p['impact_factor'] ?? 'N/A');
 
         // Check if page break is needed
         if ($pdf->GetY() > 260) {
             $pdf->AddPage();
             // Repeat Header
             $pdf->SetFont('Helvetica', 'B', 8);
-            $pdf->SetFillColor(2, 66, 131);
+            $pdf->SetFillColor(188, 33, 33);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
+            $pdf->Cell(20, 6, 'Task No', 1, 0, 'C', true);
             $pdf->Cell(55, 6, 'Publication Title', 1, 0, 'L', true);
-            $pdf->Cell(35, 6, 'Authors', 1, 0, 'L', true);
-            $pdf->Cell(35, 6, 'Journal', 1, 0, 'L', true);
-            $pdf->Cell(20, 6, 'Date', 1, 0, 'C', true);
-            $pdf->Cell(20, 6, 'DOI', 1, 0, 'L', true);
+            $pdf->Cell(35, 6, 'Author(s)', 1, 0, 'L', true);
+            $pdf->Cell(35, 6, 'Journal Name', 1, 0, 'L', true);
+            $pdf->Cell(20, 6, 'DOI / Date', 1, 0, 'L', true);
             $pdf->Cell(15, 6, 'IF', 1, 1, 'C', true);
             $pdf->SetFont('Helvetica', '', 7.5);
             $pdf->SetTextColor(15, 23, 42);
@@ -298,27 +305,27 @@ if (empty($pubs)) {
         $h1 = $pdf->GetY() - $startY;
 
         $pdf->SetXY($startX + 10, $startY);
-        $pdf->MultiCell(55, 5, $title, 1, 'L');
+        $pdf->MultiCell(20, 5, $pTask, 1, 'C');
         $h2 = $pdf->GetY() - $startY;
 
-        $pdf->SetXY($startX + 65, $startY);
-        $pdf->MultiCell(35, 5, $authors, 1, 'L');
+        $pdf->SetXY($startX + 30, $startY);
+        $pdf->MultiCell(55, 5, $pTitle, 1, 'L');
         $h3 = $pdf->GetY() - $startY;
 
-        $pdf->SetXY($startX + 100, $startY);
-        $pdf->MultiCell(35, 5, $journal, 1, 'L');
+        $pdf->SetXY($startX + 85, $startY);
+        $pdf->MultiCell(35, 5, $pAuthor, 1, 'L');
         $h4 = $pdf->GetY() - $startY;
 
-        $pdf->SetXY($startX + 135, $startY);
-        $pdf->MultiCell(20, 5, $pubDate, 1, 'C');
+        $pdf->SetXY($startX + 120, $startY);
+        $pdf->MultiCell(35, 5, $pJournal, 1, 'L');
         $h5 = $pdf->GetY() - $startY;
 
         $pdf->SetXY($startX + 155, $startY);
-        $pdf->MultiCell(20, 5, $doi, 1, 'L');
+        $pdf->MultiCell(20, 5, $pDoi, 1, 'L');
         $h6 = $pdf->GetY() - $startY;
 
         $pdf->SetXY($startX + 175, $startY);
-        $pdf->MultiCell(15, 5, $if, 1, 'C');
+        $pdf->MultiCell(15, 5, $pIf, 1, 'C');
         $h7 = $pdf->GetY() - $startY;
 
         $maxH = max($h1, $h2, $h3, $h4, $h5, $h6, $h7);
@@ -327,20 +334,17 @@ if (empty($pubs)) {
     $pdf->Ln(4);
 }
 
-// 9. SECTION: CAPACITY BUILDING
-$pdf->SectionHeader('3. CAPACITY BUILDING');
-
-// 3.1 Workshops / Conferences Conducted
+// 3.2 Workshops / Conferences Conducted
 $pdf->SetFont('Helvetica', 'B', 9.5);
-$pdf->SetTextColor(2, 66, 131);
-$pdf->Cell(0, 6, '3.1 Workshops / Conferences Conducted', 0, 1, 'L');
+$pdf->SetTextColor(107, 33, 168);
+$pdf->Cell(0, 6, '3.2 Workshops / Conferences Conducted', 0, 1, 'L');
 $pdf->Ln(1);
 
 if (empty($workshops)) {
-    $pdf->EmptySectionNotice('No workshop/conference records available.');
+    $pdf->EmptySectionNotice('No workshops or conferences recorded yet.');
 } else {
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetFillColor(2, 66, 131);
+    $pdf->SetFillColor(188, 33, 33);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
     $pdf->Cell(45, 6, 'Event Title', 1, 0, 'L', true);
@@ -365,7 +369,7 @@ if (empty($workshops)) {
         if ($pdf->GetY() > 260) {
             $pdf->AddPage();
             $pdf->SetFont('Helvetica', 'B', 8);
-            $pdf->SetFillColor(2, 66, 131);
+            $pdf->SetFillColor(188, 33, 33);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
             $pdf->Cell(45, 6, 'Event Title', 1, 0, 'L', true);
@@ -414,17 +418,17 @@ if (empty($workshops)) {
     $pdf->Ln(4);
 }
 
-// 3.2 Training Programs Conducted
+// 3.3 Training Programs Conducted
 $pdf->SetFont('Helvetica', 'B', 9.5);
-$pdf->SetTextColor(2, 66, 131);
-$pdf->Cell(0, 6, '3.2 Training Programs Conducted', 0, 1, 'L');
+$pdf->SetTextColor(107, 33, 168);
+$pdf->Cell(0, 6, '3.3 Training Programs Conducted', 0, 1, 'L');
 $pdf->Ln(1);
 
 if (empty($trainings)) {
-    $pdf->EmptySectionNotice('No training program records available.');
+    $pdf->EmptySectionNotice('No training programs recorded yet.');
 } else {
     $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetFillColor(2, 66, 131);
+    $pdf->SetFillColor(188, 33, 33);
     $pdf->SetTextColor(255, 255, 255);
     $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
     $pdf->Cell(50, 6, 'Program Title', 1, 0, 'L', true);
@@ -448,7 +452,7 @@ if (empty($trainings)) {
         if ($pdf->GetY() > 260) {
             $pdf->AddPage();
             $pdf->SetFont('Helvetica', 'B', 8);
-            $pdf->SetFillColor(2, 66, 131);
+            $pdf->SetFillColor(188, 33, 33);
             $pdf->SetTextColor(255, 255, 255);
             $pdf->Cell(10, 6, '#', 1, 0, 'C', true);
             $pdf->Cell(50, 6, 'Program Title', 1, 0, 'L', true);
@@ -496,9 +500,9 @@ if (empty($trainings)) {
 $pdf->SectionHeader('4. NUMBER OF INTERNS TRAINED');
 
 $pdf->SetFont('Helvetica', 'B', 10);
-$pdf->SetFillColor(240, 253, 244); // Soft Green
-$pdf->SetDrawColor(34, 197, 94);   // Green Border
-$pdf->SetTextColor(21, 128, 61);
+$pdf->SetFillColor(243, 232, 255); // Soft Purple
+$pdf->SetDrawColor(107, 33, 168);   // Purple Border
+$pdf->SetTextColor(107, 33, 168);
 
 $internsVal = isset($report['interns_trained_count']) && $report['interns_trained_count'] !== '' ? (string)$report['interns_trained_count'] : 'N/A';
 $pdf->Cell(190, 10, ' Total Interns / Students Trained:  ' . $internsVal . ' ', 1, 1, 'L', true);
@@ -514,6 +518,13 @@ $filename  = "ANRF-PAIR_Progress_Report_{$cleanUniv}_{$cleanTask}.pdf";
 if (PHP_SAPI === 'cli') {
     echo $pdf->Output('S');
 } else {
-    $pdf->Output('D', $filename);
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . $filename . '"');
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
+    $pdf->Output('I', $filename);
     exit();
 }
