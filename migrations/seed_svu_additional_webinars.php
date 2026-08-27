@@ -30,13 +30,8 @@ try {
             'organisers'     => 'IIT Kanpur Symposium on Advanced Materials',
             'institute'      => 'IIT Kanpur',
             'investigator'   => 'ANRF-PAIR Team',
-<<<<<<< HEAD
-            'description'    => 'Delivered an invited lecture on “Main Group Materials for Health, Energy, Environment” during the Symposium on “Advanced Materials” held at IIT Kanpur on 6th–7th March 2026. The lecture highlighted recent advancements and emerging applications of main group materials in healthcare, sustainable energy solutions, and environmental technologies.',
-            'content'        => 'Delivered an invited lecture on “Main Group Materials for Health, Energy, Environment” during the Symposium on “Advanced Materials” held at IIT Kanpur on 6th–7th March 2026. The lecture highlighted recent advancements and emerging applications of main group materials in healthcare, sustainable energy solutions, and environmental technologies.',
-=======
             'description'    => 'Delivered an invited lecture on Main Group Materials for Health, Energy, Environment during the Symposium on Advanced Materials held at IIT Kanpur on 6th-7th March 2026. The lecture highlighted recent advancements and emerging applications of main group materials in healthcare, sustainable energy solutions, and environmental technologies.',
             'content'        => 'Delivered an invited lecture on Main Group Materials for Health, Energy, Environment during the Symposium on Advanced Materials held at IIT Kanpur on 6th-7th March 2026. The lecture highlighted recent advancements and emerging applications of main group materials in healthcare, sustainable energy solutions, and environmental technologies.',
->>>>>>> f782f6d444b4ec1537c38314f459f6c614bde6a9
             'image'          => null,
             'publish_status' => 1
         ]
