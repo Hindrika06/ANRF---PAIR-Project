@@ -72,9 +72,9 @@ try {
 
 try {
     if ($prefix === 'uoh_') {
-        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports ORDER BY created_at DESC");
+        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
     } else {
-        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports ORDER BY created_at DESC");
+        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
     }
 } catch (PDOException $e) {}
 

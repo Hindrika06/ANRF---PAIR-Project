@@ -11,6 +11,7 @@ if (!empty($requestedTabToken) && preg_match('/^[a-f0-9]{64}$/i', $requestedTabT
     session_start();
 }
 
+require_once 'auth_check.php';
 require_once 'config/db.php';
 require_once 'role_access.php';
 global $pdo;
@@ -38,29 +39,11 @@ if (!$reportId || $reportId <= 0) {
 }
 
 // 2. UNIVERSITY CONTEXT RESOLUTION & SECURITY GUARD
-$prefix = null;
+$prefix = resolveAdminPrefix($requestedPrefix);
 $allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
-if (!empty($requestedPrefix) && in_array($requestedPrefix, $allowedPrefixes, true)) {
-    $prefix = $requestedPrefix;
-} elseif (function_exists('resolveAdminPrefix') && !empty($_SESSION['username'])) {
-    $prefix = resolveAdminPrefix($requestedPrefix);
-}
-
-if (!$prefix || !in_array($prefix, $allowedPrefixes, true)) {
-    // Attempt auto-detecting the institute prefix across all databases for this report ID
-    foreach ($allowedPrefixes as $p) {
-        $chkStmt = $pdo->prepare("SELECT id FROM `{$p}_progress_reports` WHERE id = :id");
-        $chkStmt->execute([':id' => $reportId]);
-        if ($chkStmt->fetch()) {
-            $prefix = $p;
-            break;
-        }
-    }
-}
-
-if (!$prefix) {
-    safeExportExit('Progress Report or University context not found.', 404);
+if (!$prefix || !in_array($prefix, $allowedPrefixes, true) || !canEditInstitute($prefix)) {
+    safeExportExit('Unauthorized access: You are not permitted to export progress reports for this institute.', 403);
     if (PHP_SAPI === 'cli') return;
 }
 
