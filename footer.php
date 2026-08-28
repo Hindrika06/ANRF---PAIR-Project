@@ -119,12 +119,6 @@ $uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
                 <div>
                     &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. <span class="nowrap">All rights reserved.</span>
                 </div>
-                <div>
-                    <span>Developed by</span>
-                    <a href="https://bhimavaramdigitals.com/" target="_blank" rel="noopener noreferrer" class="footer-dev-link" style="color: #ffffff; font-weight: 700; text-decoration: none; cursor: pointer; margin-left: 3px; display: inline-block;">
-                        Bhimavaram Digitals
-                    </a>
-                </div>
             </div>
         </div><!-- /.container -->
     </section><!-- /#footer-bottom -->

@@ -34,7 +34,6 @@ try {
         ");
         $stmt->execute([':prefix' => $reqPrefix, ':now1' => $nowStr, ':now2' => $nowStr]);
     } else {
->>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
         $stmt = $pdo->prepare("
             SELECT * FROM `homepage_banners`
             WHERE status = 'Active'
@@ -43,16 +42,6 @@ try {
             ORDER BY display_order ASC, start_datetime DESC, id DESC
         ");
         $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
-<<<<<<< HEAD
-    } else {
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-            ORDER BY display_order ASC, id DESC
-        ");
-        $stmt->execute();
-=======
->>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
     }
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -62,11 +51,7 @@ try {
             $titleText = !empty($b['title']) ? $b['title'] : (!empty($b['caption']) ? $b['caption'] : 'ANRF PAIR Event Poster');
             $activeSlides[] = [
                 'src' => $b['image_path'],
-<<<<<<< HEAD
                 'alt' => htmlspecialchars($titleText),
-                'caption' => $captionText
-=======
-                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
                 'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
                 'is_poster' => true
             ];
