@@ -16,47 +16,34 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
-<<<<<<< HEAD
     $cols = $pdo->query("SHOW COLUMNS FROM `homepage_banners`")->fetchAll(PDO::FETCH_COLUMN);
     $hasStart = in_array('start_datetime', $cols, true);
     $hasEnd   = in_array('end_datetime', $cols, true);
+    $hasPrefix = in_array('institute_prefix', $cols, true);
 
-    if ($hasStart && $hasEnd) {
-=======
     $reqPrefix = isset($_GET['prefix']) ? strtolower(trim($_GET['prefix'])) : null;
     $validPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
-    if ($reqPrefix && in_array($reqPrefix, $validPrefixes, true)) {
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-              AND (institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)
-              AND (start_datetime IS NULL OR start_datetime <= :now1)
-              AND (end_datetime IS NULL OR end_datetime >= :now2)
-            ORDER BY display_order ASC, start_datetime DESC, id DESC
-        ");
-        $stmt->execute([':prefix' => $reqPrefix, ':now1' => $nowStr, ':now2' => $nowStr]);
-    } else {
->>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-              AND (start_datetime IS NULL OR start_datetime <= :now1)
-              AND (end_datetime IS NULL OR end_datetime >= :now2)
-            ORDER BY display_order ASC, start_datetime DESC, id DESC
-        ");
-        $stmt->execute([':now1' => $nowStr, ':now2' => $nowStr]);
-<<<<<<< HEAD
-    } else {
-        $stmt = $pdo->prepare("
-            SELECT * FROM `homepage_banners`
-            WHERE status = 'Active'
-            ORDER BY display_order ASC, id DESC
-        ");
-        $stmt->execute();
-=======
->>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
+    $whereClauses = ["status = 'Active'"];
+    $params = [];
+
+    if ($reqPrefix && in_array($reqPrefix, $validPrefixes, true) && $hasPrefix) {
+        $whereClauses[] = "(institute_prefix = :prefix OR institute_prefix = 'all' OR institute_prefix = '' OR institute_prefix IS NULL)";
+        $params[':prefix'] = $reqPrefix;
     }
+
+    if ($hasStart && $hasEnd) {
+        $whereClauses[] = "(start_datetime IS NULL OR start_datetime <= :now1)";
+        $whereClauses[] = "(end_datetime IS NULL OR end_datetime >= :now2)";
+        $params[':now1'] = $nowStr;
+        $params[':now2'] = $nowStr;
+    }
+
+    $whereSql = implode(' AND ', $whereClauses);
+    $orderBySql = ($hasStart && $hasEnd) ? "ORDER BY display_order ASC, start_datetime DESC, id DESC" : "ORDER BY display_order ASC, id DESC";
+
+    $stmt = $pdo->prepare("SELECT * FROM `homepage_banners` WHERE $whereSql $orderBySql");
+    $stmt->execute($params);
     $banners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($banners)) {
@@ -66,14 +53,9 @@ try {
             $captionText = !empty($b['caption']) ? $b['caption'] : (!empty($b['title']) ? $b['title'] : '');
             $activeSlides[] = [
                 'src' => $b['image_path'],
-<<<<<<< HEAD
                 'alt' => htmlspecialchars($titleText),
-                'caption' => $captionText
-=======
-                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
-                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
+                'caption' => '', // Hide auto-generated text overlay for poster slides
                 'is_poster' => true
->>>>>>> 43636af48df1f8536c32d9a9d721dd91293e4a97
             ];
         }
         // Combine default group photo slide + scheduled active posters
