@@ -27,7 +27,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
         $stmt->execute([$delId]);
         $uRole = $stmt->fetchColumn();
 
-        if ($uRole === 'super_admin') {
+        if ($uRole === 'super_admin' || $uRole === 'superadmin') {
             $message = 'Error: Cannot delete Hub Super Admin account.';
         } else {
             $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
@@ -166,7 +166,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge <?= $admin['role'] === 'super_admin' ? 'bg-primary' : 'bg-info' ?>">
+                                            <span class="badge <?= ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin') ? 'bg-primary' : 'bg-info' ?>">
                                                 <?= htmlspecialchars(getRoleDisplayName($admin['role'])) ?>
                                             </span>
                                         </td>
@@ -178,7 +178,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditAdminModal(<?= htmlspecialchars(json_encode($admin)) ?>)">
                                                 <i class="fa fa-pencil"></i> Edit
                                             </button>
-                                            <?php if ($admin['role'] !== 'super_admin'): ?>
+                                            <?php if ($admin['role'] !== 'super_admin' && $admin['role'] !== 'superadmin'): ?>
                                             <a href="<?= buildNavUrl('manage_admins.php?action=delete&id=' . $admin['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Admin Account?', message: 'Are you sure you want to delete this Spoke Admin account? They will lose login access.', confirmText: 'Delete Account', onConfirm: function() { window.location.href = targetUrl; } });">
                                                 <i class="fa fa-trash"></i> Delete
                                             </a>
@@ -309,7 +309,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fields: [
                 { label: 'Username / Email', value: admin.username, type: 'text', icon: 'fa-solid fa-user' },
                 { label: 'Assigned Institute', value: (admin.institute_prefix || '').toUpperCase(), type: 'badge', icon: 'fa-solid fa-building-columns' },
-                { label: 'Role Level', value: admin.role === 'super_admin' ? 'Hub Super Admin' : 'Spoke Institute Admin', type: 'text', icon: 'fa-solid fa-shield-alt' },
+                { label: 'Role Level', value: (admin.role === 'super_admin' || admin.role === 'superadmin') ? 'Hub Super Admin' : 'Spoke Institute Admin', type: 'text', icon: 'fa-solid fa-shield-alt' },
                 { label: 'Account Created', value: admin.created_at || 'N/A', icon: 'fa-solid fa-clock' }
             ]
         });
