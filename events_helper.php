@@ -1,11 +1,82 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+date_default_timezone_set('Asia/Kolkata');
+
+/**
+ * Sync all event statuses based on current date/time (Asia/Kolkata IST)
+ */
+function syncAllEventStatuses($pdo = null) {
+    if (!$pdo) {
+        global $pdo;
+    }
+    if (!$pdo) return;
+
+    date_default_timezone_set('Asia/Kolkata');
+    $nowStr = date('Y-m-d H:i:s');
+
+    try {
+        $stmt = $pdo->query("SELECT id, event_date, end_date, start_time, end_time, status FROM `events`");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $upd = $pdo->prepare("UPDATE `events` SET `status` = ? WHERE id = ?");
+
+        foreach ($rows as $r) {
+            $startDate = !empty($r['event_date']) ? $r['event_date'] : date('Y-m-d');
+            $endDate   = (!empty($r['end_date']) && $r['end_date'] !== '0000-00-00') ? $r['end_date'] : $startDate;
+            $startTime = !empty($r['start_time']) ? $r['start_time'] : '00:00:00';
+            $endTime   = !empty($r['end_time']) ? $r['end_time'] : '23:59:59';
+
+            $startDT = $startDate . ' ' . $startTime;
+            $endDT   = $endDate . ' ' . $endTime;
+
+            if ($nowStr < $startDT) {
+                $newStatus = 'upcoming';
+            } elseif ($nowStr > $endDT) {
+                $newStatus = 'completed';
+            } else {
+                $newStatus = 'ongoing';
+            }
+
+            if ($r['status'] !== $newStatus) {
+                $upd->execute([$newStatus, $r['id']]);
+            }
+        }
+    } catch (Exception $e) {
+        // Silently handle if database error
+    }
+}
+
+/**
+ * Compute real-time status string for a given event array
+ */
+function getEventStatus($event) {
+    date_default_timezone_set('Asia/Kolkata');
+    $nowStr = date('Y-m-d H:i:s');
+
+    $startDate = !empty($event['event_date']) ? $event['event_date'] : date('Y-m-d');
+    $endDate   = !empty($event['end_date']) ? $event['end_date'] : $startDate;
+    $startTime = !empty($event['start_time']) ? $event['start_time'] : '00:00:00';
+    $endTime   = !empty($event['end_time']) ? $event['end_time'] : '23:59:59';
+
+    $startDateTime = $startDate . ' ' . $startTime;
+    $endDateTime   = $endDate . ' ' . $endTime;
+
+    if ($nowStr < $startDateTime) {
+        return 'upcoming';
+    } elseif ($nowStr > $endDateTime) {
+        return 'completed';
+    } else {
+        return 'ongoing';
+    }
+}
+
 /**
  * Fetch all published events ordered by event_date ASC
  */
 function getAllPublishedEvents($limit = null) {
     global $pdo;
+    syncAllEventStatuses($pdo);
     $sql = "SELECT * FROM `events` WHERE `publish_status` = 1 ORDER BY `event_date` ASC";
     if ($limit !== null && (int)$limit > 0) {
         $sql .= " LIMIT " . (int)$limit;

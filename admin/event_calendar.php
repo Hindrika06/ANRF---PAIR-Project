@@ -19,21 +19,23 @@ if (empty($_SESSION['csrf_token'])) {
 
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
+require_once '../events_helper.php';
 
 $success = false;
 $error   = '';
 
+// Always sync event statuses based on current date/time (IST)
+syncAllEventStatuses($pdo);
+
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (!$is_super) {
+    $userCsrf = $_GET['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
+    } elseif (!$is_super) {
         $error = 'Only Super Admins are allowed to delete events.';
     } else {
         try {
-            $token = $_GET['csrf_token'] ?? '';
-            if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-                throw new RuntimeException("Security Error: Invalid or missing CSRF token.");
-            }
-
             // Fetch image path first to delete the file from the server
             $stmt = $pdo->prepare("SELECT image FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
@@ -45,7 +47,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $stmt = $pdo->prepare("DELETE FROM `events` WHERE id = :id");
             $stmt->execute([':id' => (int)$_GET['id']]);
             adminRedirect(['success_msg' => 'deleted']);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             $error = 'Failed to delete record: ' . $e->getMessage();
         }
     }
@@ -57,7 +59,7 @@ if (isset($_GET['success_msg'])) {
 }
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE FROM MODALS)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) || $_POST['action'] !== 'delete')) {
     if (!$is_super) {
         $error = 'Only Super Admins are allowed to edit or add events.';
     } else {
@@ -75,7 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $venue                   = trim($_POST['venue'] ?? '');
         $event_type              = trim($_POST['event_type'] ?? '');
         $visibility              = $_POST['visibility'] ?? 'public';
-        $status                  = $_POST['status'] ?? 'upcoming';
+        $status                  = getEventStatus([
+            'event_date' => $event_date,
+            'end_date'   => $end_date,
+            'start_time' => $start_time,
+            'end_time'   => $end_time
+        ]);
         $publish_status          = isset($_POST['publish_status']) ? 1 : 0;
         $coordinator             = trim($_POST['coordinator'] ?? '');
         $resource_person          = trim($_POST['resource_person'] ?? '');
@@ -313,11 +320,12 @@ try {
     $stmt->execute();
     $records = $stmt->fetchAll();
 
-    // Fetch counts for KPIs
-    $total_events = $pdo->query("SELECT COUNT(*) FROM `events`")->fetchColumn();
-    $upcoming_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'upcoming'")->fetchColumn();
-    $ongoing_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'ongoing'")->fetchColumn();
-    $completed_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'completed'")->fetchColumn();
+    // Fetch counts for KPIs (scoped by admin permissions if regular admin)
+    $kpi_where = $is_super ? "1=1" : "(university_id = 'all' OR university_id = " . $pdo->quote($user_prefix) . ")";
+    $total_events = $pdo->query("SELECT COUNT(*) FROM `events` WHERE $kpi_where")->fetchColumn();
+    $upcoming_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'upcoming' AND $kpi_where")->fetchColumn();
+    $ongoing_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'ongoing' AND $kpi_where")->fetchColumn();
+    $completed_count = $pdo->query("SELECT COUNT(*) FROM `events` WHERE status = 'completed' AND $kpi_where")->fetchColumn();
 
 } catch (PDOException $e) {
     die("Database Error: " . $e->getMessage());
@@ -620,9 +628,7 @@ include 'loader.php';
                                     <th>Status</th>
                                     <th>Publisher</th>
                                     <th>Created By</th>
-                                    <?php if ($is_super): ?>
                                     <th class="text-end">Actions</th>
-                                    <?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
@@ -673,21 +679,24 @@ include 'loader.php';
                                         <span class="d-block"><?= htmlspecialchars($row['created_by']) ?></span>
                                         <small class="text-muted"><?= date("d/m/Y", strtotime($row['created_at'])) ?></small>
                                     </td>
-                                    <?php if ($is_super): ?>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <button type="button" class="btn btn-primary btn-xs sharp" 
+                                            <button type="button" class="btn btn-info btn-xs" onclick='viewEvent(<?= json_encode($row) ?>)'>
+                                                <i class="fa fa-eye"></i> View
+                                            </button>
+                                            <?php if ($is_super): ?>
+                                            <button type="button" class="btn btn-warning btn-xs" 
                                                     data-bs-toggle="modal" data-bs-target="#eventModal"
                                                     onclick='editEvent(<?= json_encode($row) ?>)'>
-                                                <i class="fa fa-pencil"></i>
+                                                <i class="fa fa-pencil"></i> Edit
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-xs sharp"
+                                            <button type="button" class="btn btn-danger btn-xs"
                                                     onclick="confirmDelete(<?= $row['id'] ?>)">
-                                                <i class="fa fa-trash"></i>
+                                                <i class="fa fa-trash"></i> Delete
                                             </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
-                                    <?php endif; ?>
                                 </tr>
                                 <?php endforeach; ?>
                                 <?php endif; ?>
@@ -737,7 +746,7 @@ include 'loader.php';
                 <h5 class="modal-title" id="eventModalLabel">Event Registration Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" id="modalForm" enctype="multipart/form-data">
+            <form method="POST" id="modalForm" action="<?= buildNavUrl('event_calendar.php') ?>" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div class="modal-body">
                     <input type="hidden" name="edit_id" id="modal_edit_id">
@@ -986,10 +995,38 @@ include 'loader.php';
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('action', 'delete');
         urlParams.set('id', id);
+        urlParams.set('csrf_token', '<?= $_SESSION['csrf_token'] ?>');
         modalDeleteExecutionLink.href = 'event_calendar.php?' + urlParams.toString();
         bootstrapDeleteInstance.show();
     }
     <?php endif; ?>
+
+    function viewEvent(row) {
+        openKpiRecordViewModal({
+            moduleTitle: 'Event Calendar Details',
+            recordTitle: row.title || 'Event #' + row.id,
+            institutePrefix: row.university_id || 'all',
+            approvalStatus: row.publish_status == 1 ? 'Approved' : 'Pending',
+            extraStatus: row.status ? row.status.toUpperCase() : 'UPCOMING',
+            fields: [
+                { label: 'Event Title', value: row.title, type: 'text', icon: 'fa-solid fa-calendar-day' },
+                { label: 'Description', value: row.description || 'None', type: 'longtext', icon: 'fa-solid fa-align-left' },
+                { label: 'Event Category', value: row.category || 'General', icon: 'fa-solid fa-tag' },
+                { label: 'Event Date', value: row.event_date || 'N/A', icon: 'fa-solid fa-calendar' },
+                { label: 'Time Window', value: (row.start_time || '') + ' - ' + (row.end_time || ''), icon: 'fa-solid fa-clock' },
+                { label: 'Venue / Location', value: row.venue || 'TBA', icon: 'fa-solid fa-location-dot' },
+                { label: 'Event Image / Flyer', value: row.image, type: 'image', icon: 'fa-solid fa-image' },
+                { label: 'Registration Link', value: row.registration_link || 'None', type: row.registration_link ? 'link' : 'text', icon: 'fa-solid fa-link' },
+                { label: 'Resource Persons', value: row.resource_persons || 'None', icon: 'fa-solid fa-users' },
+                { label: 'Convener', value: row.convener || 'None', icon: 'fa-solid fa-user-tie' },
+                { label: 'Organising Committee', value: row.organising_committee || 'None', type: 'longtext', icon: 'fa-solid fa-sitemap' },
+                { label: 'Visibility', value: (row.visibility || 'public').toUpperCase(), type: 'badge', icon: 'fa-solid fa-eye' },
+                { label: 'Created By', value: (row.created_by || 'Admin') + ' on ' + (row.created_at || 'N/A'), icon: 'fa-solid fa-user' }
+            ]
+        });
+    }
 </script>
+
+<?php include 'includes/view_modal.php'; ?>
 </body>
 </html>

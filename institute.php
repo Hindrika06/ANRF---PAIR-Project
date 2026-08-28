@@ -32,10 +32,12 @@ $prefix_map = [
 ];
 $prefix = $prefix_map[$institute_name] ?? 'uoh_';
 
-function fetchRows($pdo, $sql, $params = []) {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll();
+if (!function_exists('fetchRows')) {
+    function fetchRows($pdo, $sql, $params = []) {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
 }
 
 // 3. Inject the safe prefix into your queries dynamically
@@ -70,9 +72,9 @@ try {
 
 try {
     if ($prefix === 'uoh_') {
-        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports ORDER BY created_at DESC");
+        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
     } else {
-        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports ORDER BY created_at DESC");
+        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
     }
 } catch (PDOException $e) {}
 

@@ -225,6 +225,7 @@ CREATE TABLE IF NOT EXISTS `cuk_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -322,6 +323,7 @@ CREATE TABLE IF NOT EXISTS `kannur_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -419,6 +421,7 @@ CREATE TABLE IF NOT EXISTS `mgu_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -516,6 +519,7 @@ CREATE TABLE IF NOT EXISTS `ou_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -613,6 +617,7 @@ CREATE TABLE IF NOT EXISTS `svu_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -710,6 +715,7 @@ CREATE TABLE IF NOT EXISTS `uoh_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -807,6 +813,7 @@ CREATE TABLE IF NOT EXISTS `yvu_progress_reports` (
   `approved_objects` TEXT DEFAULT NULL,
   `methodology` TEXT DEFAULT NULL,
   `summary_progress` TEXT DEFAULT NULL,
+  `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Approved',
   `publish_status` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -833,6 +840,223 @@ INSERT INTO `announcements` (`title`, `link`, `is_active`) VALUES
 ('📢 Webinar on SMART NANO BIOSENSORS – May 20, 2026', 'webinars.php', 1),
 ('🎓 Osmania University Education Week: May 11–17, 2026', 'conferences.php', 1),
 ('📸 New Event Photos Uploaded in Gallery', 'gallery.php', 1);
+
+CREATE TABLE IF NOT EXISTS `yvu_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `yvu_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `uoh_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `uoh_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `svu_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `svu_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `ou_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `ou_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `mgu_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `mgu_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `kannur_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `kannur_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `cuk_progress_report_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `task_no` VARCHAR(50) DEFAULT NULL,
+  `publication_title` VARCHAR(500) NOT NULL,
+  `author_name` VARCHAR(255) NOT NULL,
+  `doi_number` VARCHAR(255) DEFAULT NULL,
+  `publication_date` DATE DEFAULT NULL,
+  `publication_journal` VARCHAR(300) NOT NULL,
+  `impact_factor` DECIMAL(6,3) DEFAULT NULL,
+  `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_id` (`progress_report_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `cuk_progress_report_capacity_events` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `progress_report_id` INT NOT NULL,
+  `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `event_date` DATE DEFAULT NULL,
+  `duration` VARCHAR(100) DEFAULT NULL,
+  `venue_mode` VARCHAR(255) DEFAULT NULL,
+  `organizing_institution` VARCHAR(255) DEFAULT NULL,
+  `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `description` TEXT DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_pr_events_id` (`progress_report_id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Seed Sample Data for Research Areas
 INSERT INTO `research_areas` (`title`, `description`, `display_order`) VALUES

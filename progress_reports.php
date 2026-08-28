@@ -165,7 +165,7 @@ try {
                             <div class="pr-section-block">
                                 <h4 class="pr-section-title"><i class="fa fa-book me-2"></i> PUBLICATIONS</h4>
                                 <?php if (empty($pubs)): ?>
-                                    <p class="pr-empty-text">No publication details added yet.</p>
+                                    <p class="pr-empty-text"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No publication details added yet.</p>
                                 <?php else: ?>
                                     <div class="pr-sub-table-wrap">
                                         <table class="pr-sub-table">
@@ -217,7 +217,7 @@ try {
                                     <div class="pr-cb-box">
                                         <h5 class="pr-cb-subtitle">Workshops / Conferences Conducted</h5>
                                         <?php if (empty($workshops)): ?>
-                                            <p class="pr-empty-text">No workshops or conferences recorded yet.</p>
+                                            <p class="pr-empty-text"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No workshops or conferences recorded yet.</p>
                                         <?php else: ?>
                                             <ul class="pr-cb-list">
                                                 <?php foreach ($workshops as $w): ?>
@@ -247,7 +247,7 @@ try {
                                     <div class="pr-cb-box">
                                         <h5 class="pr-cb-subtitle">Training Programs Conducted</h5>
                                         <?php if (empty($trainings)): ?>
-                                            <p class="pr-empty-text">No training programs recorded yet.</p>
+                                            <p class="pr-empty-text"><i class="fa fa-info-circle me-1" style="color: #6b21a8 !important;"></i> No training programs recorded yet.</p>
                                         <?php else: ?>
                                             <ul class="pr-cb-list">
                                                 <?php foreach ($trainings as $t): ?>
@@ -420,32 +420,34 @@ try {
     }
 
     .pr-info-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
         border-radius: 8px;
         padding: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
 
     .pr-box-heading {
-        font-size: 13px;
-        font-weight: 700;
-        color: #024283;
+        font-size: 12.5px;
+        font-weight: 800;
+        color: #6b21a8;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0 0 8px 0;
+        letter-spacing: 0.6px;
+        margin: 0 0 6px 0;
     }
 
     .pr-box-text {
         font-size: 13.5px;
-        color: #334155;
-        line-height: 1.55;
+        color: #1e293b;
+        font-weight: 400;
+        line-height: 1.6;
         margin: 0;
     }
 
     .pr-divider {
         margin: 24px 0;
         border: 0;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #cbd5e1;
     }
 
     .pr-section-title {
@@ -458,14 +460,20 @@ try {
     }
 
     .pr-empty-text {
-        font-size: 13px;
-        color: #94a3b8;
+        font-size: 13.5px;
+        color: #1e293b;
         font-style: italic;
+        font-weight: 500;
+        background: #ffffff;
+        padding: 12px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
         margin: 0;
+        display: block;
     }
 
     .pr-sub-table-wrap {
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         border-radius: 8px;
         overflow: hidden;
     }
@@ -477,20 +485,20 @@ try {
     }
 
     .pr-sub-table thead th {
-        background: #f1f5f9;
-        color: #475569;
+        background: #bc2121 !important;
+        color: #ffffff !important;
         font-weight: 700;
         text-transform: uppercase;
         font-size: 11px;
-        letter-spacing: 0.5px;
-        padding: 10px 14px;
-        border-bottom: 1px solid #e2e8f0;
+        letter-spacing: 0.6px;
+        padding: 11px 14px;
+        border: none;
     }
 
     .pr-sub-table tbody td {
         padding: 12px 14px;
-        border-bottom: 1px solid #f1f5f9;
-        color: #334155;
+        border-bottom: 1px solid #e2e8f0;
+        color: #0f172a;
     }
 
     .pr-if-badge {
@@ -516,16 +524,16 @@ try {
     }
 
     .pr-cb-box {
-        background: #fff;
-        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
         border-radius: 8px;
         padding: 16px;
     }
 
     .pr-cb-subtitle {
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0f172a;
         margin: 0 0 12px 0;
     }
 
@@ -556,7 +564,7 @@ try {
 
     .pr-cb-item-meta {
         font-size: 12px;
-        color: #64748b;
+        color: #475569;
         display: flex;
         gap: 12px;
         margin: 4px 0;
@@ -564,14 +572,14 @@ try {
     }
 
     .pr-cb-item-desc {
-        font-size: 12.5px;
-        color: #475569;
+        font-size: 13px;
+        color: #1e293b;
         margin: 4px 0 0 0;
     }
 
     .pr-interns-banner {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
         border-radius: 8px;
         padding: 14px 18px;
         display: flex;
@@ -580,8 +588,19 @@ try {
     }
 
     .pr-interns-label {
-        font-size: 14px;
-        color: #166534;
+        font-size: 14.5px;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .pr-interns-count {
+        font-size: 22px;
+        font-weight: 800;
+        color: #ffffff;
+        background: #6b21a8;
+        padding: 4px 16px;
+        border-radius: 6px;
+        border: 1px solid #581c87;
     }
 
     .pr-interns-count {
@@ -591,7 +610,7 @@ try {
         background: #ffffff;
         padding: 4px 16px;
         border-radius: 6px;
-        border: 1px solid #86efac;
+        border: 1.5px solid #4ade80;
     }
 
     .pr-empty {

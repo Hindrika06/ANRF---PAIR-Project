@@ -65,15 +65,17 @@ try {
     // Silently handle schema check
 }
 
-// 1. HANDLE DELETE ACTION WITH SERVER-SIDE AUTHORIZATION & CSRF VALIDATION
-if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+// 1. HANDLE DELETE ACTION WITH SERVER-SIDE AUTHORIZATION & CSRF VALIDATION (POST & GET FALLBACK)
+if ((($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['delete_id'])) || (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id']))) {
     try {
-        $token = $_GET['csrf_token'] ?? '';
+        $isPostDelete = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id']));
+        $token = $isPostDelete ? ($_POST['csrf_token'] ?? '') : ($_GET['csrf_token'] ?? '');
+        
         if (empty($token) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
             throw new RuntimeException("Security Error: Invalid or missing CSRF token. Request rejected.");
         }
 
-        $deleteId = (int)$_GET['id'];
+        $deleteId = $isPostDelete ? (int)$_POST['delete_id'] : (int)$_GET['id'];
         $stmt = $pdo->prepare("SELECT * FROM `homepage_banners` WHERE id = :id");
         $stmt->execute([':id' => $deleteId]);
         $row = $stmt->fetch();
@@ -108,22 +110,22 @@ if (isset($_GET['success_msg'])) {
  * Image Optimization Helper using GD
  */
 function optimizeAndSavePoster($tmpPath, $destFullPath, $mimeType) {
-    list($width, $height) = getimagesize($tmpPath);
+    list($width, $height) = @getimagesize($tmpPath);
     if (!$width || !$height) {
-        return move_uploaded_file($tmpPath, $destFullPath);
+        return move_uploaded_file($tmpPath, $destFullPath) || copy($tmpPath, $destFullPath);
     }
 
     $srcImg = null;
-    if ($mimeType === 'image/jpeg' || $mimeType === 'image/jpg') {
+    if (($mimeType === 'image/jpeg' || $mimeType === 'image/jpg') && function_exists('imagecreatefromjpeg')) {
         $srcImg = @imagecreatefromjpeg($tmpPath);
-    } elseif ($mimeType === 'image/png') {
+    } elseif ($mimeType === 'image/png' && function_exists('imagecreatefrompng')) {
         $srcImg = @imagecreatefrompng($tmpPath);
-    } elseif ($mimeType === 'image/webp') {
+    } elseif ($mimeType === 'image/webp' && function_exists('imagecreatefromwebp')) {
         $srcImg = @imagecreatefromwebp($tmpPath);
     }
 
-    if (!$srcImg) {
-        return move_uploaded_file($tmpPath, $destFullPath);
+    if (!$srcImg || !function_exists('imagecreatetruecolor')) {
+        return move_uploaded_file($tmpPath, $destFullPath) || copy($tmpPath, $destFullPath);
     }
 
     $maxDim = 3840;
@@ -140,35 +142,42 @@ function optimizeAndSavePoster($tmpPath, $destFullPath, $mimeType) {
         }
     }
 
-    $dstImg = imagecreatetruecolor($newW, $newH);
+    $dstImg = @imagecreatetruecolor($newW, $newH);
+    if (!$dstImg) {
+        imagedestroy($srcImg);
+        return move_uploaded_file($tmpPath, $destFullPath) || copy($tmpPath, $destFullPath);
+    }
 
     if ($mimeType === 'image/png' || $mimeType === 'image/webp') {
-        imagealphablending($dstImg, false);
-        imagesavealpha($dstImg, true);
+        @imagealphablending($dstImg, false);
+        @imagesavealpha($dstImg, true);
     }
 
-    imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newW, $newH, $width, $height);
+    @imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newW, $newH, $width, $height);
 
     $ext = strtolower(pathinfo($destFullPath, PATHINFO_EXTENSION));
+    $saved = false;
 
-    if ($ext === 'jpg' || $ext === 'jpeg') {
-        $saved = imagejpeg($dstImg, $destFullPath, 88);
-    } elseif ($ext === 'png') {
-        $saved = imagepng($dstImg, $destFullPath, 6);
-    } elseif ($ext === 'webp') {
-        $saved = imagewebp($dstImg, $destFullPath, 88);
-    } else {
-        $saved = move_uploaded_file($tmpPath, $destFullPath);
+    if (($ext === 'jpg' || $ext === 'jpeg') && function_exists('imagejpeg')) {
+        $saved = @imagejpeg($dstImg, $destFullPath, 88);
+    } elseif ($ext === 'png' && function_exists('imagepng')) {
+        $saved = @imagepng($dstImg, $destFullPath, 6);
+    } elseif ($ext === 'webp' && function_exists('imagewebp')) {
+        $saved = @imagewebp($dstImg, $destFullPath, 88);
     }
 
-    imagedestroy($srcImg);
-    imagedestroy($dstImg);
+    if (!$saved) {
+        $saved = move_uploaded_file($tmpPath, $destFullPath) || copy($tmpPath, $destFullPath);
+    }
+
+    if ($srcImg) @imagedestroy($srcImg);
+    if ($dstImg) @imagedestroy($dstImg);
 
     return $saved;
 }
 
 // 3. HANDLE FORM SUBMISSIONS (ADD OR UPDATE)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) || $_POST['action'] !== 'delete')) {
     try {
         // Validate CSRF Token
         $userCsrf = $_POST['csrf_token'] ?? '';
@@ -497,6 +506,13 @@ $nowStr = date('Y-m-d H:i:s');
                     </button>
                 </div>
                 <div class="card-body">
+                    <!-- Hidden POST Delete Form for CSRF Protection -->
+                    <form id="deletePostForm" method="POST" action="<?= buildNavUrl('banner_management.php') ?>" style="display: none;">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="delete_id" id="delete_id_input" value="">
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table table-striped table-hover align-middle">
                             <thead>
@@ -586,13 +602,16 @@ $nowStr = date('Y-m-d H:i:s');
                                             <span class="badge bg-light text-dark border"><?= (int)$b['display_order'] ?></span>
                                         </td>
                                         <td class="text-center">
+                                            <button type="button" class="btn btn-info btn-xs me-1" onclick="viewBanner(<?= htmlspecialchars(json_encode($b)) ?>)">
+                                                <i class="fa fa-eye"></i> View
+                                            </button>
                                             <?php if ($canModify): ?>
                                                 <button class="btn btn-warning btn-xs me-1" onclick="openEditModal(<?= htmlspecialchars(json_encode($b)) ?>)">
                                                     <i class="fa fa-pencil"></i> Edit
                                                 </button>
-                                                <a href="<?= buildNavUrl('banner_management.php?action=delete&id=' . $b['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Poster?', message: 'Are you sure you want to delete this event poster? It will immediately disappear from the website.', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                <button type="button" class="btn btn-danger btn-xs" onclick="confirmDeletePoster(<?= $b['id'] ?>)">
                                                     <i class="fa fa-trash"></i> Delete
-                                                </a>
+                                                </button>
                                             <?php else: ?>
                                                 <span class="text-muted small"><i class="fa fa-lock me-1"></i> Read-Only</span>
                                             <?php endif; ?>
@@ -614,7 +633,7 @@ $nowStr = date('Y-m-d H:i:s');
 <div class="modal fade" id="slideModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data" id="posterForm">
+            <form method="POST" action="<?= buildNavUrl('banner_management.php') ?>" enctype="multipart/form-data" id="posterForm">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="edit_id" id="edit_id" value="">
                 <?php if (!$isSuper): ?>
@@ -887,6 +906,41 @@ $nowStr = date('Y-m-d H:i:s');
             }
         }
     }
+
+    function confirmDeletePoster(id) {
+        ANRFModal.confirm({
+            title: 'Delete Poster?',
+            message: 'Are you sure you want to remove this homepage banner? This action cannot be undone.',
+            confirmText: 'Delete',
+            onConfirm: function() {
+                document.getElementById('delete_id_input').value = id;
+                document.getElementById('deletePostForm').submit();
+            }
+        });
+    }
+
+    function viewBanner(b) {
+        var titleText = b.title || b.caption || 'Poster #' + b.id;
+        openKpiRecordViewModal({
+            moduleTitle: 'Homepage Banner / Poster Details',
+            recordTitle: titleText,
+            institutePrefix: b.institute_prefix || 'all',
+            extraStatus: b.status || 'Active',
+            fields: [
+                { label: 'Poster Title', value: titleText, type: 'text', icon: 'fa-solid fa-heading' },
+                { label: 'Short Description', value: b.short_description || 'None', type: 'longtext', icon: 'fa-solid fa-align-left' },
+                { label: 'Target URL', value: b.target_url || 'None', type: b.target_url ? 'link' : 'text', icon: 'fa-solid fa-link' },
+                { label: 'Poster Image', value: b.image_path, type: 'image', icon: 'fa-solid fa-image' },
+                { label: 'Institute Prefix', value: (b.institute_prefix || 'all').toUpperCase(), type: 'badge', icon: 'fa-solid fa-building-columns' },
+                { label: 'Start Date & Time (IST)', value: b.start_datetime || 'Immediate', icon: 'fa-solid fa-play' },
+                { label: 'End Date & Time (IST)', value: b.end_datetime || 'No Expiration', icon: 'fa-solid fa-stop' },
+                { label: 'Display Order', value: b.display_order || 10, icon: 'fa-solid fa-arrow-down-short-wide' },
+                { label: 'Status', value: b.status || 'Active', type: 'badge', icon: 'fa-solid fa-toggle-on' },
+                { label: 'Created At', value: b.created_at || 'N/A', icon: 'fa-solid fa-clock' }
+            ]
+        });
+    }
 </script>
 
+<?php include 'includes/view_modal.php'; ?>
 <?php include 'footer.php'; ?>

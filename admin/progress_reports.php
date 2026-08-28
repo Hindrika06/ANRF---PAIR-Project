@@ -1,207 +1,88 @@
 <?php
 require_once 'auth_check.php';
 require_once 'role_access.php';
+require_once 'config/db.php';
 
+// Step 1: Resolve Institute Context using existing Admin Portal mechanism
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 
 if (!isValidPrefix($prefix)) {
-    die('Invalid institute configuration. Please contact admin.');
+    die('Invalid institute configuration. Please contact administrator.');
 }
 
-$table = "{$prefix}_progress_reports";
-$pubsTable = "{$prefix}_progress_report_publications";
+$table       = "{$prefix}_progress_reports";
+$pubsTable   = "{$prefix}_progress_report_publications";
 $eventsTable = "{$prefix}_progress_report_capacity_events";
 
-require_once 'config/db.php';
+$success_msg = '';
+$error_msg   = '';
 
-// Self-healing DB check for columns and child tables across all university prefixes
-try {
-    $allPrefixesToCheck = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
-    foreach ($allPrefixesToCheck as $pCheck) {
-        $pTbl   = "{$pCheck}_progress_reports";
-        $pPubs  = "{$pCheck}_progress_report_publications";
-        $pEvts  = "{$pCheck}_progress_report_capacity_events";
-
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS `$pTbl` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `project_title` VARCHAR(255) NOT NULL,
-                `pi_name` VARCHAR(255) NOT NULL,
-                `co_pi_name` VARCHAR(255) DEFAULT NULL,
-                `task_no` VARCHAR(50) NOT NULL,
-                `work_package_no` VARCHAR(100) DEFAULT NULL,
-                `approved_objects` TEXT DEFAULT NULL,
-                `methodology` TEXT DEFAULT NULL,
-                `summary_progress` TEXT DEFAULT NULL,
-                `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0,
-                `approval_status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-        ");
-
-        $chkC = $pdo->query("SHOW COLUMNS FROM `$pTbl` LIKE 'work_package_no'");
-        if ($chkC->rowCount() === 0) {
-            $pdo->exec("ALTER TABLE `$pTbl` ADD COLUMN `work_package_no` VARCHAR(100) NULL AFTER `task_no`");
-        }
-
-        $chkI = $pdo->query("SHOW COLUMNS FROM `$pTbl` LIKE 'interns_trained_count'");
-        if ($chkI->rowCount() === 0) {
-            $pdo->exec("ALTER TABLE `$pTbl` ADD COLUMN `interns_trained_count` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `summary_progress`");
-        }
-
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS `$pPubs` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `progress_report_id` INT NOT NULL,
-                `task_no` VARCHAR(50) DEFAULT NULL,
-                `publication_title` VARCHAR(500) NOT NULL,
-                `author_name` VARCHAR(255) NOT NULL,
-                `doi_number` VARCHAR(255) DEFAULT NULL,
-                `publication_date` DATE DEFAULT NULL,
-                `publication_journal` VARCHAR(300) NOT NULL,
-                `impact_factor` DECIMAL(6,3) DEFAULT NULL,
-                `approval_status` ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Approved',
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                KEY `idx_pr_id` (`progress_report_id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-        ");
-
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS `$pEvts` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `progress_report_id` INT NOT NULL,
-                `category` ENUM('Workshop_Conference', 'Training_Program') NOT NULL,
-                `title` VARCHAR(255) NOT NULL,
-                `event_date` DATE DEFAULT NULL,
-                `duration` VARCHAR(100) DEFAULT NULL,
-                `venue_mode` VARCHAR(255) DEFAULT NULL,
-                `organizing_institution` VARCHAR(255) DEFAULT NULL,
-                `participant_count` INT UNSIGNED NOT NULL DEFAULT 0,
-                `description` TEXT DEFAULT NULL,
-                `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-                KEY `idx_pr_events_id` (`progress_report_id`),
-                KEY `idx_category` (`category`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-        ");
-    }
-} catch (PDOException $e) {
-    // Failsafe
-}
-
-$success = false;
-$error   = '';
-
-// 1. HANDLE MAIN PROGRESS REPORT DELETE ACTION
-if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
-    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
-        $error = 'You are not allowed to delete records for this institute.';
-    } else {
-        try {
-            $deleteTable = "{$deletePrefix}_progress_reports";
-            $deletePubsTable = "{$deletePrefix}_progress_report_publications";
-            $deleteEventsTable = "{$deletePrefix}_progress_report_capacity_events";
-            $id = (int)$_GET['id'];
-
-            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
-            $stmt->execute([':id' => $id]);
-
-            // Clean up associated child records
-            $stmt = $pdo->prepare("DELETE FROM `$deletePubsTable` WHERE progress_report_id = :id");
-            $stmt->execute([':id' => $id]);
-
-            $stmt = $pdo->prepare("DELETE FROM `$deleteEventsTable` WHERE progress_report_id = :id");
-            $stmt->execute([':id' => $id]);
-
-            adminRedirect(['success_msg' => 'deleted']);
-        } catch (PDOException $e) {
-            $error = 'Failed to delete record: ' . $e->getMessage();
-        }
-    }
-}
-
-// 2. HANDLE CHILD RECORD DELETIONS
-if (isset($_GET['action']) && isset($_GET['sub_id'])) {
-    $subAction = $_GET['action'];
-    $subId = (int)$_GET['sub_id'];
-    $recPrefix = $_GET['record_prefix'] ?? $prefix;
-
-    if (!isValidPrefix($recPrefix) || !canEditInstitute($recPrefix)) {
-        $error = 'Unauthorized operation for this institute.';
-    } else {
-        try {
-            if ($subAction === 'delete_pub') {
-                $targetTable = "{$recPrefix}_progress_report_publications";
-                $stmt = $pdo->prepare("DELETE FROM `$targetTable` WHERE id = :id");
-                $stmt->execute([':id' => $subId]);
-                adminRedirect(['success_msg' => 'deleted_pub']);
-            } elseif ($subAction === 'delete_capacity_event') {
-                $targetTable = "{$recPrefix}_progress_report_capacity_events";
-                $stmt = $pdo->prepare("DELETE FROM `$targetTable` WHERE id = :id");
-                $stmt->execute([':id' => $subId]);
-                adminRedirect(['success_msg' => 'deleted_event']);
-            }
-        } catch (PDOException $e) {
-            $error = 'Failed to delete sub-record: ' . $e->getMessage();
-        }
-    }
-}
-
-// SHOW SUCCESS FLASH MESSAGES
+// Handle Flash Messages
 if (isset($_GET['success_msg'])) {
-    $success = true;
+    $msgType = $_GET['success_msg'];
+    if ($msgType === 'submitted') {
+        $success_msg = 'Progress report changes submitted successfully for Hub Admin approval.';
+    } elseif ($msgType === 'updated' || $msgType === 'inserted') {
+        $success_msg = 'Progress report project context saved successfully.';
+    } elseif ($msgType === 'pub_saved') {
+        $success_msg = 'Publication details updated successfully.';
+    } elseif ($msgType === 'event_saved') {
+        $success_msg = 'Capacity building event record saved successfully.';
+    } elseif ($msgType === 'interns_updated') {
+        $success_msg = 'Number of interns trained updated successfully.';
+    } elseif ($msgType === 'deleted') {
+        $success_msg = 'Record deleted successfully.';
+    }
 }
 
-// 3. HANDLE ALL FORM SUBMISSIONS (MAIN REPORT, PUBLICATIONS, CAPACITY EVENTS, INTERNS COUNT)
+// ----------------------------------------------------------------------------
+// POST FORM SUBMISSION HANDLER (WITH CSRF & STRICT SERVER AUTHORIZATION)
+// ----------------------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken();
-    $formType = $_POST['form_type'] ?? 'main_report';
+    $formType = $_POST['form_type'] ?? '';
 
     if (!canEditInstitute($prefix)) {
-        $error = 'You are not allowed to update records for this institute.';
+        $error_msg = 'Unauthorized operation: You do not have permission to modify data for this institute.';
     } else {
         try {
-            // A. MAIN PROGRESS REPORT FORM SUBMISSION
-            if ($formType === 'main_report') {
-                $project_title         = trim($_POST['project_title'] ?? '');
-                $pi_name               = trim($_POST['pi_name'] ?? '');
-                $co_pi_name            = trim($_POST['co_pi_name'] ?? '');
-                $task_no               = trim($_POST['task_no'] ?? '');
-                $work_package_no       = trim($_POST['work_package_no'] ?? '');
-                $approved_objects      = trim($_POST['approved_objects'] ?? '');
-                $methodology           = trim($_POST['methodology'] ?? '');
-                $summary_progress      = trim($_POST['summary_progress'] ?? '');
-                $interns_trained_input = $_POST['interns_trained_count'] ?? '0';
+            $is_super = isSuperAdmin();
+            $approvalStatus = $is_super ? 'Approved' : 'Pending';
 
-                if ($interns_trained_input < 0 || !filter_var($interns_trained_input, FILTER_VALIDATE_INT, ["options" => ["min_range" => 0]])) {
-                    throw new RuntimeException("Number of Interns Trained must be a valid non-negative integer (0 or greater).");
+            // A. MAIN PROGRESS REPORT FORM (Create or Update Task Context)
+            if ($formType === 'save_main_report') {
+                $task_no          = trim($_POST['task_no'] ?? '');
+                $project_title    = trim($_POST['project_title'] ?? '');
+                $pi_name          = trim($_POST['pi_name'] ?? '');
+                $co_pi_name       = trim($_POST['co_pi_name'] ?? '');
+                $work_package_no  = trim($_POST['work_package_no'] ?? '');
+                $approved_objects = trim($_POST['approved_objects'] ?? '');
+                $methodology      = trim($_POST['methodology'] ?? '');
+                $summary_progress = trim($_POST['summary_progress'] ?? '');
+                $interns_count    = isset($_POST['interns_trained_count']) ? (int)$_POST['interns_trained_count'] : 0;
+                $edit_id          = !empty($_POST['report_id']) ? (int)$_POST['report_id'] : null;
+
+                if (empty($task_no)) {
+                    throw new RuntimeException("Task ID is required.");
                 }
-                $interns_trained_count = (int)$interns_trained_input;
-
-                $edit_id        = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
-                $is_super       = isSuperAdmin();
-                $approvalStatus = $is_super ? 'Approved' : 'Pending';
-
-                $payload = [
-                    ':project_title'         => $project_title,
-                    ':pi_name'               => $pi_name,
-                    ':co_pi_name'            => $co_pi_name,
-                    ':task_no'               => $task_no,
-                    ':work_package_no'       => $work_package_no,
-                    ':approved_objects'      => $approved_objects,
-                    ':methodology'           => $methodology,
-                    ':summary_progress'      => $summary_progress,
-                    ':interns_trained_count' => $interns_trained_count,
-                    ':approval_status'       => $approvalStatus
-                ];
+                if (empty($project_title)) {
+                    throw new RuntimeException("Project Title is required.");
+                }
 
                 if ($edit_id) {
+                    // Verify report_id belongs to current institute table
+                    $chk = $pdo->prepare("SELECT id FROM `$table` WHERE id = ?");
+                    $chk->execute([$edit_id]);
+                    if (!$chk->fetch()) {
+                        throw new RuntimeException("Progress Report record #{$edit_id} not found for this institute.");
+                    }
+
                     $stmt = $pdo->prepare("
                         UPDATE `$table` SET
+                            task_no = :task_no,
                             project_title = :project_title,
                             pi_name = :pi_name,
                             co_pi_name = :co_pi_name,
-                            task_no = :task_no,
                             work_package_no = :work_package_no,
                             approved_objects = :approved_objects,
                             methodology = :methodology,
@@ -210,110 +91,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             approval_status = :approval_status
                         WHERE id = :id
                     ");
-                    $payload[':id'] = $edit_id;
+                    $payload = [
+                        ':task_no'               => $task_no,
+                        ':project_title'         => $project_title,
+                        ':pi_name'               => $pi_name,
+                        ':co_pi_name'            => $co_pi_name,
+                        ':work_package_no'       => $work_package_no,
+                        ':approved_objects'      => $approved_objects,
+                        ':methodology'           => $methodology,
+                        ':summary_progress'      => $summary_progress,
+                        ':interns_trained_count' => $interns_count,
+                        ':approval_status'       => $approvalStatus,
+                        ':id'                    => $edit_id
+                    ];
                     $stmt->execute($payload);
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Progress Reports', $table, $prefix, $edit_id, 'UPDATE', $payload);
-                        adminRedirect(['success_msg' => 'submitted']);
+                        adminRedirect(['success_msg' => 'submitted', 'task_no' => $task_no, 'report_id' => $edit_id]);
                     } else {
-                        adminRedirect(['success_msg' => 'updated']);
+                        adminRedirect(['success_msg' => 'updated', 'task_no' => $task_no, 'report_id' => $edit_id]);
                     }
                 } else {
                     $stmt = $pdo->prepare("
                         INSERT INTO `$table`
-                            (project_title, pi_name, co_pi_name, task_no, work_package_no,
+                            (task_no, project_title, pi_name, co_pi_name, work_package_no,
                              approved_objects, methodology, summary_progress, interns_trained_count, approval_status, created_at)
                         VALUES
-                            (:project_title, :pi_name, :co_pi_name, :task_no, :work_package_no,
+                            (:task_no, :project_title, :pi_name, :co_pi_name, :work_package_no,
                              :approved_objects, :methodology, :summary_progress, :interns_trained_count, :approval_status, NOW())
                     ");
+                    $payload = [
+                        ':task_no'               => $task_no,
+                        ':project_title'         => $project_title,
+                        ':pi_name'               => $pi_name,
+                        ':co_pi_name'            => $co_pi_name,
+                        ':work_package_no'       => $work_package_no,
+                        ':approved_objects'      => $approved_objects,
+                        ':methodology'           => $methodology,
+                        ':summary_progress'      => $summary_progress,
+                        ':interns_trained_count' => $interns_count,
+                        ':approval_status'       => $approvalStatus
+                    ];
                     $stmt->execute($payload);
                     $new_id = $pdo->lastInsertId();
 
                     if (!$is_super) {
                         submitKpiApprovalRequest($pdo, 'Progress Reports', $table, $prefix, $new_id, 'CREATE', $payload);
-                        adminRedirect(['success_msg' => 'submitted']);
+                        adminRedirect(['success_msg' => 'submitted', 'task_no' => $task_no, 'report_id' => $new_id]);
                     } else {
-                        adminRedirect(['success_msg' => 'inserted']);
+                        adminRedirect(['success_msg' => 'inserted', 'task_no' => $task_no, 'report_id' => $new_id]);
                     }
                 }
             }
 
-            // B. PUBLICATION DETAILS SUBMISSION (ATTACHED TO PROGRESS REPORT)
-            elseif ($formType === 'publication_details') {
-                $pr_id               = (int)($_POST['progress_report_id'] ?? 0);
-                $pub_id              = !empty($_POST['pub_edit_id']) ? (int)$_POST['pub_edit_id'] : null;
-                $pub_task_no         = trim($_POST['pub_task_no'] ?? '');
-                $publication_title   = trim($_POST['publication_title'] ?? '');
-                $author_name         = trim($_POST['author_name'] ?? '');
-                $doi_number          = trim($_POST['doi_number'] ?? '');
-                $publication_date    = !empty($_POST['publication_date']) ? $_POST['publication_date'] : null;
-                $publication_journal = trim($_POST['publication_journal'] ?? '');
-                $impact_factor       = ($_POST['impact_factor'] !== '') ? (float)$_POST['impact_factor'] : null;
-
-                if ($pr_id <= 0) {
-                    throw new RuntimeException("Invalid Progress Report reference.");
-                }
-                if (empty($publication_title)) {
-                    throw new RuntimeException("Publication Title is required.");
-                }
-                if (empty($author_name)) {
-                    throw new RuntimeException("Primary Author Name is required.");
-                }
-                if (empty($publication_journal)) {
-                    throw new RuntimeException("Journal Name is required.");
-                }
-
-                if ($pub_id) {
-                    $stmt = $pdo->prepare("
-                        UPDATE `$pubsTable` SET
-                            task_no = :task_no,
-                            publication_title = :publication_title,
-                            author_name = :author_name,
-                            doi_number = :doi_number,
-                            publication_date = :publication_date,
-                            publication_journal = :publication_journal,
-                            impact_factor = :impact_factor
-                        WHERE id = :id AND progress_report_id = :pr_id
-                    ");
-                    $stmt->execute([
-                        ':task_no'             => $pub_task_no,
-                        ':publication_title'   => $publication_title,
-                        ':author_name'         => $author_name,
-                        ':doi_number'          => $doi_number,
-                        ':publication_date'    => $publication_date,
-                        ':publication_journal' => $publication_journal,
-                        ':impact_factor'       => $impact_factor,
-                        ':id'                  => $pub_id,
-                        ':pr_id'               => $pr_id
-                    ]);
-                    adminRedirect(['success_msg' => 'pub_updated']);
-                } else {
-                    $stmt = $pdo->prepare("
-                        INSERT INTO `$pubsTable`
-                            (progress_report_id, task_no, publication_title, author_name, doi_number, publication_date, publication_journal, impact_factor)
-                        VALUES
-                            (:pr_id, :task_no, :publication_title, :author_name, :doi_number, :publication_date, :publication_journal, :impact_factor)
-                    ");
-                    $stmt->execute([
-                        ':pr_id'               => $pr_id,
-                        ':task_no'             => $pub_task_no,
-                        ':publication_title'   => $publication_title,
-                        ':author_name'         => $author_name,
-                        ':doi_number'          => $doi_number,
-                        ':publication_date'    => $publication_date,
-                        ':publication_journal' => $publication_journal,
-                        ':impact_factor'       => $impact_factor
-                    ]);
-                    adminRedirect(['success_msg' => 'pub_inserted']);
-                }
-            }
-
-            // C. CAPACITY BUILDING EVENT SUBMISSION (WORKSHOP / CONFERENCE OR TRAINING PROGRAM)
-            elseif ($formType === 'capacity_building_event') {
+            // B. CAPACITY BUILDING EVENT SUBMISSION
+            elseif ($formType === 'save_capacity_event') {
                 $pr_id                  = (int)($_POST['progress_report_id'] ?? 0);
-                $event_id               = !empty($_POST['event_edit_id']) ? (int)$_POST['event_edit_id'] : null;
+                $task_no                = trim($_POST['task_no'] ?? '');
+                $event_id               = !empty($_POST['event_id']) ? (int)$_POST['event_id'] : null;
                 $category               = in_array($_POST['category'] ?? '', ['Workshop_Conference', 'Training_Program']) ? $_POST['category'] : 'Workshop_Conference';
                 $event_title            = trim($_POST['event_title'] ?? '');
                 $event_date             = !empty($_POST['event_date']) ? $_POST['event_date'] : null;
@@ -323,134 +159,276 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $participant_input      = $_POST['participant_count'] ?? '0';
                 $description            = trim($_POST['description'] ?? '');
 
-                if ($pr_id <= 0) {
-                    throw new RuntimeException("Invalid Progress Report reference.");
-                }
-                if (empty($event_title)) {
-                    throw new RuntimeException("Event / Program Title is required.");
-                }
+                if ($pr_id <= 0) throw new RuntimeException("Invalid project context.");
+                if (empty($event_title)) throw new RuntimeException("Event title is required.");
                 if ($participant_input < 0 || !filter_var($participant_input, FILTER_VALIDATE_INT, ["options" => ["min_range" => 0]])) {
-                    throw new RuntimeException("Participant Count must be a valid non-negative integer (0 or greater).");
+                    throw new RuntimeException("Participant Count must be a valid non-negative integer.");
                 }
                 $participant_count = (int)$participant_input;
 
+                // Validate parent progress_report_id belongs to current institute table
+                $chkPr = $pdo->prepare("SELECT id, task_no FROM `$table` WHERE id = ?");
+                $chkPr->execute([$pr_id]);
+                $prRow = $chkPr->fetch(PDO::FETCH_ASSOC);
+                if (!$prRow) {
+                    throw new RuntimeException("Invalid Progress Report ID #{$pr_id} for this institute.");
+                }
+                $task_no = $prRow['task_no'];
+
+                $hasAppCol = false;
+                try {
+                    $chkCol = $pdo->query("SHOW COLUMNS FROM `$eventsTable` LIKE 'approval_status'");
+                    if ($chkCol && $chkCol->rowCount() > 0) $hasAppCol = true;
+                } catch (Exception $ex) {}
+
+                $payload = [
+                    ':category'               => $category,
+                    ':title'                  => $event_title,
+                    ':event_date'             => $event_date,
+                    ':duration'               => $duration,
+                    ':venue_mode'             => $venue_mode,
+                    ':organizing_institution' => $organizing_institution,
+                    ':participant_count'      => $participant_count,
+                    ':description'            => $description
+                ];
+                if ($hasAppCol) {
+                    $payload[':approval_status'] = $approvalStatus;
+                }
+
                 if ($event_id) {
-                    $stmt = $pdo->prepare("
-                        UPDATE `$eventsTable` SET
-                            category = :category,
-                            title = :title,
-                            event_date = :event_date,
-                            duration = :duration,
-                            venue_mode = :venue_mode,
-                            organizing_institution = :organizing_institution,
-                            participant_count = :participant_count,
-                            description = :description
-                        WHERE id = :id AND progress_report_id = :pr_id
-                    ");
-                    $stmt->execute([
-                        ':category'               => $category,
-                        ':title'                  => $event_title,
-                        ':event_date'             => $event_date,
-                        ':duration'               => $duration,
-                        ':venue_mode'             => $venue_mode,
-                        ':organizing_institution' => $organizing_institution,
-                        ':participant_count'      => $participant_count,
-                        ':description'            => $description,
-                        ':id'                     => $event_id,
-                        ':pr_id'                  => $pr_id
-                    ]);
-                    adminRedirect(['success_msg' => 'event_updated']);
+                    $sql = "UPDATE `$eventsTable` SET
+                                category = :category,
+                                title = :title,
+                                event_date = :event_date,
+                                duration = :duration,
+                                venue_mode = :venue_mode,
+                                organizing_institution = :organizing_institution,
+                                participant_count = :participant_count,
+                                description = :description" . ($hasAppCol ? ", approval_status = :approval_status" : "") . "
+                            WHERE id = :id AND progress_report_id = :pr_id";
+                    $stmt = $pdo->prepare($sql);
+                    $payload[':id']    = $event_id;
+                    $payload[':pr_id'] = $pr_id;
+                    $stmt->execute($payload);
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Progress Report Capacity Events', $eventsTable, $prefix, $event_id, 'UPDATE', $payload);
+                        adminRedirect(['success_msg' => 'submitted', 'task_no' => $task_no, 'report_id' => $pr_id]);
+                    } else {
+                        adminRedirect(['success_msg' => 'event_saved', 'task_no' => $task_no, 'report_id' => $pr_id]);
+                    }
                 } else {
-                    $stmt = $pdo->prepare("
-                        INSERT INTO `$eventsTable`
-                            (progress_report_id, category, title, event_date, duration, venue_mode, organizing_institution, participant_count, description)
-                        VALUES
-                            (:pr_id, :category, :title, :event_date, :duration, :venue_mode, :organizing_institution, :participant_count, :description)
-                    ");
-                    $stmt->execute([
-                        ':pr_id'                  => $pr_id,
-                        ':category'               => $category,
-                        ':title'                  => $event_title,
-                        ':event_date'             => $event_date,
-                        ':duration'               => $duration,
-                        ':venue_mode'             => $venue_mode,
-                        ':organizing_institution' => $organizing_institution,
-                        ':participant_count'      => $participant_count,
-                        ':description'            => $description
-                    ]);
-                    adminRedirect(['success_msg' => 'event_inserted']);
+                    $cols = "progress_report_id, category, title, event_date, duration, venue_mode, organizing_institution, participant_count, description" . ($hasAppCol ? ", approval_status" : "");
+                    $vals = ":pr_id, :category, :title, :event_date, :duration, :venue_mode, :organizing_institution, :participant_count, :description" . ($hasAppCol ? ", :approval_status" : "");
+                    
+                    $stmt = $pdo->prepare("INSERT INTO `$eventsTable` ($cols) VALUES ($vals)");
+                    $payload[':pr_id'] = $pr_id;
+                    $stmt->execute($payload);
+                    $new_event_id = $pdo->lastInsertId();
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Progress Report Capacity Events', $eventsTable, $prefix, $new_event_id, 'CREATE', $payload);
+                        adminRedirect(['success_msg' => 'submitted', 'task_no' => $task_no, 'report_id' => $pr_id]);
+                    } else {
+                        adminRedirect(['success_msg' => 'event_saved', 'task_no' => $task_no, 'report_id' => $pr_id]);
+                    }
                 }
             }
 
-            // D. UPDATE INTERNS TRAINED COUNT
-            elseif ($formType === 'update_interns_count') {
-                $pr_id                 = (int)($_POST['progress_report_id'] ?? 0);
-                $interns_trained_input = $_POST['interns_trained_count'] ?? '0';
-
-                if ($pr_id <= 0) {
-                    throw new RuntimeException("Invalid Progress Report reference.");
+            // C. DESTRUCTIVE ACTIONS (SECURE POST DELETE HANDLERS)
+            elseif ($formType === 'delete_main_report') {
+                $del_id  = (int)($_POST['delete_id'] ?? 0);
+                if ($del_id > 0) {
+                    $chk = $pdo->prepare("SELECT id FROM `$table` WHERE id = ?");
+                    $chk->execute([$del_id]);
+                    if ($chk->fetch()) {
+                        $pdo->prepare("DELETE FROM `$table` WHERE id = ?")->execute([$del_id]);
+                        $pdo->prepare("DELETE FROM `$pubsTable` WHERE progress_report_id = ?")->execute([$del_id]);
+                        $pdo->prepare("DELETE FROM `$eventsTable` WHERE progress_report_id = ?")->execute([$del_id]);
+                    }
                 }
-                if ($interns_trained_input < 0 || !filter_var($interns_trained_input, FILTER_VALIDATE_INT, ["options" => ["min_range" => 0]])) {
-                    throw new RuntimeException("Number of Interns Trained must be a valid non-negative integer (0 or greater).");
+                adminRedirect(['success_msg' => 'deleted', 'task_no' => null]);
+            }
+            elseif ($formType === 'delete_capacity_event') {
+                $del_id  = (int)($_POST['delete_id'] ?? 0);
+                $pr_id   = (int)($_POST['progress_report_id'] ?? 0);
+                if ($del_id > 0 && $pr_id > 0) {
+                    $chkPr = $pdo->prepare("SELECT id, task_no FROM `$table` WHERE id = ?");
+                    $chkPr->execute([$pr_id]);
+                    $prRow = $chkPr->fetch(PDO::FETCH_ASSOC);
+                    if ($prRow) {
+                        $pdo->prepare("DELETE FROM `$eventsTable` WHERE id = ? AND progress_report_id = ?")->execute([$del_id, $pr_id]);
+                        adminRedirect(['success_msg' => 'deleted', 'task_no' => $prRow['task_no'], 'report_id' => $pr_id]);
+                    }
                 }
-                $interns_trained_count = (int)$interns_trained_input;
-
-                $stmt = $pdo->prepare("UPDATE `$table` SET interns_trained_count = :count WHERE id = :id");
-                $stmt->execute([':count' => $interns_trained_count, ':id' => $pr_id]);
-                adminRedirect(['success_msg' => 'interns_updated']);
+                adminRedirect(['success_msg' => 'deleted']);
             }
         } catch (Exception $e) {
-            $error = $e->getMessage();
+            $error_msg = $e->getMessage();
         }
     }
 }
 
-// 4. FETCH CENTRALIZED PROGRESS REPORTS DATA & ATTACH CHILD RECORDS
-$reports = [];
+// ----------------------------------------------------------------------------
+// DATA RETRIEVAL FOR TASK IDs ACROSS ALL INSTITUTE MODULE TABLES (DYNAMIC & COLLATION-SAFE)
+// ----------------------------------------------------------------------------
+$availableTaskNos = [];
 try {
-    $reports = fetchCentralizedKpiDataset($pdo, 'progress_reports', $prefix, isSuperAdmin());
-    usort($reports, function($a, $b) {
-        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
-    });
+    $unionParts = ["SELECT CONVERT(task_no USING utf8mb4) AS task_no FROM `$table` WHERE task_no IS NOT NULL AND task_no != ''"];
 
-    // Populate publications and capacity building events for each report
-    foreach ($reports as &$rep) {
-        $p = $rep['institute_prefix'] ?? $prefix;
-        $prId = (int)$rep['id'];
-        $pPubsTbl   = "{$p}_progress_report_publications";
-        $pEventsTbl = "{$p}_progress_report_capacity_events";
+    $kpiTablesCols = [
+        "{$prefix}_publications" => 'task_no',
+        "{$prefix}_conferences"  => 'taskno',
+        "{$prefix}_webinars"     => 'taskno',
+        "{$prefix}_internships"  => 'task_no',
+        "{$prefix}_patents"      => 'task_no'
+    ];
 
-        $rep['publications'] = [];
-        $rep['workshops']    = [];
-        $rep['trainings']    = [];
-
+    foreach ($kpiTablesCols as $tName => $colName) {
         try {
-            $stmtPubs = $pdo->prepare("SELECT * FROM `$pPubsTbl` WHERE progress_report_id = :pr_id ORDER BY id DESC");
-            $stmtPubs->execute([':pr_id' => $prId]);
-            $rep['publications'] = $stmtPubs->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $ex) {}
-
-        try {
-            $stmtEvents = $pdo->prepare("SELECT * FROM `$pEventsTbl` WHERE progress_report_id = :pr_id ORDER BY id DESC");
-            $stmtEvents->execute([':pr_id' => $prId]);
-            $allEv = $stmtEvents->fetchAll(PDO::FETCH_ASSOC);
-
-            foreach ($allEv as $ev) {
-                if ($ev['category'] === 'Workshop_Conference') {
-                    $rep['workshops'][] = $ev;
-                } else {
-                    $rep['trainings'][] = $ev;
-                }
+            $chkCol = $pdo->query("SHOW COLUMNS FROM `$tName` LIKE '$colName'");
+            if ($chkCol && $chkCol->rowCount() > 0) {
+                $unionParts[] = "SELECT CONVERT($colName USING utf8mb4) AS task_no FROM `$tName` WHERE $colName IS NOT NULL AND $colName != ''";
             }
         } catch (Exception $ex) {}
     }
-    unset($rep);
 
+    $sqlUnion = implode(" UNION ", $unionParts) . " ORDER BY task_no ASC";
+    $stmtTasks = $pdo->query($sqlUnion);
+    $availableTaskNos = $stmtTasks->fetchAll(PDO::FETCH_COLUMN);
 } catch (Exception $e) {
-    $error = 'Could not load data records: ' . $e->getMessage();
+    try {
+        $stmtTasks = $pdo->query("SELECT DISTINCT task_no FROM `$table` WHERE task_no IS NOT NULL AND task_no != '' ORDER BY task_no ASC");
+        $availableTaskNos = $stmtTasks->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $ex) {}
 }
 
-$total_records = count($reports);
+// Resolve selected Task ID
+$reqTaskNo = $_GET['task_no'] ?? null;
+$reqReportId = isset($_GET['report_id']) ? (int)$_GET['report_id'] : null;
+
+$activeTaskNo = null;
+if (!empty($reqTaskNo) && $reqTaskNo !== '__new__') {
+    if (in_array((string)$reqTaskNo, array_map('strval', $availableTaskNos), true)) {
+        $activeTaskNo = (string)$reqTaskNo;
+    }
+}
+
+if (!$activeTaskNo && !empty($availableTaskNos) && $reqTaskNo !== '__new__') {
+    $activeTaskNo = (string)$availableTaskNos[0];
+}
+
+// Fetch all report instances for the activeTaskNo to safely handle historical duplicate Task IDs
+$taskInstances = [];
+$activeTask    = null;
+
+if ($activeTaskNo) {
+    try {
+        $stmtInst = $pdo->prepare("SELECT * FROM `$table` WHERE task_no = :task_no ORDER BY id DESC");
+        $stmtInst->execute([':task_no' => $activeTaskNo]);
+        $taskInstances = $stmtInst->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!empty($taskInstances)) {
+            if ($reqReportId) {
+                foreach ($taskInstances as $inst) {
+                    if ((int)$inst['id'] === $reqReportId) {
+                        $activeTask = $inst;
+                        break;
+                    }
+                }
+            }
+            if (!$activeTask) {
+                $activeTask = $taskInstances[0];
+            }
+        }
+    } catch (Exception $e) {
+        $activeTask = null;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// AUTO-AGGREGATION OF EXISTING SYSTEM KPI RECORDS FOR ACTIVE TASK ID
+// ----------------------------------------------------------------------------
+$systemKpiData = [
+    'publications' => [],
+    'conferences'  => [],
+    'webinars'     => [],
+    'internships'  => [],
+    'patents'      => []
+];
+
+$derivedInternCount = 0;
+$hasInternshipRecords = false;
+
+if ($activeTaskNo) {
+    // 1. System Publications
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_publications` WHERE task_no = :t ORDER BY id DESC");
+        $stmt->execute([':t' => $activeTaskNo]);
+        $systemKpiData['publications'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {}
+
+    // 2. System Conferences
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_conferences` WHERE taskno = :t ORDER BY id DESC");
+        $stmt->execute([':t' => $activeTaskNo]);
+        $systemKpiData['conferences'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {}
+
+    // 3. System Webinars
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_webinars` WHERE taskno = :t ORDER BY id DESC");
+        $stmt->execute([':t' => $activeTaskNo]);
+        $systemKpiData['webinars'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {}
+
+    // 4. System Internships & Derivation of Interns Count
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_internships` WHERE task_no = :t ORDER BY id DESC");
+        $stmt->execute([':t' => $activeTaskNo]);
+        $systemKpiData['internships'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!empty($systemKpiData['internships'])) {
+            $hasInternshipRecords = true;
+            foreach ($systemKpiData['internships'] as $internRow) {
+                $derivedInternCount += (int)($internRow['no_students_trained'] ?? 1);
+            }
+        }
+    } catch (Exception $e) {}
+
+    // 5. System Patents
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_patents` WHERE task_no = :t ORDER BY id DESC");
+        $stmt->execute([':t' => $activeTaskNo]);
+        $systemKpiData['patents'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {}
+}
+
+if (!$hasInternshipRecords && $activeTask) {
+    $derivedInternCount = (int)($activeTask['interns_trained_count'] ?? 0);
+}
+
+// Fetch report-specific capacity events if report exists
+$taskWorkshops  = [];
+$taskTrainings  = [];
+
+if ($activeTask) {
+    $activePrId = (int)$activeTask['id'];
+    try {
+        $stmtE = $pdo->prepare("SELECT * FROM `$eventsTable` WHERE progress_report_id = :pr_id ORDER BY id DESC");
+        $stmtE->execute([':pr_id' => $activePrId]);
+        $allEv = $stmtE->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($allEv as $ev) {
+            if ($ev['category'] === 'Workshop_Conference') {
+                $taskWorkshops[] = $ev;
+            } else {
+                $taskTrainings[] = $ev;
+            }
+        }
+    } catch (Exception $ex) {}
+}
+
+$isNewTaskSelected = ($reqTaskNo === '__new__');
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
@@ -458,62 +436,39 @@ $total_records = count($reports);
 <?php include 'loader.php'; ?>
 
 <style>
-    .registry-card {
-        border-radius: 12px !important;
-        border: 1px solid #e2e8f0 !important;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.01) !important;
-        overflow: hidden;
-        background: #ffffff;
+    .workflow-card {
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
     }
-    .table-theme-sapphire {
-        margin-bottom: 0 !important;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    .table-theme-sapphire thead th {
-        background-color: #024283 !important;
+    .project-banner-card {
+        background: linear-gradient(135deg, #024283 0%, #0f172a 100%) !important;
         color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 11px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.8px !important;
-        padding: 12px 16px !important;
-        border: none !important;
+        border-radius: 10px;
+        padding: 20px;
     }
-    .table-theme-sapphire tbody tr:hover {
-        background-color: #f8fafc !important;
-    }
-    .table-theme-sapphire tbody td {
-        padding: 10px 16px !important;
-        vertical-align: middle !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        color: #334155;
-    }
-    .index-badge-circle {
-        width: 22px;
-        height: 22px;
-        background-color: #b93c3c;
-        color: #ffffff;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 10px;
-    }
-    .registry-task-link {
-        font-size: 12px;
-        font-weight: 700;
-        color: #bc2121;
-        text-decoration: none;
-        display: inline-block;
-        margin-bottom: 2px;
-    }
-    .sub-count-badge {
-        font-size: 10.5px;
-        padding: 3px 8px;
-        border-radius: 12px;
+    .btn-sapphire {
+        background-color: #024283 !important;
+        border-color: #024283 !important;
+        color: #ffffff !important;
         font-weight: 600;
+    }
+    .btn-sapphire:hover {
+        background-color: #012a55 !important;
+    }
+    .multi-instance-alert {
+        background-color: #fefce8;
+        border: 1px solid #fef08a;
+        border-radius: 8px;
+        padding: 10px 14px;
+    }
+    .kpi-section-title {
+        border-left: 4px solid #024283;
+        padding-left: 10px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 15px;
     }
 </style>
 
@@ -521,8 +476,10 @@ $total_records = count($reports);
     <div class="content-body default-height">
         <div class="container-fluid">
 
+            <!-- Canonical Institute Context Banner & Switcher (Reused from existing Admin Portal) -->
             <?php include 'institute_banner.php'; ?>
 
+            <!-- Page Breadcrumb -->
             <div class="page-titles">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
@@ -530,148 +487,215 @@ $total_records = count($reports);
                 </ol>
             </div>
 
-            <?php if ($success): ?>
+            <!-- Alerts -->
+            <?php if (!empty($success_msg)): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Success!</strong> Progress report information updated successfully.
+                <i class="fa fa-check-circle me-2"></i> <strong>Success!</strong> <?= htmlspecialchars($success_msg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
 
-            <?php if ($error !== ''): ?>
+            <?php if (!empty($error_msg)): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Error:</strong> <?= htmlspecialchars($error) ?>
+                <i class="fa fa-exclamation-triangle me-2"></i> <strong>Error:</strong> <?= htmlspecialchars($error_msg) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
 
-            <div class="card registry-card">
-                <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h4 class="card-title text-dark font-w700 mb-0">Progress Reports Registry</h4>
-                        <small class="text-muted">Manage progress updates, attached publications, and capacity building metrics.</small>
+            <!-- =========================================================================
+                 STEP 1 — TASK ID SELECTION & PROJECT CONTEXT BANNER
+                 ========================================================================= -->
+            <div class="card workflow-card mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label font-w700 text-uppercase text-muted mb-1" style="font-size: 11px; letter-spacing: 0.5px;">
+                                Task ID Selection
+                            </label>
+                            <h6 class="mb-0 font-w700 text-dark">Business Identifier:</h6>
+                        </div>
+                        <div class="col-md-9">
+                            <select id="task_id_selector" class="form-select font-w700 text-dark" style="max-width: 500px; border-color: #024283;" onchange="switchTaskId(this.value)">
+                                <?php if (empty($availableTaskNos)): ?>
+                                    <option value="__new__" selected>+ Create New Task ID / Project Context</option>
+                                <?php else: ?>
+                                    <?php foreach ($availableTaskNos as $tNo): ?>
+                                        <option value="<?= htmlspecialchars((string)$tNo) ?>" <?= ((string)$activeTaskNo === (string)$tNo && !$isNewTaskSelected) ? 'selected' : '' ?>>
+                                            Task ID: <?= htmlspecialchars((string)$tNo) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                    <option value="__new__" <?= $isNewTaskSelected ? 'selected' : '' ?>>+ Create New Task ID / Project Context</option>
+                                <?php endif; ?>
+                            </select>
+
+                            <!-- Multi-Instance Handling for Historical Duplicate Task IDs -->
+                            <?php if (count($taskInstances) > 1): ?>
+                            <div class="multi-instance-alert mt-3 d-flex align-items-center flex-wrap gap-2">
+                                <span class="font-w700 text-dark fs-13"><i class="fa fa-history text-warning me-1"></i> Historical Reports for Task ID '<?= htmlspecialchars($activeTaskNo) ?>':</span>
+                                <select class="form-select form-select-sm font-w700 text-dark" style="max-width: 420px; border-color: #eab308;" onchange="switchReportInstance(this.value)">
+                                    <?php foreach ($taskInstances as $inst): ?>
+                                        <option value="<?= $inst['id'] ?>" <?= ($activeTask && (int)$activeTask['id'] === (int)$inst['id']) ? 'selected' : '' ?>>
+                                            Report #<?= $inst['id'] ?> — <?= date('d M Y', strtotime($inst['created_at'])) ?> [<?= htmlspecialchars($inst['approval_status'] ?: 'Approved') ?>] — <?= htmlspecialchars($inst['project_title']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <?php if (canEditInstitute($prefix)): ?>
-                    <button type="button" class="btn btn-primary btn-sm" id="addNewBtn" data-bs-toggle="modal" data-bs-target="#reportModal">
-                        <i class="fa fa-plus me-1"></i> Add Progress Report
-                    </button>
+
+                    <?php if ($activeTask && !$isNewTaskSelected): ?>
+                        <!-- Active Project Summary Banner -->
+                        <div class="project-banner-card mt-3">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge bg-warning text-dark font-w700">
+                                            <i class="fa fa-tag me-1"></i> TASK ID: <?= htmlspecialchars($activeTask['task_no']) ?>
+                                        </span>
+                                        <span class="badge bg-light text-dark font-w600">
+                                            Report ID #<?= (int)$activeTask['id'] ?>
+                                        </span>
+                                        <span class="badge <?= ($activeTask['approval_status'] === 'Approved' ? 'bg-success' : ($activeTask['approval_status'] === 'Rejected' ? 'bg-danger' : 'bg-secondary')) ?> text-white font-w600">
+                                            <?= htmlspecialchars($activeTask['approval_status'] ?: 'Approved') ?>
+                                        </span>
+                                    </div>
+                                    <h4 class="text-white font-w700 mb-2"><?= htmlspecialchars($activeTask['project_title']) ?></h4>
+                                    <div class="d-flex flex-wrap gap-4 text-white-50 fs-14">
+                                        <span><strong class="text-white">PI:</strong> <?= htmlspecialchars($activeTask['pi_name'] ?: '—') ?></span>
+                                        <span><strong class="text-white">Co-PI:</strong> <?= htmlspecialchars($activeTask['co_pi_name'] ?: '—') ?></span>
+                                        <span><strong class="text-white">Work Package:</strong> <?= htmlspecialchars($activeTask['work_package_no'] ?: '—') ?></span>
+                                        <span><strong class="text-white">Interns Trained:</strong> <?= $derivedInternCount ?> <?= $hasInternshipRecords ? '(Derived from KPI records)' : '(Progress Report Summary)' ?></span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $activeTask['id'] . '&prefix=' . $prefix) ?>" target="_blank" class="btn btn-light btn-sm font-w700 text-dark">
+                                        <i class="fa fa-file-pdf-o text-danger me-1"></i> Export PDF Report
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php elseif ($activeTaskNo && !$activeTask): ?>
+                        <!-- Notice when Task ID has no Progress Report entry yet -->
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="fa fa-info-circle me-2"></i> No Progress Report entry exists yet for Task ID <strong>'<?= htmlspecialchars($activeTaskNo) ?>'</strong>. Complete the Progress Report form below to create one.
+                        </div>
                     <?php endif; ?>
                 </div>
+            </div>
 
-                <div class="card-body p-0 mt-3">
-                    <div class="table-responsive">
-                        <table class="table table-theme-sapphire align-middle">
-                            <thead>
+            <!-- =========================================================================
+                 MODULE 1: PROGRESS REPORT FORM (NARRATIVE & PROJECT SPECIFIC DATA)
+                 ========================================================================= -->
+            <div id="sec_progress_report" class="card workflow-card mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 text-white font-w700"><i class="fa fa-file-text-o me-2"></i>Progress Report Module</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>">
+                        <?= getCsrfInputField() ?>
+                        <input type="hidden" name="form_type" value="save_main_report">
+                        <input type="hidden" name="report_id" value="<?= htmlspecialchars($activeTask['id'] ?? '') ?>">
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label font-w700 text-dark">Task ID *</label>
+                                <input type="text" name="task_no" class="form-control font-w700" value="<?= htmlspecialchars($activeTask['task_no'] ?? ($activeTaskNo ?: ($reqTaskNo === '__new__' ? '' : ''))) ?>" placeholder="e.g. CUK-PAIR-001" required <?= ($activeTask && !$isNewTaskSelected) ? 'readonly' : '' ?>>
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label font-w700 text-dark">Project Title *</label>
+                                <input type="text" name="project_title" class="form-control" value="<?= htmlspecialchars($activeTask['project_title'] ?? '') ?>" placeholder="Full title of the research project" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-w600 text-dark">Principal Investigator (PI)</label>
+                                <input type="text" name="pi_name" class="form-control" value="<?= htmlspecialchars($activeTask['pi_name'] ?? '') ?>" placeholder="PI Name">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-w600 text-dark">Co-Principal Investigator (Co-PI)</label>
+                                <input type="text" name="co_pi_name" class="form-control" value="<?= htmlspecialchars($activeTask['co_pi_name'] ?? '') ?>" placeholder="Co-PI Name">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label font-w600 text-dark">Work Package Number</label>
+                                <input type="text" name="work_package_no" class="form-control" value="<?= htmlspecialchars($activeTask['work_package_no'] ?? '') ?>" placeholder="Work Package No">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label font-w600 text-dark">Approved Objectives / Targets</label>
+                                <textarea name="approved_objects" class="form-control" rows="3" placeholder="Specify approved objectives..."><?= htmlspecialchars($activeTask['approved_objects'] ?? '') ?></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label font-w600 text-dark">Methodology / Approach Used</label>
+                                <textarea name="methodology" class="form-control" rows="3" placeholder="Describe technical methodology..."><?= htmlspecialchars($activeTask['methodology'] ?? '') ?></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label font-w600 text-dark">Summary of Progress</label>
+                                <textarea name="summary_progress" class="form-control" rows="4" placeholder="Detailed progress report summary..."><?= htmlspecialchars($activeTask['summary_progress'] ?? '') ?></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label font-w700 text-dark">Number of Interns Trained</label>
+                                <?php if ($hasInternshipRecords): ?>
+                                    <input type="text" class="form-control font-w700 text-dark bg-light" value="<?= $derivedInternCount ?> (Derived automatically from Internship KPI Module records)" readonly>
+                                    <input type="hidden" name="interns_trained_count" value="<?= $derivedInternCount ?>">
+                                    <small class="text-muted"><i class="fa fa-info-circle"></i> Auto-calculated from <?= count($systemKpiData['internships']) ?> internship record(s) in main Internship module for Task ID '<?= htmlspecialchars($activeTaskNo) ?>'.</small>
+                                <?php else: ?>
+                                    <input type="number" min="0" name="interns_trained_count" class="form-control font-w700 text-dark" value="<?= (int)($activeTask['interns_trained_count'] ?? 0) ?>">
+                                    <small class="text-muted"><i class="fa fa-pencil me-1"></i> Progress Report-specific summary value (no individual internship records currently filed in main Internship KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>').</small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <?php if (canEditInstitute($prefix)): ?>
+                        <div class="mt-4 text-end">
+                            <button type="submit" class="btn btn-sapphire px-4 py-2">
+                                <i class="fa fa-save me-1"></i> Save Progress Report
+                            </button>
+                        </div>
+                        <?php endif; ?>
+                    </form>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 MODULE 2: EXISTING SYSTEM KPI RECORDS (AUTO-AGGREGATED FROM MAIN MODULES)
+                 ========================================================================= -->
+            <div class="card workflow-card mb-4">
+                <div class="card-header bg-light py-3 border-0">
+                    <h5 class="mb-0 font-w700 text-dark">
+                        <i class="fa fa-database text-primary me-2"></i>Associated KPI Records for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'
+                    </h5>
+                    <small class="text-muted">Auto-aggregated KPI records linked to this Task ID across the ANRF–PAIR system.</small>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- A. PUBLICATIONS -->
+                    <h6 class="kpi-section-title"><i class="fa fa-book text-success me-2"></i>Publications (<?= count($systemKpiData['publications']) ?>)</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
                                 <tr>
-                                    <th style="width: 50px; text-align: center;">#</th>
-                                    <th>Task No & Project Title</th>
-                                    <th>PI / Co-PI</th>
-                                    <th>Work Package</th>
-                                    <th style="width: 220px;">Associated Sub-Records</th>
-                                    <th style="width: 110px;">Date</th>
-                                    <th style="width: 120px; text-align: center;">Actions</th>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Author(s)</th>
+                                    <th>Journal</th>
+                                    <th>DOI / Date</th>
+                                    <th>Impact Factor</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($reports)): ?>
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4" style="font-size: 13px;">No progress reports submitted yet.</td>
-                                    </tr>
+                                <?php if (empty($systemKpiData['publications'])): ?>
+                                    <tr><td colspan="7" class="text-center text-muted py-3">No publication records found in main KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'.</td></tr>
                                 <?php else: ?>
-                                    <?php
-                                    $sno = 1;
-                                    foreach ($reports as $report):
-                                        $pubCount = count($report['publications']);
-                                        $wsCount  = count($report['workshops']);
-                                        $trCount  = count($report['trainings']);
-                                        $internCount = (int)($report['interns_trained_count'] ?? 0);
-                                    ?>
+                                    <?php $pNo = 1; foreach ($systemKpiData['publications'] as $pub): ?>
                                         <tr>
-                                            <td style="text-align: center;">
-                                                <span class="index-badge-circle"><?= $sno++ ?></span>
-                                            </td>
-                                            <td>
-                                                <span class="registry-task-link">
-                                                    <?= htmlspecialchars($report['task_no'] ?: 'TASK-UNASSIGNED') ?>
-                                                </span>
-                                                <span class="registry-main-title d-block font-w700 text-dark">
-                                                    <?= htmlspecialchars($report['project_title'] ?: 'Untitled Project') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="registry-meta-text font-w600 text-dark d-block">
-                                                    <strong>PI:</strong> <?= htmlspecialchars($report['pi_name'] ?: '—') ?>
-                                                </span>
-                                                <span class="registry-sub-label text-muted d-block small">
-                                                    <strong>Co-PI:</strong> <?= htmlspecialchars($report['co_pi_name'] ?: '—') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="registry-meta-text">
-                                                    <?= htmlspecialchars($report['work_package_no'] ?: '—') ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    <span class="sub-count-badge bg-primary text-white" title="Publications attached">
-                                                        <i class="fa fa-book me-1"></i> Pubs: <?= $pubCount ?>
-                                                    </span>
-                                                    <span class="sub-count-badge bg-info text-white" title="Workshops & Conferences">
-                                                        <i class="fa fa-users me-1"></i> Events: <?= ($wsCount + $trCount) ?>
-                                                    </span>
-                                                    <span class="sub-count-badge bg-success text-white" title="Interns Trained">
-                                                        <i class="fa fa-user-graduate me-1"></i> Interns: <?= $internCount ?>
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="text-dark font-w600" style="font-size: 12px;">
-                                                    <?= date('d M Y', strtotime($report['created_at'])) ?>
-                                                </span>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <!-- Export PDF Button -->
-                                                    <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $report['id'] . '&prefix=' . htmlspecialchars($report['institute_prefix'] ?? $prefix)) ?>"
-                                                       target="_blank"
-                                                       class="btn btn-action-compact btn-danger text-white"
-                                                       title="Export PDF Report">
-                                                        <i class="fa fa-file-pdf-o me-1"></i> PDF
-                                                    </a>
-                                                    <!-- View & Manage Sub-records Button -->
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-primary text-white open-manage-modal-btn"
-                                                            data-report="<?= htmlspecialchars(json_encode($report), ENT_QUOTES, 'UTF-8') ?>"
-                                                            title="View Details & Manage Sections">
-                                                        <i class="fa fa-folder-open me-1"></i> Manage
-                                                    </button>
-                                                    <?php if (canEditInstitute($report['institute_prefix'] ?? $prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#reportModal"
-                                                            data-id="<?= $report['id'] ?>"
-                                                            data-title="<?= htmlspecialchars($report['project_title']) ?>"
-                                                            data-pi="<?= htmlspecialchars($report['pi_name']) ?>"
-                                                            data-copi="<?= htmlspecialchars($report['co_pi_name'] ?? '') ?>"
-                                                            data-task="<?= htmlspecialchars($report['task_no']) ?>"
-                                                            data-wp="<?= htmlspecialchars($report['work_package_no'] ?? '') ?>"
-                                                            data-objects="<?= htmlspecialchars($report['approved_objects'] ?? '') ?>"
-                                                            data-methodology="<?= htmlspecialchars($report['methodology'] ?? '') ?>"
-                                                            data-summary="<?= htmlspecialchars($report['summary_progress'] ?? '') ?>"
-                                                            data-interns="<?= (int)($report['interns_trained_count'] ?? 0) ?>"
-                                                            title="Edit Core Progress Report">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $report['id'] ?>"
-                                                            data-record-prefix="<?= htmlspecialchars($report['institute_prefix'] ?? $prefix) ?>"
-                                                            title="Delete Record">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
+                                            <td><?= $pNo++ ?></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($pub['publication_title']) ?></strong></td>
+                                            <td><?= htmlspecialchars($pub['author_name']) ?></td>
+                                            <td><?= htmlspecialchars($pub['publication_journal']) ?></td>
+                                            <td><?= $pub['doi_number'] ? 'DOI: '.htmlspecialchars($pub['doi_number']) : '—' ?><br><small class="text-muted"><?= htmlspecialchars($pub['publication_date'] ?? '') ?></small></td>
+                                            <td><span class="badge bg-light text-dark border"><?= $pub['impact_factor'] !== null ? $pub['impact_factor'] : '—' ?></span></td>
+                                            <td><span class="badge bg-success text-white"><?= htmlspecialchars($pub['approval_status'] ?? 'Approved') ?></span></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -679,731 +703,317 @@ $total_records = count($reports);
                         </table>
                     </div>
 
-                    <div class="d-flex align-items-center justify-content-between flex-wrap p-2 px-3 bg-white border-top">
-                        <p class="mb-0 text-muted small font-w500">Total: <?= $total_records ?> progress reports</p>
+                    <!-- B. CONFERENCES -->
+                    <h6 class="kpi-section-title"><i class="fa fa-users text-info me-2"></i>Conferences Conducted (<?= count($systemKpiData['conferences']) ?>)</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Conference Title</th>
+                                    <th>Date / Duration</th>
+                                    <th>Venue / Mode</th>
+                                    <th>Organizing Dept</th>
+                                    <th>Participants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($systemKpiData['conferences'])): ?>
+                                    <tr><td colspan="6" class="text-center text-muted py-3">No conference records found in main KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'.</td></tr>
+                                <?php else: ?>
+                                    <?php $cNo = 1; foreach ($systemKpiData['conferences'] as $conf): ?>
+                                        <tr>
+                                            <td><?= $cNo++ ?></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($conf['title'] ?? $conf['conference_name'] ?? '—') ?></strong></td>
+                                            <td><?= htmlspecialchars($conf['event_date'] ?? $conf['conference_date'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($conf['venue_mode'] ?? $conf['venue'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($conf['organizing_dept'] ?? '—') ?></td>
+                                            <td><span class="badge bg-info text-white"><?= (int)($conf['participant_count'] ?? 0) ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
+
+                    <!-- C. WEBINARS -->
+                    <h6 class="kpi-section-title"><i class="fa fa-video-camera text-purple me-2"></i>Webinars (<?= count($systemKpiData['webinars']) ?>)</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Webinar Title</th>
+                                    <th>Speaker / Expert</th>
+                                    <th>Date</th>
+                                    <th>Participants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($systemKpiData['webinars'])): ?>
+                                    <tr><td colspan="5" class="text-center text-muted py-3">No webinar records found in main KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'.</td></tr>
+                                <?php else: ?>
+                                    <?php $wNo = 1; foreach ($systemKpiData['webinars'] as $web): ?>
+                                        <tr>
+                                            <td><?= $wNo++ ?></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($web['title'] ?? $web['webinar_title'] ?? '—') ?></strong></td>
+                                            <td><?= htmlspecialchars($web['speaker_name'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($web['webinar_date'] ?? $web['event_date'] ?? '—') ?></td>
+                                            <td><span class="badge bg-purple text-white"><?= (int)($web['participant_count'] ?? 0) ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- D. INTERNSHIPS -->
+                    <h6 class="kpi-section-title"><i class="fa fa-user-graduate text-warning me-2"></i>Internships (<?= count($systemKpiData['internships']) ?>)</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Internship Title</th>
+                                    <th>Investigator</th>
+                                    <th>Students Trained</th>
+                                    <th>Days Trained</th>
+                                    <th>Student Names</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($systemKpiData['internships'])): ?>
+                                    <tr><td colspan="6" class="text-center text-muted py-3">No internship records found in main KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'.</td></tr>
+                                <?php else: ?>
+                                    <?php $iNo = 1; foreach ($systemKpiData['internships'] as $intern): ?>
+                                        <tr>
+                                            <td><?= $iNo++ ?></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($intern['title'] ?? '—') ?></strong></td>
+                                            <td><?= htmlspecialchars($intern['project_investigator'] ?? '—') ?></td>
+                                            <td><span class="badge bg-warning text-dark"><?= (int)($intern['no_students_trained'] ?? 1) ?></span></td>
+                                            <td><?= htmlspecialchars($intern['no_days_trained'] ?? '—') ?> days</td>
+                                            <td><small class="text-dark"><?= htmlspecialchars($intern['students_names'] ?? '—') ?></small></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- E. PATENTS -->
+                    <h6 class="kpi-section-title"><i class="fa fa-certificate text-danger me-2"></i>Patents (<?= count($systemKpiData['patents']) ?>)</h6>
+                    <div class="table-responsive mb-0">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Patent Title</th>
+                                    <th>Application No</th>
+                                    <th>Filing Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($systemKpiData['patents'])): ?>
+                                    <tr><td colspan="5" class="text-center text-muted py-3">No patent records found in main KPI module for Task ID '<?= htmlspecialchars($activeTaskNo ?: '—') ?>'.</td></tr>
+                                <?php else: ?>
+                                    <?php $ptNo = 1; foreach ($systemKpiData['patents'] as $pat): ?>
+                                        <tr>
+                                            <td><?= $ptNo++ ?></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($pat['title'] ?? $pat['patent_title'] ?? '—') ?></strong></td>
+                                            <td><?= htmlspecialchars($pat['application_no'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($pat['filing_date'] ?? '—') ?></td>
+                                            <td><span class="badge bg-success text-white"><?= htmlspecialchars($pat['status'] ?? 'Filed') ?></span></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
             </div>
 
-        </div>
-    </div>
-</div>
-
-<!-- ── MAIN ADD / EDIT PROGRESS REPORT MODAL ────────────────────────────── -->
-<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-white" id="reportModalLabel">Project Progress Report Form</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" id="modalForm">
-                <?= getCsrfInputField() ?>
-                <input type="hidden" name="form_type" value="main_report">
-                <input type="hidden" name="edit_id" id="modal_edit_id">
-
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label font-weight-bold">Task No *</label>
-                            <input type="text" name="task_no" id="modal_task_no" class="form-control" placeholder="e.g. TASK-001" required>
-                        </div>
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label font-weight-bold">Project Title *</label>
-                            <input type="text" name="project_title" id="modal_project_title" class="form-control" placeholder="Full project title" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Principal Investigator (PI) Name *</label>
-                            <input type="text" name="pi_name" id="modal_pi_name" class="form-control" placeholder="PI name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Co-Principal Investigator (Co-PI) Name</label>
-                            <input type="text" name="co_pi_name" id="modal_co_pi_name" class="form-control" placeholder="Co-PI name">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Work Package Number</label>
-                            <input type="text" name="work_package_no" id="modal_work_package_no" class="form-control" placeholder="e.g. WP-001">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Number of Interns Trained</label>
-                            <input type="number" name="interns_trained_count" id="modal_interns_trained_count" class="form-control" min="0" value="0" placeholder="0">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Approved Objectives / Targets</label>
-                        <textarea name="approved_objects" id="modal_approved_objects" rows="3" class="form-control" placeholder="List approved objectives"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Methodology / Approach Used</label>
-                        <textarea name="methodology" id="modal_methodology" rows="3" class="form-control" placeholder="Describe methodology"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Summary of the Progress</label>
-                        <textarea name="summary_progress" id="modal_summary_progress" rows="4" class="form-control" placeholder="Summarize progress made"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Submit Report</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ── COMPREHENSIVE VIEW & MANAGE DETAILS MODAL (PUBLICATIONS & CAPACITY BUILDING) ── -->
-<div class="modal fade" id="manageReportDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <div>
-                    <h5 class="modal-title text-white mb-0" id="manageModalTitle">Progress Report & Associated Sections</h5>
-                    <small class="text-light opacity-75" id="manageModalSubtitle">Task & Project Details</small>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="#" id="manageExportPdfBtn" target="_blank" class="btn btn-sm btn-danger text-white">
-                        <i class="fa fa-file-pdf-o me-1"></i> Export PDF
-                    </a>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-            </div>
-
-            <div class="modal-body p-4">
-                <!-- Overview Cards -->
-                <div class="card bg-light border-0 mb-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-primary mb-2"><i class="fa fa-info-circle me-1"></i> Core Report Overview</h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">PI Name:</small>
-                                <strong id="detPiName" class="text-dark">—</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Co-PI Name:</small>
-                                <strong id="detCoPiName" class="text-dark">—</strong>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Work Package:</small>
-                                <strong id="detWpNo" class="text-dark">—</strong>
-                            </div>
-                        </div>
-                        <hr class="my-3">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Approved Objectives:</small>
-                                <div id="detObjects" class="small text-dark text-break">—</div>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Methodology:</small>
-                                <div id="detMethodology" class="small text-dark text-break">—</div>
-                            </div>
-                            <div class="col-md-4">
-                                <small class="text-muted d-block">Summary Progress:</small>
-                                <div id="detProgress" class="small text-dark text-break">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="my-4">
-
-                <!-- ══════════════════════════════════════════════════════
-                     SECTION: PUBLICATIONS
-                ══════════════════════════════════════════════════════ -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0"><i class="fa fa-book text-danger me-2"></i> PUBLICATIONS</h5>
+            <!-- =========================================================================
+                 MODULE 3: REPORT-SPECIFIC CAPACITY BUILDING ATTACHMENTS
+                 ========================================================================= -->
+            <?php if ($activeTask): ?>
+            <div class="card workflow-card mb-4">
+                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white font-w700"><i class="fa fa-graduation-cap me-2"></i>Report-Specific Capacity Building Events</h5>
                     <?php if (canEditInstitute($prefix)): ?>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="openAddPubModal()">
-                        <i class="fa fa-plus me-1"></i> Add Publication Details
+                    <button type="button" class="btn btn-light btn-sm font-w700" onclick="openAddEventModal('Workshop_Conference')">
+                        <i class="fa fa-plus text-dark me-1"></i> Add Event
                     </button>
                     <?php endif; ?>
                 </div>
-
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-striped align-middle">
-                        <thead class="bg-light">
-                            <tr>
-                                <th>Task No</th>
-                                <th>Publication Title</th>
-                                <th>Primary Author</th>
-                                <th>Journal Name</th>
-                                <th>DOI / Date</th>
-                                <th>Impact Factor</th>
-                                <th style="width: 100px; text-align: center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detPubsTableBody">
-                            <!-- Rendered dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <hr class="my-4">
-
-                <!-- ══════════════════════════════════════════════════════
-                     SECTION: CAPACITY BUILDING
-                ══════════════════════════════════════════════════════ -->
-                <h5 class="fw-bold text-dark mb-3"><i class="fa fa-chalkboard-user text-primary me-2"></i> CAPACITY BUILDING</h5>
-
-                <!-- A. Workshops / Conferences Conducted -->
-                <div class="card mb-4 border border-light">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                        <h6 class="fw-bold mb-0 text-dark">A. Workshops / Conferences Conducted</h6>
-                        <?php if (canEditInstitute($prefix)): ?>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAddEventModal('Workshop_Conference')">
-                            <i class="fa fa-plus me-1"></i> Add Workshop / Conference
-                        </button>
-                        <?php endif; ?>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Event Name</th>
-                                        <th>Date</th>
-                                        <th>Venue / Mode</th>
-                                        <th>Organizing Institution</th>
-                                        <th>Participants</th>
-                                        <th>Description</th>
-                                        <th style="width: 90px; text-align: center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detWorkshopsTableBody">
-                                    <!-- Rendered dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>Date / Duration</th>
+                                    <th>Venue / Mode</th>
+                                    <th>Participants</th>
+                                    <th style="width: 100px; text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $allEvts = array_merge($taskWorkshops, $taskTrainings); ?>
+                                <?php if (empty($allEvts)): ?>
+                                    <tr><td colspan="7" class="text-center text-muted py-3">No report-specific capacity events recorded for Report #<?= (int)$activeTask['id'] ?>.</td></tr>
+                                <?php else: ?>
+                                    <?php $eNo = 1; foreach ($allEvts as $ev): ?>
+                                        <tr>
+                                            <td><?= $eNo++ ?></td>
+                                            <td><span class="badge bg-secondary text-white"><?= htmlspecialchars(str_replace('_', ' / ', $ev['category'])) ?></span></td>
+                                            <td><strong class="text-dark"><?= htmlspecialchars($ev['title']) ?></strong></td>
+                                            <td><?= htmlspecialchars($ev['event_date'] ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($ev['venue_mode'] ?? '—') ?></td>
+                                            <td><span class="badge bg-info text-white"><?= (int)$ev['participant_count'] ?></span></td>
+                                            <td style="text-align: center;">
+                                                <?php if (canEditInstitute($prefix)): ?>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button" class="btn btn-warning btn-xs" onclick='openEditEventModal(<?= json_encode($ev, JSON_HEX_APOS|JSON_HEX_QUOT) ?>)'>
+                                                        <i class="fa fa-pencil"></i>
+                                                    </button>
+                                                    <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>" onsubmit="return confirm('Delete this event?');" style="display:inline;">
+                                                        <?= getCsrfInputField() ?>
+                                                        <input type="hidden" name="form_type" value="delete_capacity_event">
+                                                        <input type="hidden" name="delete_id" value="<?= $ev['id'] ?>">
+                                                        <input type="hidden" name="task_no" value="<?= htmlspecialchars($activeTask['task_no']) ?>">
+                                                        <input type="hidden" name="progress_report_id" value="<?= (int)$activeTask['id'] ?>">
+                                                        <button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <!-- B. Training Programs Conducted -->
-                <div class="card mb-4 border border-light">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                        <h6 class="fw-bold mb-0 text-dark">B. Training Programs Conducted</h6>
-                        <?php if (canEditInstitute($prefix)): ?>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAddEventModal('Training_Program')">
-                            <i class="fa fa-plus me-1"></i> Add Training Program
-                        </button>
-                        <?php endif; ?>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Program Name</th>
-                                        <th>Date / Duration</th>
-                                        <th>Venue / Mode</th>
-                                        <th>Participants</th>
-                                        <th>Description</th>
-                                        <th style="width: 90px; text-align: center;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detTrainingsTableBody">
-                                    <!-- Rendered dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- C. Number of Interns Trained -->
-                <div class="card border border-light bg-light">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="fw-bold text-dark mb-1">C. Number of Interns Trained</h6>
-                            <small class="text-muted">Total number of students and researchers trained during this progress report period.</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="badge bg-success fs-5 px-3 py-2" id="detInternsBadge">0</span>
-                            <?php if (canEditInstitute($prefix)): ?>
-                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="openUpdateInternsModal()">
-                                <i class="fa fa-pencil me-1"></i> Edit Count
-                            </button>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+            <?php endif; ?>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
         </div>
     </div>
 </div>
 
-<!-- ── SUB-MODAL 1: ADD / EDIT PUBLICATION DETAILS ──────────────────────── -->
-<div class="modal fade" id="pubModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title text-white" id="pubModalTitle">Add Publication Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST">
-                <?= getCsrfInputField() ?>
-                <input type="hidden" name="form_type" value="publication_details">
-                <input type="hidden" name="progress_report_id" id="pub_pr_id">
-                <input type="hidden" name="pub_edit_id" id="pub_edit_id">
-
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label font-weight-bold">Task Number</label>
-                            <input type="text" name="pub_task_no" id="pub_task_no" class="form-control" placeholder="e.g. TASK-001">
-                        </div>
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label font-weight-bold">Publication Title *</label>
-                            <input type="text" name="publication_title" id="pub_title" class="form-control" placeholder="Full paper title" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Primary Author Name *</label>
-                            <input type="text" name="author_name" id="pub_author" class="form-control" placeholder="Author name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Journal Name *</label>
-                            <input type="text" name="publication_journal" id="pub_journal" class="form-control" placeholder="e.g. IEEE Transactions on Biomedical Engineering" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label font-weight-bold">DOI Number</label>
-                            <input type="text" name="doi_number" id="pub_doi" class="form-control" placeholder="10.1016/j.bspc.2026.105432">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label font-weight-bold">Publication Date</label>
-                            <input type="date" name="publication_date" id="pub_date" class="form-control">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label font-weight-bold">Impact Factor</label>
-                            <input type="number" step="0.001" min="0" name="impact_factor" id="pub_impact" class="form-control" placeholder="e.g. 4.750">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger"><i class="fa fa-save me-1"></i> Save Publication</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ── SUB-MODAL 2: ADD / EDIT CAPACITY BUILDING EVENT ──────────────────── -->
+<!-- =========================================================================
+     MODAL: CAPACITY BUILDING EVENT FORM
+     ========================================================================= -->
 <div class="modal fade" id="capacityEventModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-white" id="capacityEventModalTitle">Add Capacity Building Event</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST">
+            <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>">
                 <?= getCsrfInputField() ?>
-                <input type="hidden" name="form_type" value="capacity_building_event">
-                <input type="hidden" name="progress_report_id" id="event_pr_id">
-                <input type="hidden" name="event_edit_id" id="event_edit_id">
-                <input type="hidden" name="category" id="event_category" value="Workshop_Conference">
+                <input type="hidden" name="form_type" value="save_capacity_event">
+                <input type="hidden" name="progress_report_id" id="modal_evt_pr_id" value="<?= htmlspecialchars($activeTask['id'] ?? '') ?>">
+                <input type="hidden" name="task_no" id="modal_evt_task_no" value="<?= htmlspecialchars($activeTask['task_no'] ?? '') ?>">
+                <input type="hidden" name="event_id" id="modal_evt_id" value="">
 
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold" id="eventTitleLabel">Title *</label>
-                        <input type="text" name="event_title" id="event_title" class="form-control" placeholder="Name of workshop, conference, or training program" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Date</label>
-                            <input type="date" name="event_date" id="event_date" class="form-control">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title text-white font-w700" id="evtModalTitle">Capacity Building Event</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label font-w700 text-dark">Category *</label>
+                            <select name="category" id="modal_evt_category" class="form-select font-w600 text-dark" required>
+                                <option value="Workshop_Conference">Workshop / Conference</option>
+                                <option value="Training_Program">Training Program</option>
+                            </select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Duration / Timings</label>
-                            <input type="text" name="duration" id="event_duration" class="form-control" placeholder="e.g. 2 Days / 10 AM - 4 PM">
+                        <div class="col-md-6">
+                            <label class="form-label font-w700 text-dark" id="evtTitleLabel">Event Title *</label>
+                            <input type="text" name="event_title" id="modal_evt_title" class="form-control" required>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Venue / Mode</label>
-                            <input type="text" name="venue_mode" id="event_venue_mode" class="form-control" placeholder="e.g. Online / Auditorium B, UoH">
+                        <div class="col-md-4">
+                            <label class="form-label font-w600 text-dark">Event Date</label>
+                            <input type="date" name="event_date" id="modal_evt_date" class="form-control">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label font-weight-bold">Organizing Institution</label>
-                            <input type="text" name="organizing_institution" id="event_organizer" class="form-control" placeholder="e.g. ANRF-PAIR Project & Dept of Physics">
+                        <div class="col-md-4">
+                            <label class="form-label font-w600 text-dark">Duration / Timings</label>
+                            <input type="text" name="duration" id="modal_evt_duration" class="form-control" placeholder="e.g. 2 Days / 10 AM - 4 PM">
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Number of Participants</label>
-                        <input type="number" name="participant_count" id="event_participants" class="form-control" min="0" value="0" placeholder="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label font-weight-bold">Brief Description / Outcome</label>
-                        <textarea name="description" id="event_description" rows="3" class="form-control" placeholder="Brief summary of event objectives and participant outcomes..."></textarea>
+                        <div class="col-md-4">
+                            <label class="form-label font-w600 text-dark">Participant Count</label>
+                            <input type="number" min="0" name="participant_count" id="modal_evt_participants" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label font-w600 text-dark">Venue / Mode</label>
+                            <input type="text" name="venue_mode" id="modal_evt_venue" class="form-control" placeholder="e.g. Online / Main Auditorium">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label font-w600 text-dark">Organizing Institution</label>
+                            <input type="text" name="organizing_institution" id="modal_evt_organizer" class="form-control" placeholder="Organizing body/department">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label font-w600 text-dark">Description / Outcome</label>
+                            <textarea name="description" id="modal_evt_desc" class="form-control" rows="3" placeholder="Brief summary or outcome..."></textarea>
+                        </div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Save Event Record</button>
+                    <button type="submit" class="btn btn-info text-white"><i class="fa fa-save me-1"></i> Save Event</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<!-- ── SUB-MODAL 3: UPDATE INTERNS TRAINED COUNT ───────────────────────── -->
-<div class="modal fade" id="internsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white py-2">
-                <h6 class="modal-title text-white" id="internsModalTitle">Number of Interns Trained</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST">
-                <?= getCsrfInputField() ?>
-                <input type="hidden" name="form_type" value="update_interns_count">
-                <input type="hidden" name="progress_report_id" id="interns_pr_id">
-
-                <div class="modal-body py-3">
-                    <label class="form-label font-weight-bold">Number of Interns Trained *</label>
-                    <input type="number" name="interns_trained_count" id="interns_count_input" class="form-control" min="0" required placeholder="0">
-                    <small class="text-muted d-block mt-1">Must be a valid non-negative integer.</small>
-                </div>
-
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-save me-1"></i> Save Count</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ── DELETE CONFIRMATION MODAL ──────────────────────────────────── -->
-<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-dark" id="deleteModalLabel">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-2 text-dark">
-                Are you sure you want to permanently delete this progress report? This operation cannot be rolled back.
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
-                <a href="#" id="modalDeleteExecutionLink" class="btn btn-sm btn-danger text-white">
-                    Delete Record
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="vendor/global/global.min.js"></script>
-<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
-<script src="js/custom.min.js"></script>
-<script src="js/dlabnav-init.js"></script>
 
 <script>
-var activeReportData = null;
-var pubModalInstance = null;
-var capacityEventModalInstance = null;
-var internsModalInstance = null;
-var manageReportDetailsModalInstance = null;
+let capacityEventModalInstance = null;
 
-document.addEventListener("DOMContentLoaded", function() {
-
-    const manageModalEl = document.getElementById('manageReportDetailsModal');
-    if (manageModalEl) manageReportDetailsModalInstance = new bootstrap.Modal(manageModalEl);
-
-    const pubModalEl = document.getElementById('pubModal');
-    if (pubModalEl) pubModalInstance = new bootstrap.Modal(pubModalEl);
-
-    const capModalEl = document.getElementById('capacityEventModal');
-    if (capModalEl) capacityEventModalInstance = new bootstrap.Modal(capModalEl);
-
-    const intModalEl = document.getElementById('internsModal');
-    if (intModalEl) internsModalInstance = new bootstrap.Modal(intModalEl);
-
-    // OPEN MANAGE DETAILS MODAL
-    const openManageBtns = document.querySelectorAll('.open-manage-modal-btn');
-    openManageBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!this.dataset.report) return;
-            activeReportData = JSON.parse(this.dataset.report);
-            renderManageModal(activeReportData);
-            if (manageReportDetailsModalInstance) manageReportDetailsModalInstance.show();
-        });
-    });
-
-    const addNewBtn = document.getElementById('addNewBtn');
-    const editButtons = document.querySelectorAll('.edit-btn');
-    const modalTitle = document.getElementById('reportModalLabel');
-    const modalSubmitBtn = document.getElementById('modalSubmitBtn');
-    const modalForm = document.getElementById('modalForm');
-
-    const deleteTriggers = document.querySelectorAll('.delete-confirm-trigger');
-    const modalDeleteExecutionLink = document.getElementById('modalDeleteExecutionLink');
-    const bootstrapDeleteInstance = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
-
-    if(addNewBtn) {
-        addNewBtn.addEventListener('click', function() {
-            modalForm.reset();
-            document.getElementById('modal_edit_id').value = '';
-            modalTitle.innerText = "Project Progress Report Form";
-            modalSubmitBtn.innerText = "Submit Report";
-            modalSubmitBtn.style.display = "block";
-            modalForm.querySelectorAll('input, textarea, select').forEach(el => {
-                el.disabled = false;
-                el.readOnly = false;
-            });
-        });
-    }
-
-    editButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            modalTitle.innerText = "Edit Progress Report";
-            modalSubmitBtn.style.display = "block";
-            modalForm.querySelectorAll('input, textarea, select').forEach(el => {
-                el.disabled = false;
-                el.readOnly = false;
-            });
-
-            document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
-            document.getElementById('modal_project_title').value = this.getAttribute('data-title');
-            document.getElementById('modal_pi_name').value = this.getAttribute('data-pi');
-            document.getElementById('modal_co_pi_name').value = this.getAttribute('data-copi');
-            document.getElementById('modal_task_no').value = this.getAttribute('data-task');
-            document.getElementById('modal_work_package_no').value = this.getAttribute('data-wp');
-            document.getElementById('modal_approved_objects').value = this.getAttribute('data-objects');
-            document.getElementById('modal_methodology').value = this.getAttribute('data-methodology');
-            document.getElementById('modal_summary_progress').value = this.getAttribute('data-summary');
-            document.getElementById('modal_interns_trained_count').value = this.getAttribute('data-interns') || 0;
-        });
-    });
-
-    deleteTriggers.forEach(triggerBtn => {
-        triggerBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const recordId = this.getAttribute('data-id');
-            const recordPrefix = this.getAttribute('data-record-prefix') || this.getAttribute('data-prefix');
-            const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('action', 'delete');
-            urlParams.set('id', recordId);
-            if (recordPrefix) {
-                urlParams.set('record_prefix', recordPrefix);
-            }
-            modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
-            bootstrapDeleteInstance.show();
-        });
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    capacityEventModalInstance = new bootstrap.Modal(document.getElementById('capacityEventModal'));
 });
 
-function renderManageModal(rep) {
-    document.getElementById('manageModalTitle').innerText = (rep.task_no ? rep.task_no + ': ' : '') + (rep.project_title || 'Progress Report');
-    document.getElementById('manageModalSubtitle').innerText = 'PI: ' + (rep.pi_name || '—') + ' | Institute: ' + (rep.institute_prefix || '').toUpperCase();
-
-    var pdfUrl = 'export_progress_report_pdf.php?id=' + rep.id + '&prefix=' + encodeURIComponent(rep.institute_prefix || '');
-    var tabToken = new URLSearchParams(window.location.search).get('tab_token');
-    if (tabToken) pdfUrl += '&tab_token=' + encodeURIComponent(tabToken);
-    var exportPdfBtn = document.getElementById('manageExportPdfBtn');
-    if (exportPdfBtn) exportPdfBtn.setAttribute('href', pdfUrl);
-
-    document.getElementById('detPiName').innerText = rep.pi_name || '—';
-    document.getElementById('detCoPiName').innerText = rep.co_pi_name || '—';
-    document.getElementById('detWpNo').innerText = rep.work_package_no || '—';
-    document.getElementById('detObjects').innerText = rep.approved_objects || '—';
-    document.getElementById('detMethodology').innerText = rep.methodology || '—';
-    document.getElementById('detProgress').innerText = rep.summary_progress || '—';
-
-    // RENDER PUBLICATIONS
-    const pubTbody = document.getElementById('detPubsTableBody');
-    pubTbody.innerHTML = '';
-    const pubs = rep.publications || [];
-
-    if (pubs.length === 0) {
-        pubTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No publication details added yet.</td></tr>';
-    } else {
-        pubs.forEach(p => {
-            var tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><small class="fw-bold">${p.task_no || '—'}</small></td>
-                <td><strong>${escapeHtml(p.publication_title)}</strong></td>
-                <td>${escapeHtml(p.author_name)}</td>
-                <td>${escapeHtml(p.publication_journal)}</td>
-                <td><small class="d-block">${p.doi_number ? 'DOI: ' + escapeHtml(p.doi_number) : ''}</small><small class="text-muted">${p.publication_date || ''}</small></td>
-                <td><span class="badge bg-light text-dark border">${p.impact_factor ? p.impact_factor : '—'}</span></td>
-                <td style="text-align: center;">
-                    ${ (rep.can_edit !== false) ? `
-                        <button class="btn btn-warning btn-xs me-1" onclick='openEditPubModal(${JSON.stringify(p)})'><i class="fa fa-pencil"></i></button>
-                        <a href="?action=delete_pub&sub_id=${p.id}&record_prefix=${rep.institute_prefix || ''}" class="btn btn-danger btn-xs" onclick="return confirm('Delete this publication entry?');"><i class="fa fa-trash"></i></a>
-                    ` : '<span class="text-muted small"><i class="fa fa-lock"></i></span>' }
-                </td>
-            `;
-            pubTbody.appendChild(tr);
-        });
-    }
-
-    // RENDER WORKSHOPS / CONFERENCES
-    const wsTbody = document.getElementById('detWorkshopsTableBody');
-    wsTbody.innerHTML = '';
-    const workshops = rep.workshops || [];
-
-    if (workshops.length === 0) {
-        wsTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No workshops or conferences recorded yet.</td></tr>';
-    } else {
-        workshops.forEach(w => {
-            var tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${escapeHtml(w.title)}</strong></td>
-                <td><small>${w.event_date || '—'}</small></td>
-                <td>${escapeHtml(w.venue_mode || '—')}</td>
-                <td>${escapeHtml(w.organizing_institution || '—')}</td>
-                <td><span class="badge bg-info text-white">${w.participant_count || 0}</span></td>
-                <td><small class="text-muted">${escapeHtml(w.description || '—')}</small></td>
-                <td style="text-align: center;">
-                    ${ (rep.can_edit !== false) ? `
-                        <button class="btn btn-warning btn-xs me-1" onclick='openEditEventModal(${JSON.stringify(w)})'><i class="fa fa-pencil"></i></button>
-                        <a href="?action=delete_capacity_event&sub_id=${w.id}&record_prefix=${rep.institute_prefix || ''}" class="btn btn-danger btn-xs" onclick="return confirm('Delete this workshop entry?');"><i class="fa fa-trash"></i></a>
-                    ` : '<span class="text-muted small"><i class="fa fa-lock"></i></span>' }
-                </td>
-            `;
-            wsTbody.appendChild(tr);
-        });
-    }
-
-    // RENDER TRAINING PROGRAMS
-    const trTbody = document.getElementById('detTrainingsTableBody');
-    trTbody.innerHTML = '';
-    const trainings = rep.trainings || [];
-
-    if (trainings.length === 0) {
-        trTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">No training programs recorded yet.</td></tr>';
-    } else {
-        trainings.forEach(t => {
-            var tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${escapeHtml(t.title)}</strong></td>
-                <td><small>${t.event_date || ''} ${t.duration ? '(' + escapeHtml(t.duration) + ')' : ''}</small></td>
-                <td>${escapeHtml(t.venue_mode || '—')}</td>
-                <td><span class="badge bg-info text-white">${t.participant_count || 0}</span></td>
-                <td><small class="text-muted">${escapeHtml(t.description || '—')}</small></td>
-                <td style="text-align: center;">
-                    ${ (rep.can_edit !== false) ? `
-                        <button class="btn btn-warning btn-xs me-1" onclick='openEditEventModal(${JSON.stringify(t)})'><i class="fa fa-pencil"></i></button>
-                        <a href="?action=delete_capacity_event&sub_id=${t.id}&record_prefix=${rep.institute_prefix || ''}" class="btn btn-danger btn-xs" onclick="return confirm('Delete this training program entry?');"><i class="fa fa-trash"></i></a>
-                    ` : '<span class="text-muted small"><i class="fa fa-lock"></i></span>' }
-                </td>
-            `;
-            trTbody.appendChild(tr);
-        });
-    }
-
-    // RENDER INTERNS TRAINED COUNT
-    document.getElementById('detInternsBadge').innerText = rep.interns_trained_count || 0;
+function switchTaskId(taskNoVal) {
+    let urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('task_no', taskNoVal);
+    urlParams.delete('report_id');
+    window.location.search = urlParams.toString();
 }
 
-function openAddPubModal() {
-    if (!activeReportData) return;
-    document.getElementById('pub_pr_id').value = activeReportData.id;
-    document.getElementById('pub_edit_id').value = '';
-    document.getElementById('pub_task_no').value = activeReportData.task_no || '';
-    document.getElementById('pub_title').value = '';
-    document.getElementById('pub_author').value = activeReportData.pi_name || '';
-    document.getElementById('pub_journal').value = '';
-    document.getElementById('pub_doi').value = '';
-    document.getElementById('pub_date').value = '';
-    document.getElementById('pub_impact').value = '';
-    document.getElementById('pubModalTitle').innerText = 'Add Publication Details';
-
-    if (pubModalInstance) pubModalInstance.show();
-}
-
-function openEditPubModal(p) {
-    document.getElementById('pub_pr_id').value = p.progress_report_id;
-    document.getElementById('pub_edit_id').value = p.id;
-    document.getElementById('pub_task_no').value = p.task_no || '';
-    document.getElementById('pub_title').value = p.publication_title || '';
-    document.getElementById('pub_author').value = p.author_name || '';
-    document.getElementById('pub_journal').value = p.publication_journal || '';
-    document.getElementById('pub_doi').value = p.doi_number || '';
-    document.getElementById('pub_date').value = p.publication_date || '';
-    document.getElementById('pub_impact').value = p.impact_factor || '';
-    document.getElementById('pubModalTitle').innerText = 'Edit Publication Details';
-
-    if (pubModalInstance) pubModalInstance.show();
+function switchReportInstance(reportIdVal) {
+    let urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('report_id', reportIdVal);
+    window.location.search = urlParams.toString();
 }
 
 function openAddEventModal(cat) {
-    if (!activeReportData) return;
-    document.getElementById('event_pr_id').value = activeReportData.id;
-    document.getElementById('event_edit_id').value = '';
-    document.getElementById('event_category').value = cat;
-    document.getElementById('event_title').value = '';
-    document.getElementById('event_date').value = '';
-    document.getElementById('event_duration').value = '';
-    document.getElementById('event_venue_mode').value = '';
-    document.getElementById('event_organizer').value = '';
-    document.getElementById('event_participants').value = '0';
-    document.getElementById('event_description').value = '';
-
-    if (cat === 'Workshop_Conference') {
-        document.getElementById('capacityEventModalTitle').innerText = 'Add Workshop / Conference';
-        document.getElementById('eventTitleLabel').innerText = 'Workshop / Conference Name *';
-    } else {
-        document.getElementById('capacityEventModalTitle').innerText = 'Add Training Program';
-        document.getElementById('eventTitleLabel').innerText = 'Training Program Name *';
-    }
-
-    if (capacityEventModalInstance) capacityEventModalInstance.show();
+    document.getElementById('modal_evt_id').value = '';
+    document.getElementById('modal_evt_category').value = cat || 'Workshop_Conference';
+    document.getElementById('modal_evt_title').value = '';
+    document.getElementById('modal_evt_date').value = '';
+    document.getElementById('modal_evt_duration').value = '';
+    document.getElementById('modal_evt_participants').value = '0';
+    document.getElementById('modal_evt_venue').value = '';
+    document.getElementById('modal_evt_organizer').value = '';
+    document.getElementById('modal_evt_desc').value = '';
+    capacityEventModalInstance.show();
 }
 
 function openEditEventModal(e) {
-    document.getElementById('event_pr_id').value = e.progress_report_id;
-    document.getElementById('event_edit_id').value = e.id;
-    document.getElementById('event_category').value = e.category;
-    document.getElementById('event_title').value = e.title || '';
-    document.getElementById('event_date').value = e.event_date || '';
-    document.getElementById('event_duration').value = e.duration || '';
-    document.getElementById('event_venue_mode').value = e.venue_mode || '';
-    document.getElementById('event_organizer').value = e.organizing_institution || '';
-    document.getElementById('event_participants').value = e.participant_count || 0;
-    document.getElementById('event_description').value = e.description || '';
-
-    if (e.category === 'Workshop_Conference') {
-        document.getElementById('capacityEventModalTitle').innerText = 'Edit Workshop / Conference';
-        document.getElementById('eventTitleLabel').innerText = 'Workshop / Conference Name *';
-    } else {
-        document.getElementById('capacityEventModalTitle').innerText = 'Edit Training Program';
-        document.getElementById('eventTitleLabel').innerText = 'Training Program Name *';
-    }
-
-    if (capacityEventModalInstance) capacityEventModalInstance.show();
-}
-
-function openUpdateInternsModal() {
-    if (!activeReportData) return;
-    document.getElementById('interns_pr_id').value = activeReportData.id;
-    document.getElementById('interns_count_input').value = activeReportData.interns_trained_count || 0;
-    if (internsModalInstance) internsModalInstance.show();
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    document.getElementById('modal_evt_id').value = e.id;
+    document.getElementById('modal_evt_category').value = e.category || 'Workshop_Conference';
+    document.getElementById('modal_evt_title').value = e.title || '';
+    document.getElementById('modal_evt_date').value = e.event_date || '';
+    document.getElementById('modal_evt_duration').value = e.duration || '';
+    document.getElementById('modal_evt_participants').value = e.participant_count || 0;
+    document.getElementById('modal_evt_venue').value = e.venue_mode || '';
+    document.getElementById('modal_evt_organizer').value = e.organizing_institution || '';
+    document.getElementById('modal_evt_desc').value = e.description || '';
+    capacityEventModalInstance.show();
 }
 </script>
 </body>

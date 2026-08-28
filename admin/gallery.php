@@ -49,22 +49,7 @@ try {
         ");
     }
 
-    // Seed sample data for default uoh table if empty
-    $uohCount = $pdo->query("SELECT COUNT(*) FROM `uoh_gallery_events`")->fetchColumn();
-    if ((int)$uohCount === 0) {
-        $seeds = [
-            ['Annual Research Symposium 2024', 'Dr. Meena Iyer',     '2024-11-15', 'https://drive.google.com/drive/folders/sample1', 'Symposium',  'Annual research showcase bringing together all project PIs.'],
-            ['Lab Inauguration Ceremony',       'Prof. K. Ramachandran', '2024-09-02', 'https://drive.google.com/drive/folders/sample2', 'Ceremony',   'Inauguration of the new Biomedical Instrumentation Lab.'],
-            ['International Conference on Medical AI', 'Dr. Aris Thorne', '2025-01-20', 'https://drive.google.com/drive/folders/sample3', 'Conference', 'Participation in ICMAI 2025 with paper presentations.'],
-            ['Student Training Workshop – Bioinformatics', 'Dr. Leila Hasan', '2025-03-10', 'https://drive.google.com/drive/folders/sample4', 'Workshop', '3-day hands-on bioinformatics workshop for graduate students.'],
-            ['Project Review Meeting – Q2 2025', 'Prof. Ishaan Gupta', '2025-04-05', 'https://drive.google.com/drive/folders/sample5', 'Meeting', 'Quarterly review with ANRF–PAIR project committee.'],
-            ['Field Visit – AIIMS Delhi',         'Dr. Sanya Mehta',   '2025-02-22', 'https://drive.google.com/drive/folders/sample6', 'Field Visit', 'Team visit to AIIMS for collaborative clinical research.'],
-        ];
-        $ins = $pdo->prepare("INSERT INTO `uoh_gallery_events` (event_name, coordinator_name, event_date, photos_drive_link, category, description) VALUES (?,?,?,?,?,?)");
-        foreach ($seeds as $s) {
-            $ins->execute($s);
-        }
-    }
+
 } catch (PDOException $e) {
     // ignore table creation errors silently
 }
@@ -96,7 +81,7 @@ if (isset($_GET['success_msg'])) {
 }
 
 // 3. HANDLE FORM SUBMISSIONS
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $userCsrf = $_POST['csrf_token'] ?? '';
     if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
         $error = 'Security Error: Invalid or missing CSRF token.';
@@ -524,36 +509,36 @@ $total_categories   = count($categories_count);
                                             </td>
                                             <td style="text-align: center;">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-info text-white view-kpi-btn"
-                                                            data-record="<?= htmlspecialchars(json_encode($ev), ENT_QUOTES, 'UTF-8') ?>"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
-                                                    <?php if (canEditInstitute($prefix)): ?>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-edit-yellow edit-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#galleryModal"
-                                                            data-id="<?= $ev['id'] ?>"
-                                                            data-event="<?= htmlspecialchars($ev['event_name']) ?>"
-                                                            data-coordinator="<?= htmlspecialchars($ev['coordinator_name'] ?? '') ?>"
-                                                            data-date="<?= $ev['event_date'] ?? '' ?>"
-                                                            data-drive="<?= htmlspecialchars($ev['photos_drive_link'] ?? '') ?>"
-                                                            data-category="<?= htmlspecialchars($ev['category'] ?? 'General') ?>"
-                                                            data-description="<?= htmlspecialchars($ev['description'] ?? '') ?>"
-                                                            title="Edit Record">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                    <button type="button"
-                                                            class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
-                                                            data-id="<?= $ev['id'] ?>"
-                                                            data-record-prefix="<?= htmlspecialchars($ev['institute_prefix'] ?? $prefix) ?>"
-                                                            title="Delete Record">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                     <button type="button"
+                                                             class="btn btn-info btn-xs text-white view-kpi-btn"
+                                                             data-record="<?= htmlspecialchars(json_encode($ev), ENT_QUOTES, 'UTF-8') ?>"
+                                                             title="View Details">
+                                                         <i class="fa fa-eye"></i> View
+                                                     </button>
+                                                     <?php if (canEditInstitute($prefix)): ?>
+                                                     <button type="button"
+                                                             class="btn btn-warning btn-xs edit-btn"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#galleryModal"
+                                                             data-id="<?= $ev['id'] ?>"
+                                                             data-event="<?= htmlspecialchars($ev['event_name']) ?>"
+                                                             data-coordinator="<?= htmlspecialchars($ev['coordinator_name'] ?? '') ?>"
+                                                             data-date="<?= $ev['event_date'] ?? '' ?>"
+                                                             data-drive="<?= htmlspecialchars($ev['photos_drive_link'] ?? '') ?>"
+                                                             data-category="<?= htmlspecialchars($ev['category'] ?? 'General') ?>"
+                                                             data-description="<?= htmlspecialchars($ev['description'] ?? '') ?>"
+                                                             title="Edit Record">
+                                                         <i class="fa fa-pencil"></i> Edit
+                                                     </button>
+                                                     <button type="button"
+                                                             class="btn btn-danger btn-xs delete-confirm-trigger"
+                                                             data-id="<?= $ev['id'] ?>"
+                                                             data-record-prefix="<?= htmlspecialchars($ev['institute_prefix'] ?? $prefix) ?>"
+                                                             title="Delete Record">
+                                                         <i class="fa fa-trash"></i> Delete
+                                                     </button>
+                                                     <?php endif; ?>
+                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -588,7 +573,7 @@ $total_categories   = count($categories_count);
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST" id="modalForm">
+                <form method="POST" id="modalForm" action="<?= buildNavUrl('gallery.php') ?>">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
@@ -789,6 +774,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
+    viewKpiBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            try {
+                const rec = JSON.parse(this.getAttribute('data-record'));
+                openKpiRecordViewModal({
+                    moduleTitle: 'Drive Event Link Details',
+                    recordTitle: rec.event_name,
+                    institutePrefix: rec.institute_prefix || '<?= $prefix ?>',
+                    fields: [
+                        { label: 'Event Name', value: rec.event_name, type: 'text', icon: 'fa-solid fa-calendar-star' },
+                        { label: 'Coordinator / PI', value: rec.coordinator_name || 'None', icon: 'fa-solid fa-user-tie' },
+                        { label: 'Event Date', value: rec.event_date || 'N/A', icon: 'fa-solid fa-calendar' },
+                        { label: 'Category', value: rec.category || 'General', icon: 'fa-solid fa-tag' },
+                        { label: 'Google Drive Link', value: rec.photos_drive_link || 'None', type: rec.photos_drive_link ? 'link' : 'text', linkText: 'Open Google Drive Folder', icon: 'fa-brands fa-google-drive' },
+                        { label: 'Description', value: rec.description || 'None', type: 'longtext', icon: 'fa-solid fa-align-left' },
+                        { label: 'Created At', value: rec.created_at || 'N/A', icon: 'fa-solid fa-clock' }
+                    ]
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    });
+
     deleteTriggers.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -806,5 +816,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+<?php include 'includes/view_modal.php'; ?>
 </body>
 </html>

@@ -1,4 +1,6 @@
 <?php
-require_once __DIR__ . '/../admin/config/db.php';
-$stmt = $pdo->query("SELECT id, username, role, institute_prefix FROM users");
-print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
+$dump = file_get_contents('C:/Users/HP/Downloads/anrf (5).sql');
+if (preg_match_all("/INSERT INTO `users`[^\(]*\((.*?)\)\s*VALUES\s*(.*?);/s", $dump, $m)) {
+    echo "Users columns: " . $m[1][0] . "\n";
+    echo "Users values: " . $m[2][0] . "\n";
+}
