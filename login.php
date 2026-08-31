@@ -44,16 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($row && !empty($row['role']) && password_verify($password, $row['password'])) {
             $role = $row['role'];
 
-            // Generate cryptographically secure tab-isolated session token
+            // Generate cryptographically secure post-authentication tab-isolated session ID (prevents session fixation)
             $tabToken = bin2hex(random_bytes(32));
             if (session_status() === PHP_SESSION_ACTIVE) {
                 session_write_close();
             }
             session_id($tabToken);
             session_start();
-
-            // SEC-04: Regenerate session ID on login
-            session_regenerate_id(true);
 
             $_SESSION['tab_token']        = $tabToken;
             $_SESSION['user_id']          = $row['id'];

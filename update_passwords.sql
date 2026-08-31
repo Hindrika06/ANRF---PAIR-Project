@@ -1,10 +1,10 @@
 -- SQL script to set exact requested credentials
-UPDATE `users` SET `password` = '$2y$10$/noqLSEz97Uw1NVvOH0OWu61IOwcba7NU3Y2rkBqGIw2HvXMONoXu' WHERE `username` = 'Idsathyan@cuk.ac.in';
-UPDATE `users` SET `password` = '$2y$10$lRYOifJHW6qEdaE22KqLM.qDAUStfMwBzXUunq.02bnR3rKM2CFWK' WHERE `username` = 'anupkesavan@kannuriuniv.ac.in';
-UPDATE `users` SET `password` = '$2y$10$YQs.hTWFwip853MaLZ9sUO7YVf1VyqIBAh2Use/9gUH/Ff4a1t0R2' WHERE `username` = 'radhakrishnanek@mgu.ac.in';
-UPDATE `users` SET `password` = '$2y$10$zym5SKx.MOy3YHYqw7v2I.LXW7dynWQOtx6CWsdTJ3TmY4MluWbiW' WHERE `username` = 'vijjulatha@osmania.ac.in';
-UPDATE `users` SET `password` = '$2y$10$/9zzDWxjIP/qv3Zvx5MeW.RTnXzfiRx.htUQNclW5EddouEZ/jQdu' WHERE `username` = 'balaji.meriga@gmail.com';
-UPDATE `users` SET `password` = '$2y$10$XQBrlPP85DnvOE5Y.UHSDuuqXp1kasdUD4kpXyaQ8PZkbLgdbUPh.' WHERE `username` = 'sarma7@yogivemanauniversity.ac.in';
-UPDATE `users` SET `password` = '$2y$10$gA4fyS6bgG0xc7jzwV28TOZTUEST8JHx7j8haJjW8eS7y8aAYSAoW' WHERE `username` = 'admin@uoh.ac.in';
-UPDATE `users` SET `password` = '$2y$10$yxwUbkhpbbKIiWI3Oydzkuc6gfiyR/oncdgu7fMjX.h4Gzj.Mu9Fu' WHERE `username` = 'superadmin@uoh.ac.in';
-UPDATE `users` SET `password` = '$2y$10$n7tLTYOyFqA66x2hmCkmjuyHL.HygTji5Y7NNT0gFYr4X98Wa1ywa' WHERE `username` = 'superadmin';
+UPDATE `users` SET `password` = '$2y$10$Z2S3rFKej73skzRrN7LBjetjdbTuEhWUnw5NzlhMWxaIg1BhSKg3C' WHERE `username` = 'Idsathyan@cuk.ac.in';
+UPDATE `users` SET `password` = '$2y$10$7NDFZkuqwEKmmHeBDkxpyOCov13T7eNmJUM2tQkAoGB/LvXSfGsFG' WHERE `username` = 'anupkesavan@kannuriuniv.ac.in';
+UPDATE `users` SET `password` = '$2y$10$OiVelfOalqhuOf49URUYlOrwenF3.n6Q4REdej2gybpAQ9l6YlDci' WHERE `username` = 'radhakrishnanek@mgu.ac.in';
+UPDATE `users` SET `password` = '$2y$10$9kq3GpGhQ6LeUH6evgFuMu5P7ZgLuDHezIIztmeq.t.rhZ4tNT9yK' WHERE `username` = 'vijjulatha@osmania.ac.in';
+UPDATE `users` SET `password` = '$2y$10$FDHzUy.es/HEUsaNVt.pHOPvoY/q9DPfsZbTjd8Kk1OyDRVocAb0u' WHERE `username` = 'balaji.meriga@gmail.com';
+UPDATE `users` SET `password` = '$2y$10$4Fa0tehXDzsZHA6OEFqu8uZ.onaCy5xz3zgpvoVF8tl25mgB9bGRS' WHERE `username` = 'sarma7@yogivemanauniversity.ac.in';
+UPDATE `users` SET `password` = '$2y$10$.xza6sv2w./4.CuIcDc7IuGAeOaY6xQYKPcotLuPfoh3CsEPb50F.' WHERE `username` = 'admin@uoh.ac.in';
+UPDATE `users` SET `password` = '$2y$10$vyWe3Whez0orCjvqfqrtPuxTZsc0bieZb0bD5eHLv.LZs0NOqT.Qi' WHERE `username` = 'superadmin@uoh.ac.in';
+UPDATE `users` SET `password` = '$2y$10$Rol5ooSSpLhKxyJ3fjJ.ee2d7juXGoDiaWkAESRMaF60yPsMMjLCW' WHERE `username` = 'superadmin';
