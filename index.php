@@ -16,10 +16,6 @@ $sliderImages = [];
 $nowStr = date('Y-m-d H:i:s');
 
 try {
-    $cols = $pdo->query("SHOW COLUMNS FROM `homepage_banners`")->fetchAll(PDO::FETCH_COLUMN);
-    $hasStart = in_array('start_datetime', $cols, true);
-    $hasEnd   = in_array('end_datetime', $cols, true);
-
     $reqPrefix = isset($_GET['prefix']) ? strtolower(trim($_GET['prefix'])) : null;
     $validPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
@@ -51,8 +47,8 @@ try {
             $titleText = !empty($b['title']) ? $b['title'] : (!empty($b['caption']) ? $b['caption'] : 'ANRF PAIR Event Poster');
             $activeSlides[] = [
                 'src' => $b['image_path'],
-                'alt' => htmlspecialchars($titleText),
-                'caption' => '', // Hide auto-generated text overlay for poster slides as posters contain their own text
+                'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
+                'caption' => '',
                 'is_poster' => true
             ];
         }

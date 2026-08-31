@@ -1030,3 +1030,53 @@ h1, h2, h3, h4, h5, h6,
 .anrf-intro-heading-row h4, .anrf-intro-text h3 {
     border-bottom: none !important;
 }
+
+/* ============================================================
+   STRICT VECTOR & ICON QUALITY OPTIMIZATION — ENTIRE WEBSITE
+   ============================================================ */
+i.fa, i.fas, i.far, i.fab, i.fal, .fa, .fas, .far, .fab {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    font-style: normal !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Crisp rendering for SVGs */
+svg, .svg-icon {
+    shape-rendering: geometricPrecision !important;
+    text-rendering: optimizeLegibility !important;
+    image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* Sharp rendering for logos and emblems without quality degradation */
+img.logo-left-img,
+img.logo-pair-img,
+.logo-right img,
+.brand-logo img,
+.topbar-logo img,
+.login-logo {
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Perfect alignment & crispness for icon badges */
+.topbar-icon-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+.topbar-icon-badge i,
+.menu-bar-wrapper .nav.navbar-nav > li > a i,
+.child-navigation li a i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+}
+
