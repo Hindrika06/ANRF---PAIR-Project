@@ -1,0 +1,18 @@
+# Credentials & Secrets
+credentials.json
+.env
+*.pem
+*.key
+
+# Legacy Archives & Backups
+admin.zip
+
+# Dependencies & IDE/OS artifacts
+vendor/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# Temporary / Scratch
+scratch/

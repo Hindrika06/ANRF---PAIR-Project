@@ -99,7 +99,23 @@ function resolveAdminPrefix($requestedPrefix = null)
 
 function isSuperAdmin()
 {
-    return (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
+    return (isset($_SESSION['role']) && in_array($_SESSION['role'], ['super_admin', 'superadmin', 'hub_admin'], true));
+}
+
+function requireHubAdmin()
+{
+    if (!isSuperAdmin()) {
+        header("Location: dashboard.php");
+        exit();
+    }
+}
+
+function requireSpokeAdmin()
+{
+    if (!isset($_SESSION['username'])) {
+        header("Location: ../login.php");
+        exit();
+    }
 }
 
 /**

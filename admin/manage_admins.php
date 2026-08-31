@@ -16,18 +16,18 @@ if (empty($_SESSION['csrf_token'])) {
 $message = '';
 $success = false;
 
-// 1. HANDLE DELETE ACTION
-if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $userCsrf = $_GET['csrf_token'] ?? '';
+// 1. HANDLE DELETE ACTION (POST ONLY with CSRF validation)
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    $userCsrf = $_POST['csrf_token'] ?? '';
     if (empty($userCsrf) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
         $message = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        $delId = (int)$_GET['id'];
+        $delId = (int)$_POST['id'];
         $stmt = $pdo->prepare('SELECT role FROM users WHERE id = ?');
         $stmt->execute([$delId]);
         $uRole = $stmt->fetchColumn();
 
-        if ($uRole === 'super_admin') {
+        if (in_array($uRole, ['super_admin', 'superadmin', 'hub_admin'], true)) {
             $message = 'Error: Cannot delete Hub Super Admin account.';
         } else {
             $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
@@ -178,11 +178,16 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <button class="btn btn-warning btn-xs me-1" onclick="openEditAdminModal(<?= htmlspecialchars(json_encode($admin)) ?>)">
                                                 <i class="fa fa-pencil"></i> Edit
                                             </button>
-                                            <?php if ($admin['role'] !== 'super_admin'): ?>
-                                            <a href="<?= buildNavUrl('manage_admins.php?action=delete&id=' . $admin['id'] . '&csrf_token=' . $_SESSION['csrf_token']) ?>" class="btn btn-danger btn-xs" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Admin Account?', message: 'Are you sure you want to delete this Spoke Admin account? They will lose login access.', confirmText: 'Delete Account', onConfirm: function() { window.location.href = targetUrl; } });">
-                                                <i class="fa fa-trash"></i> Delete
-                                            </a>
-                                            <?php endif; ?>
+                                            <?php if (!in_array($admin['role'], ['super_admin', 'superadmin', 'hub_admin'], true)): ?>
+                                             <form method="POST" action="<?= buildNavUrl('manage_admins.php') ?>" style="display:inline-block;" id="deleteAdminForm_<?= (int)$admin['id'] ?>">
+                                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                                 <input type="hidden" name="action" value="delete">
+                                                 <input type="hidden" name="id" value="<?= (int)$admin['id'] ?>">
+                                                 <button type="button" class="btn btn-danger btn-xs" onclick="ANRFModal.confirm({ title: 'Delete Admin Account?', message: 'Are you sure you want to delete this Spoke Admin account? They will lose login access.', confirmText: 'Delete Account', onConfirm: function() { document.getElementById('deleteAdminForm_<?= (int)$admin['id'] ?>').submit(); } });">
+                                                     <i class="fa fa-trash"></i> Delete
+                                                 </button>
+                                             </form>
+                                             <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

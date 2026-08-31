@@ -1,6 +1,7 @@
 <?php
 require_once 'auth_check.php';
 require_once 'role_access.php';
+requireHubAdmin();
 
 date_default_timezone_set('Asia/Kolkata');
 require_once 'config/db.php';
