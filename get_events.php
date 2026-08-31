@@ -15,7 +15,7 @@ try {
     $params = [];
 
     // Filter by visibility/permissions
-    if (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin') {
+    if (isSuperAdmin()) {
         // Super Admin sees all published events (both public and university_only)
     } elseif (isset($_SESSION['institute_prefix'])) {
         // Logged-in regular admin sees public events, plus university_only events for their own university

@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = "Spoke Admin Login | ANRF–PAIR Project";
+$pageTitle = "Admin Portal Login | ANRF–PAIR Project";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -238,7 +238,7 @@ $pageTitle = "Spoke Admin Login | ANRF–PAIR Project";
     <div class="login-card">
         <!-- Center image logo -->
         <img src="2.png" alt="ANRF-PAIR Logo" class="login-logo">
-        <h2 class="login-title">SPOKE ADMIN</h2>
+        <h2 class="login-title">ADMIN PORTAL</h2>
         <p class="login-subtitle">SIGN IN TO DASHBOARD</p>
 
         <?php if ($error !== ""): ?>

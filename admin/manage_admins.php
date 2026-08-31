@@ -166,7 +166,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge <?= $admin['role'] === 'super_admin' ? 'bg-primary' : 'bg-info' ?>">
+                                            <span class="badge <?= ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin') ? 'bg-primary' : 'bg-info' ?>">
                                                 <?= htmlspecialchars(getRoleDisplayName($admin['role'])) ?>
                                             </span>
                                         </td>
@@ -314,7 +314,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fields: [
                 { label: 'Username / Email', value: admin.username, type: 'text', icon: 'fa-solid fa-user' },
                 { label: 'Assigned Institute', value: (admin.institute_prefix || '').toUpperCase(), type: 'badge', icon: 'fa-solid fa-building-columns' },
-                { label: 'Role Level', value: admin.role === 'super_admin' ? 'Hub Super Admin' : 'Spoke Institute Admin', type: 'text', icon: 'fa-solid fa-shield-alt' },
+                { label: 'Role Level', value: (admin.role === 'super_admin' || admin.role === 'superadmin') ? 'Hub Super Admin' : 'Spoke Institute Admin', type: 'text', icon: 'fa-solid fa-shield-alt' },
                 { label: 'Account Created', value: admin.created_at || 'N/A', icon: 'fa-solid fa-clock' }
             ]
         });
