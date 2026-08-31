@@ -5,15 +5,17 @@ session_start();
 // Include database configuration
 require_once 'admin/config/db.php';
 require_once 'admin/role_access.php';
+require_once 'events_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
+    syncAllEventStatuses($pdo);
     $where_clauses = ["publish_status = 1"];
     $params = [];
 
     // Filter by visibility/permissions
-    if (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin') {
+    if (isSuperAdmin()) {
         // Super Admin sees all published events (both public and university_only)
     } elseif (isset($_SESSION['institute_prefix'])) {
         // Logged-in regular admin sees public events, plus university_only events for their own university
@@ -44,7 +46,8 @@ try {
             'title'       => $row['title'],
             'time'        => $timeStr,
             'venue'       => $row['venue'],
-            'coordinator' => $coordinator
+            'coordinator' => $coordinator,
+            'status'      => getEventStatus($row)
         ];
 
         $startDate = $row['event_date'];

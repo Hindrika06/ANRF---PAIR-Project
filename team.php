@@ -48,7 +48,8 @@ if (!empty($others)) {
 }
 
 // Helper function to render a team card
-function renderTeamCard($m) {
+if (!function_exists('renderTeamCard')) {
+    function renderTeamCard($m) {
     $photo = !empty($m['profile_image']) && file_exists($m['profile_image']) ? $m['profile_image'] : null;
     $deptUni = [];
     if (!empty($m['department'])) $deptUni[] = $m['department'];
@@ -119,6 +120,7 @@ function renderTeamCard($m) {
         </div>
     </div>
     <?php
+}
 }
 ?>
 

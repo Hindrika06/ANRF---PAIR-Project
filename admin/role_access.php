@@ -99,7 +99,27 @@ function resolveAdminPrefix($requestedPrefix = null)
 
 function isSuperAdmin()
 {
-    return (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
+    if (!isset($_SESSION['role'])) {
+        return false;
+    }
+    $role = strtolower(trim($_SESSION['role']));
+    return in_array($role, ['super_admin', 'superadmin', 'hub_admin'], true);
+}
+
+function requireHubAdmin()
+{
+    if (!isSuperAdmin()) {
+        header("Location: dashboard.php");
+        exit();
+    }
+}
+
+function requireSpokeAdmin()
+{
+    if (!isset($_SESSION['username'])) {
+        header("Location: ../login.php");
+        exit();
+    }
 }
 
 /**
@@ -109,10 +129,11 @@ function isSuperAdmin()
  */
 function getRoleDisplayName($role, $uppercase = true)
 {
-    if ($role === 'super_admin') {
+    $roleLower = strtolower(trim((string)$role));
+    if (in_array($roleLower, ['super_admin', 'superadmin', 'hub_admin'], true)) {
         return $uppercase ? 'HUB ADMIN' : 'Hub Admin';
     }
-    if ($role === 'admin') {
+    if (in_array($roleLower, ['admin', 'spoke_admin', 'spokeadmin'], true)) {
         return $uppercase ? 'SPOKE ADMIN' : 'Spoke Admin';
     }
     return $uppercase ? strtoupper(str_replace('_', ' ', (string)$role)) : ucwords(str_replace('_', ' ', (string)$role));

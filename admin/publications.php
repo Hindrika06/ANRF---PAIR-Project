@@ -16,24 +16,34 @@ require_once 'config/db.php';
 $success = false;
 $error   = '';
 
+// Generate CSRF Token for Form Security
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // 1. HANDLE DELETE
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    if (isSuperAdmin()) {
-        $deletePrefix = $_GET['record_prefix'] ?? ($prefix !== 'all' ? $prefix : '');
+    $userCsrf = $_GET['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
     } else {
-        $deletePrefix = $_SESSION['institute_prefix'] ?? '';
-    }
+        if (isSuperAdmin()) {
+            $deletePrefix = $_GET['record_prefix'] ?? ($prefix !== 'all' ? $prefix : '');
+        } else {
+            $deletePrefix = $_SESSION['institute_prefix'] ?? '';
+        }
 
-    if (!in_array($deletePrefix, $allowedPrefixes, true) || !canEditInstitute($deletePrefix)) {
-        $error = 'You are not allowed to delete records for this institute.';
-    } else {
-        try {
-            $deleteTable = "{$deletePrefix}_publications";
-            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
-            $stmt->execute([':id' => (int)$_GET['id']]);
-            adminRedirect(['success_msg' => 'deleted']);
-        } catch (PDOException $e) {
-            $error = 'Failed to delete record: ' . $e->getMessage();
+        if (!in_array($deletePrefix, $allowedPrefixes, true) || !canEditInstitute($deletePrefix)) {
+            $error = 'You are not allowed to delete records for this institute.';
+        } else {
+            try {
+                $deleteTable = "{$deletePrefix}_publications";
+                $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
+                $stmt->execute([':id' => (int)$_GET['id']]);
+                adminRedirect(['success_msg' => 'deleted']);
+            } catch (PDOException $e) {
+                $error = 'Failed to delete record: ' . $e->getMessage();
+            }
         }
     }
 }
@@ -955,6 +965,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const urlParams = new URLSearchParams(window.location.search);
             urlParams.set('action', 'delete');
             urlParams.set('id', this.dataset.id);
+            urlParams.set('csrf_token', '<?= $_SESSION['csrf_token'] ?>');
             const recordPrefix = this.dataset.recordPrefix || this.dataset.prefix;
             if (recordPrefix) {
                 urlParams.set('record_prefix', recordPrefix);

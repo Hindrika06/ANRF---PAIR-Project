@@ -9,6 +9,10 @@ if (!isValidPrefix($prefix)) {
 }
 
 require_once 'config/db.php';
+require_once '../events_helper.php';
+
+// Sync event statuses based on current date/time (IST)
+syncAllEventStatuses($pdo);
 
 // Function to safely query counts
 if (!function_exists('getTableCount')) {

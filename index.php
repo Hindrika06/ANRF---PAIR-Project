@@ -45,7 +45,6 @@ try {
         $activeSlides = [];
         foreach ($banners as $b) {
             $titleText = !empty($b['title']) ? $b['title'] : (!empty($b['caption']) ? $b['caption'] : 'ANRF PAIR Event Poster');
-            $captionText = !empty($b['caption']) ? $b['caption'] : (!empty($b['title']) ? $b['title'] : '');
             $activeSlides[] = [
                 'src' => $b['image_path'],
                 'alt' => !empty($b['title']) ? $b['title'] : 'ANRF PAIR Event Poster',
@@ -53,7 +52,6 @@ try {
                 'is_poster' => true
             ];
         }
-        // Combine default group photo slide + scheduled active posters
         $sliderImages = array_merge($defaultSlide, $activeSlides);
     } else {
         $sliderImages = $defaultSlide;
@@ -65,6 +63,7 @@ try {
 
 <?php include 'header.php'; ?>
 
+<?php if (!empty($sliderImages)): ?>
 <!-- MAIN HOME SLIDER (EXACT ORIGINAL DESIGN SYSTEM) -->
 <section id="homepage-slider">
     <div class="main-slider">
@@ -108,6 +107,7 @@ try {
         <?php endif; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <?php include 'whatsnew.php'; ?>
 

@@ -39,7 +39,7 @@ $bodyClass = 'page-sub-page page-about-us'; include 'header.php';?>
                         <figure class="font-color-primary" style="margin-bottom: 5px;">Project</figure>
                         <h2 style="color: #BC2121; margin-bottom: 0; line-height: 1.2;">
                             <b><a style="color: black;">ANRF-PAIR</a><br>
-                            Anusunda National Research Foundation–Partnerships for Accelerated Innovation and Research</b>
+                            Anusandhan National Research Foundation–Partnerships for Accelerated Innovation and Research</b>
                         </h2>
                         <hr style="margin-top: 5px; margin-bottom: 15px;">
                         

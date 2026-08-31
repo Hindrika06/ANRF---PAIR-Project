@@ -35,12 +35,24 @@ include 'header.php';
                     : '';
                 $startTime = date("g:i A", strtotime($event['start_time']));
                 $endTime = date("g:i A", strtotime($event['end_time']));
+
+                $evtStatus = getEventStatus($event);
+                $statusLabel = strtoupper($evtStatus);
+                $badgeBg = '#dbeafe'; $badgeFg = '#1e40af'; // upcoming
+                if ($evtStatus === 'ongoing') {
+                    $badgeBg = '#fef3c7'; $badgeFg = '#92400e';
+                } elseif ($evtStatus === 'completed') {
+                    $badgeBg = '#d1fae5'; $badgeFg = '#065f46';
+                }
             ?>
 
             <!-- Event Title & Header Block -->
             <div style="background: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border-left: 5px solid #bc2121;">
                 <span style="display: inline-block; background: #bc2121; color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px;">
                     <?= htmlspecialchars($event['event_type']) ?>
+                </span>
+                <span style="display: inline-block; background: <?= $badgeBg ?>; color: <?= $badgeFg ?>; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px; margin-left: 6px;">
+                    <?= $statusLabel ?>
                 </span>
                 <h1 style="color: #1b3a6b; font-size: 26px; font-weight: 800; margin: 0 0 15px; line-height: 1.3;">
                     <?= htmlspecialchars($event['title']) ?>

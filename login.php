@@ -1,11 +1,32 @@
 <?php
 $rememberMe = isset($_POST['remember']);
-session_set_cookie_params($rememberMe ? (30 * 24 * 60 * 60) : 0);
-session_start();
+$cookieLifetime = $rememberMe ? (30 * 24 * 60 * 60) : 0;
+$isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+
+if (session_status() === PHP_SESSION_NONE) {
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'lifetime' => $cookieLifetime,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isSecure,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    } else {
+        session_set_cookie_params($cookieLifetime, '/; samesite=Lax', '', $isSecure, true);
+    }
+    session_start();
+}
 
 require_once 'config.php';
 
 $error = "";
+
+if (isset($_SESSION['login_error'])) {
+    $error = $_SESSION['login_error'];
+    unset($_SESSION['login_error']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
@@ -14,50 +35,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === '' || $password === '') {
         $error = "Please fill in all fields.";
     } else {
-        $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE username = ?");
-        $stmt->execute([$username]);
+        $stmt = $pdo->prepare("SELECT id, username, password, institute_prefix, role FROM users WHERE LOWER(username) = LOWER(?) OR username = ?");
+        $stmt->execute([$username, $username]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($row && !empty($row['role'])) {
+        // SEC-03: Authenticate strictly via password_verify(). Plaintext fallback removed.
+        if ($row && !empty($row['role']) && password_verify($password, $row['password'])) {
             $role = $row['role'];
 
-            if (password_verify($password, $row['password']) || $password === $row['password']) {
-                if ($password === $row['password'] && !password_verify($password, $row['password'])) {
-                    // Migrate plain-text password to hash on first login
-                    $newHash = password_hash($password, PASSWORD_DEFAULT);
-                    $update  = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-                    $update->execute([$newHash, $row['id']]);
-                }
-
-                // Generate cryptographically secure tab-isolated session token
-                $tabToken = bin2hex(random_bytes(32));
-                if (session_status() === PHP_SESSION_ACTIVE) {
-                    session_write_close();
-                }
-                session_id($tabToken);
-                session_start();
-
-                $_SESSION['tab_token']        = $tabToken;
-                $_SESSION['user_id']          = $row['id'];
-                $_SESSION['username']         = $row['username'];
-                $_SESSION['institute_prefix'] = $row['institute_prefix'];
-                $_SESSION['role']             = $role;
-                $_SESSION['active_prefix']    = $row['institute_prefix'];
-                $_SESSION['LAST_ACTIVITY']    = time();
-
-                header("Location: admin/dashboard.php?tab_token=" . urlencode($tabToken));
-                exit();
-            } else {
-                $error = "Invalid password!";
+            // Generate cryptographically secure tab-isolated session token
+            $tabToken = bin2hex(random_bytes(32));
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
             }
+            session_id($tabToken);
+            session_start();
+
+            // SEC-04: Regenerate session ID on login
+            session_regenerate_id(true);
+
+            $_SESSION['tab_token']        = $tabToken;
+            $_SESSION['user_id']          = $row['id'];
+            $_SESSION['username']         = $row['username'];
+            $_SESSION['institute_prefix'] = $row['institute_prefix'];
+            $_SESSION['role']             = $role;
+            $_SESSION['active_prefix']    = $row['institute_prefix'];
+            $_SESSION['LAST_ACTIVITY']    = time();
+
+            header("Location: admin/dashboard.php?tab_token=" . urlencode($tabToken));
+            exit();
         } else {
-            $error = "User not found!";
+            // SEC-04 / Security Hardening: Generic error message to prevent user enumeration
+            $error = "Invalid username/email or password.";
         }
     }
 }
 
-$pageTitle = "Spoke Admin Login | ANRF–PAIR Project";
+$pageTitle = "Admin Portal Login | ANRF–PAIR Project";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -223,7 +238,7 @@ $pageTitle = "Spoke Admin Login | ANRF–PAIR Project";
     <div class="login-card">
         <!-- Center image logo -->
         <img src="2.png" alt="ANRF-PAIR Logo" class="login-logo">
-        <h2 class="login-title">SPOKE ADMIN</h2>
+        <h2 class="login-title">ADMIN PORTAL</h2>
         <p class="login-subtitle">SIGN IN TO DASHBOARD</p>
 
         <?php if ($error !== ""): ?>
