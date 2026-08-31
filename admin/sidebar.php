@@ -83,6 +83,41 @@ $pagesActive = isSuperAdmin() && in_array($currentPage, [
     color: #bc2121 !important;
 }
 
+/* --- Strict Vector & Icon Quality Optimization (Admin) --- */
+.custom-sidebar .metismenu i,
+.custom-sidebar .metismenu .nav-arrow,
+.btn i,
+.table i,
+.card i,
+.badge i,
+.modal i,
+i.fas, i.far, i.fab, i.fa {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    font-style: normal !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Crisp rendering for admin logos & images */
+.brand-logo img,
+.header-profile img,
+.logo-img {
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Alignment for table action buttons & icons */
+.btn i, .btn span {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+}
+
 /* --- Global & Header Updates --- */
 .nav-header {
     display: flex !important;
