@@ -1038,7 +1038,6 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
                                     <li><a href="downloads.php"><i class="fa fa-download"></i> Downloads (Forms/SOPs)</a></li>
                                     <li><a href="conferences.php"><i class="fa fa-microphone"></i> Conferences</a></li>
                                     <li><a href="webinars.php"><i class="fa fa-video-camera"></i> Webinars</a></li>
-                                    <li><a href="progress_reports.php"><i class="fa fa-signal"></i> Progress Reports</a></li>
                                     <li><a href="gallery.php"><i class="fa fa-camera"></i> Photo &amp; Video Gallery</a></li>
                                 </ul>
                             </li>
