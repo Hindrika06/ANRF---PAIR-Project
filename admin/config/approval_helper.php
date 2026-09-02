@@ -210,3 +210,112 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
         return $combined;
     }
+
+    /**
+     * Fetches Real-time Approval Notifications for Super Admin & Spoke Admins
+     */
+    function getApprovalNotifications($pdo, $username, $isSuper = false) {
+        $notifications = [];
+        $pendingCount = 0;
+
+        try {
+            if ($isSuper) {
+                // 1. Pending count for Super Admin
+                $countStmt = $pdo->query("SELECT COUNT(*) FROM `approval_requests` WHERE status = 'Pending'");
+                $pendingCount = (int)$countStmt->fetchColumn();
+
+                // 2. Fetch top 15 recent approval requests for Super Admin
+                $stmt = $pdo->query("
+                    SELECT id, module_name, institute_prefix, action_type, requested_by, requested_at, status, approved_by, approved_at, rejection_reason
+                    FROM `approval_requests`
+                    ORDER BY COALESCE(approved_at, requested_at) DESC
+                    LIMIT 15
+                ");
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($rows as $r) {
+                    $time = $r['approved_at'] ?: $r['requested_at'];
+                    if ($r['status'] === 'Pending') {
+                        $title = "New Approval Request #" . $r['id'];
+                        $message = "Submitted by " . htmlspecialchars($r['requested_by']) . " (" . strtoupper($r['institute_prefix']) . ") for " . htmlspecialchars($r['module_name']) . " [" . $r['action_type'] . "]";
+                        $type = "warning";
+                    } elseif ($r['status'] === 'Approved') {
+                        $title = "Request #" . $r['id'] . " Approved";
+                        $message = "Approved by " . htmlspecialchars($r['approved_by'] ?: 'Super Admin') . " (" . htmlspecialchars($r['module_name']) . ")";
+                        $type = "success";
+                    } else {
+                        $title = "Request #" . $r['id'] . " Rejected";
+                        $message = "Rejected by " . htmlspecialchars($r['approved_by'] ?: 'Super Admin') . ($r['rejection_reason'] ? ": " . htmlspecialchars($r['rejection_reason']) : "");
+                        $type = "danger";
+                    }
+
+                    $notifications[] = [
+                        'id'           => (int)$r['id'],
+                        'title'        => $title,
+                        'message'      => $message,
+                        'status'       => $r['status'],
+                        'action_type'  => $r['action_type'],
+                        'module_name'  => $r['module_name'],
+                        'institute'    => strtoupper($r['institute_prefix']),
+                        'timestamp'    => $time,
+                        'type'         => $type,
+                        'link'         => 'approvals.php'
+                    ];
+                }
+            } else {
+                // 1. Pending count for Spoke Admin
+                $countStmt = $pdo->prepare("SELECT COUNT(*) FROM `approval_requests` WHERE requested_by = ? AND status = 'Pending'");
+                $countStmt->execute([$username]);
+                $pendingCount = (int)$countStmt->fetchColumn();
+
+                // 2. Fetch top 15 recent approval requests for Spoke Admin
+                $stmt = $pdo->prepare("
+                    SELECT id, module_name, institute_prefix, action_type, requested_by, requested_at, status, approved_by, approved_at, rejection_reason
+                    FROM `approval_requests`
+                    WHERE requested_by = ?
+                    ORDER BY COALESCE(approved_at, requested_at) DESC
+                    LIMIT 15
+                ");
+                $stmt->execute([$username]);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($rows as $r) {
+                    $time = $r['approved_at'] ?: $r['requested_at'];
+                    if ($r['status'] === 'Pending') {
+                        $title = "Request #" . $r['id'] . " Awaiting Review";
+                        $message = "Your " . htmlspecialchars($r['action_type']) . " request for " . htmlspecialchars($r['module_name']) . " is pending Hub Admin approval.";
+                        $type = "warning";
+                    } elseif ($r['status'] === 'Approved') {
+                        $title = "Request #" . $r['id'] . " Approved!";
+                        $message = "Your request for " . htmlspecialchars($r['module_name']) . " has been approved & published by Hub Admin.";
+                        $type = "success";
+                    } else {
+                        $title = "Request #" . $r['id'] . " Rejected";
+                        $message = "Your request for " . htmlspecialchars($r['module_name']) . " was rejected" . ($r['rejection_reason'] ? ": " . htmlspecialchars($r['rejection_reason']) : ".");
+                        $type = "danger";
+                    }
+
+                    $notifications[] = [
+                        'id'           => (int)$r['id'],
+                        'title'        => $title,
+                        'message'      => $message,
+                        'status'       => $r['status'],
+                        'action_type'  => $r['action_type'],
+                        'module_name'  => $r['module_name'],
+                        'institute'    => strtoupper($r['institute_prefix']),
+                        'timestamp'    => $time,
+                        'type'         => $type,
+                        'link'         => 'approvals.php'
+                    ];
+                }
+            }
+        } catch (Exception $e) {
+            // Silence exception and return empty array
+        }
+
+        return [
+            'pending_count' => $pendingCount,
+            'notifications' => $notifications
+        ];
+    }
+
