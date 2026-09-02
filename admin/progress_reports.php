@@ -338,7 +338,7 @@ $instituteFullName = getInstituteFullName($prefix);
 
 // ROLE-BASED STRICT THEME COLOR DEFINITION
 $isSuper = isSuperAdmin();
-$primaryThemeColor = $isSuper ? '#024283' : '#7a0e0e';
+$primaryThemeColor = $isSuper ? '#024283' : '#bc2121';
 $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
 ?>
 <?php include 'nav_header.php'; ?>
@@ -348,38 +348,202 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
 
 <style>
 .btn-theme-red {
-    background-color: #7a0e0e !important;
-    border-color: #7a0e0e !important;
-    color: #ffffff !important;
-}
-.btn-theme-red:hover, .btn-theme-red:focus {
     background-color: #bc2121 !important;
     border-color: #bc2121 !important;
     color: #ffffff !important;
 }
+.btn-theme-red:hover, .btn-theme-red:focus {
+    background-color: #a01b1b !important;
+    border-color: #a01b1b !important;
+    color: #ffffff !important;
+}
 .btn-outline-theme-red {
-    border-color: #7a0e0e !important;
-    color: #7a0e0e !important;
+    border-color: #bc2121 !important;
+    color: #bc2121 !important;
 }
 .btn-outline-theme-red:hover {
-    background-color: #7a0e0e !important;
+    background-color: #bc2121 !important;
     color: #ffffff !important;
 }
 .progress-report-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     background: #ffffff;
+    overflow: hidden;
 }
 .kpi-row-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+/* ── EQUAL SIZE MINIMAL KPI SELECTION BUTTONS ── */
+.btn-kpi-select {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 175px !important;
+    width: 175px !important;
+    height: 36px !important;
+    padding: 0 12px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+.btn-primary.btn-kpi-select {
+    background-color: #024283 !important;
+    border-color: #024283 !important;
+    color: #ffffff !important;
+}
+.btn-primary.btn-kpi-select:hover {
+    background-color: #0856a4 !important;
+    border-color: #0856a4 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(2, 66, 131, 0.2) !important;
+}
+.btn-kpi-select i {
+    margin-right: 8px !important;
+    font-size: 0.78rem !important;
+}
+.btn-kpi-select:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+
+/* ── BOTTOM ACTION BUTTONS ── */
+.btn-action-draft {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 150px !important;
+    padding: 0 22px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-draft:hover {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.btn-action-submit {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 190px !important;
+    padding: 0 22px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    background: #09BD3C !important;
+    color: #ffffff !important;
+    border: 1.5px solid #09BD3C !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(9, 189, 60, 0.25) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-submit:hover {
+    background: #07a033 !important;
+    border-color: #07a033 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(9, 189, 60, 0.35) !important;
+    transform: translateY(-1px) !important;
+}
+.btn-action-save-super {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 155px !important;
+    padding: 0 20px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    background: #024283 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #024283 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(2, 66, 131, 0.22) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-save-super:hover {
+    background: #0856a4 !important;
+    border-color: #0856a4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(8, 86, 164, 0.32) !important;
+    transform: translateY(-1px) !important;
+}
+.btn-action-approve-super {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 140px !important;
+    padding: 0 20px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    background: #09BD3C !important;
+    color: #ffffff !important;
+    border: 1.5px solid #09BD3C !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(9, 189, 60, 0.22) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-approve-super:hover {
+    background: #07a033 !important;
+    border-color: #07a033 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(9, 189, 60, 0.32) !important;
+    transform: translateY(-1px) !important;
+}
+.btn-action-reject-super {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 140px !important;
+    padding: 0 20px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    background: #bc2121 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #bc2121 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(188, 33, 33, 0.22) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-reject-super:hover {
+    background: #a01b1b !important;
+    border-color: #a01b1b !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(160, 27, 27, 0.32) !important;
+    transform: translateY(-1px) !important;
+}
+.btn-action-super {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 42px !important;
+    min-width: 140px !important;
+    padding: 0 20px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
 </style>
 
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
-
             <?php include 'institute_banner.php'; ?>
 
             <!-- Notifications -->
@@ -398,19 +562,17 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
             <?php endif; ?>
 
             <!-- ONE SINGLE COMPACT FORM CARD FOR THE ENTIRE PROGRESS REPORT -->
-            <div class="card progress-report-card shadow-sm mb-5">
-                <div class="card-header text-white py-3" style="background: <?= $primaryThemeColor ?> !important;">
+            <div class="card progress-report-card shadow-sm mb-5" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <div class="card-header py-3" style="background: <?= $isSuper ? 'linear-gradient(135deg, #024283, #0856a4)' : '#bc2121' ?> !important; border-bottom: none;">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="card-title text-white mb-0 font-weight-bold">
-                            <i class="fas fa-file-alt me-2"></i> Progress Report
+                        <h4 class="card-title text-white mb-0 font-weight-bold" style="font-size: 1.05rem; color: #ffffff !important;">
+                            <i class="fas fa-file-alt me-2"></i> Progress Report Details
                         </h4>
                         <div>
                             <?php if ($reportStatus === 'Approved'): ?>
-                                <span class="badge bg-success fs-6 p-2"><i class="fas fa-check-circle me-1"></i> Approved</span>
+                                <span class="badge rounded-pill px-3 py-2 ms-1" style="background-color: #dcfce7 !important; color: #166534 !important; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0;"><i class="fas fa-check-circle me-1"></i> Approved</span>
                             <?php elseif ($reportStatus === 'Rejected'): ?>
-                                <span class="badge bg-danger fs-6 p-2"><i class="fas fa-times-circle me-1"></i> Rejected</span>
-                            <?php else: ?>
-                                <span class="badge bg-warning text-dark fs-6 p-2"><i class="fas fa-clock me-1"></i> Pending Approval</span>
+                                <span class="badge rounded-pill px-3 py-2 ms-1" style="background-color: #fee2e2 !important; color: #991b1b !important; font-size: 12px; font-weight: 700; border: 1px solid #fecaca;"><i class="fas fa-times-circle me-1"></i> Rejected</span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -422,7 +584,9 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         <input type="hidden" name="report_id" value="<?= $selectedReportId ?>">
 
                         <!-- REPORT DETAILS -->
-                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2">Report Details</h5>
+                        <h5 class="font-weight-bold mb-3 border-bottom pb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569;">
+                            <i class="fas fa-info-circle me-2" style="color: <?= $primaryThemeColor ?>;"></i> Report Details
+                        </h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label font-weight-bold text-dark mb-1">Project Title <span class="text-danger">*</span></label>
@@ -464,14 +628,16 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         <hr class="my-4">
 
                         <!-- KPI SELECTION -->
-                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2"><i class="fas fa-chart-line me-2" style="color: <?= $primaryThemeColor ?>;"></i> Key Performance Indicators</h5>
+                        <h5 class="font-weight-bold mb-3 border-bottom pb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569;">
+                            <i class="fas fa-chart-line me-2" style="color: <?= $primaryThemeColor ?>;"></i> Key Performance Indicators
+                        </h5>
 
                         <!-- Publications -->
-                        <div class="mb-4 border rounded bg-white">
-                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                        <div class="mb-4 border rounded bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; overflow: hidden;">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Publications</label>
-                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('publications')">
-                                    <i class="fas fa-plus me-1"></i> Select Publications
+                                <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('publications')">
+                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Publications
                                 </button>
                             </div>
                             <input type="hidden" name="selected_publication_ids" id="selected_publication_ids" value='<?= json_encode($pubIds) ?>'>
@@ -479,11 +645,11 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         </div>
 
                         <!-- Conferences -->
-                        <div class="mb-4 border rounded bg-white">
-                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                        <div class="mb-4 border rounded bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; overflow: hidden;">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Conferences</label>
-                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('conferences')">
-                                    <i class="fas fa-plus me-1"></i> Select Conferences
+                                <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('conferences')">
+                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Conferences
                                 </button>
                             </div>
                             <input type="hidden" name="selected_conference_ids" id="selected_conference_ids" value='<?= json_encode($confIds) ?>'>
@@ -491,11 +657,11 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         </div>
 
                         <!-- Webinars -->
-                        <div class="mb-4 border rounded bg-white">
-                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                        <div class="mb-4 border rounded bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; overflow: hidden;">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Webinars</label>
-                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('webinars')">
-                                    <i class="fas fa-plus me-1"></i> Select Webinars
+                                <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('webinars')">
+                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Webinars
                                 </button>
                             </div>
                             <input type="hidden" name="selected_webinar_ids" id="selected_webinar_ids" value='<?= json_encode($webIds) ?>'>
@@ -503,11 +669,11 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         </div>
 
                         <!-- Internships -->
-                        <div class="mb-4 border rounded bg-white">
-                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                        <div class="mb-4 border rounded bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; overflow: hidden;">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Internships</label>
-                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('internships')">
-                                    <i class="fas fa-plus me-1"></i> Select Internships
+                                <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('internships')">
+                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Internships
                                 </button>
                             </div>
                             <input type="hidden" name="selected_internship_ids" id="selected_internship_ids" value='<?= json_encode($intIds) ?>'>
@@ -515,11 +681,11 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         </div>
 
                         <!-- Patents -->
-                        <div class="mb-4 border rounded bg-white">
-                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                        <div class="mb-4 border rounded bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; overflow: hidden;">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Patents</label>
-                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('patents')">
-                                    <i class="fas fa-plus me-1"></i> Select Patents
+                                <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('patents')">
+                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Patents
                                 </button>
                             </div>
                             <input type="hidden" name="selected_patent_ids" id="selected_patent_ids" value='<?= json_encode($patIds) ?>'>
@@ -529,20 +695,22 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         <hr class="my-4">
 
                         <!-- CAPACITY BUILDING -->
-                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2"><i class="fas fa-graduation-cap me-2" style="color: <?= $primaryThemeColor ?>;"></i> Capacity Building</h5>
+                        <h5 class="font-weight-bold mb-3 border-bottom pb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569;">
+                            <i class="fas fa-graduation-cap me-2" style="color: <?= $primaryThemeColor ?>;"></i> Capacity Building
+                        </h5>
 
-                        <div class="mb-3 border rounded p-3 bg-light">
+                        <div class="mb-3 border rounded p-3 bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; background: #ffffff !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" name="include_workshops" id="chkWorkshops" value="1" <?= $chkWshops ? 'checked' : '' ?> onchange="toggleCapacitySection('workshopsGroup', this.checked)">
-                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkWorkshops">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkWorkshops" style="cursor: pointer;">
                                     Workshops / Conferences Conducted
                                 </label>
                             </div>
                             <div id="workshopsGroup" class="ms-4 mt-2" style="display: <?= $chkWshops ? 'block' : 'none' ?>;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                     <span class="text-muted small">Select workshop/conference records conducted under capacity building:</span>
-                                    <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('workshops')">
-                                        <i class="fas fa-plus me-1"></i> Select Workshops / Conferences
+                                    <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('workshops')">
+                                        <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Workshops
                                     </button>
                                 </div>
                                 <input type="hidden" name="selected_workshop_ids" id="selected_workshop_ids" value='<?= json_encode($wshopIds) ?>'>
@@ -550,18 +718,18 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             </div>
                         </div>
 
-                        <div class="mb-3 border rounded p-3 bg-light">
+                        <div class="mb-3 border rounded p-3 bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; background: #ffffff !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" name="include_training" id="chkTraining" value="1" <?= $chkTraining ? 'checked' : '' ?> onchange="toggleCapacitySection('trainingGroup', this.checked)">
-                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkTraining">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkTraining" style="cursor: pointer;">
                                     Training Programs Conducted
                                 </label>
                             </div>
                             <div id="trainingGroup" class="ms-4 mt-2" style="display: <?= $chkTraining ? 'block' : 'none' ?>;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                     <span class="text-muted small">Select training program / webinar records conducted:</span>
-                                    <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('trainings')">
-                                        <i class="fas fa-plus me-1"></i> Select Training Programs
+                                    <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('trainings')">
+                                        <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Trainings
                                     </button>
                                 </div>
                                 <input type="hidden" name="selected_training_ids" id="selected_training_ids" value='<?= json_encode($trainIds) ?>'>
@@ -569,10 +737,10 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             </div>
                         </div>
 
-                        <div class="mb-4 border rounded p-3 bg-light">
+                        <div class="mb-4 border rounded p-3 bg-white" style="border-radius: 10px !important; border-color: #e2e8f0 !important; background: #ffffff !important; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" name="include_interns" id="chkInterns" value="1" <?= $chkInterns ? 'checked' : '' ?> onchange="toggleCapacitySection('internsGroup', this.checked)">
-                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkInterns">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkInterns" style="cursor: pointer;">
                                     Number of Interns Trained
                                 </label>
                             </div>
@@ -582,7 +750,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                                         <label class="form-label font-weight-bold text-dark mb-0">Number of Interns Trained:</label>
                                     </div>
                                     <div class="col-auto">
-                                        <input type="number" min="0" name="interns_trained_count" class="form-control font-weight-bold" style="width: 150px;" value="<?= $valInternsCount ?>">
+                                        <input type="number" min="0" name="interns_trained_count" class="form-control font-weight-bold" style="width: 150px; border-radius: 6px;" value="<?= $valInternsCount ?>">
                                     </div>
                                 </div>
                             </div>
@@ -594,38 +762,35 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <div>
                                 <?php if ($selectedReportId > 0 && isSuperAdmin()): ?>
-                                    <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteReport();">
-                                        <i class="fas fa-trash-alt me-1"></i> Delete Report
+                                    <button type="button" class="btn btn-outline-danger btn-action-super" onclick="confirmDeleteReport();">
+                                        <i class="fas fa-trash-alt me-1.5"></i> Delete Report
                                     </button>
                                 <?php endif; ?>
                             </div>
 
-                            <div class="d-flex gap-2 flex-wrap">
+                            <div class="d-flex gap-3 flex-wrap align-items-center">
                                 <?php if (!isSuperAdmin()): ?>
                                     <!-- SPOKE ADMIN BUTTONS -->
-                                    <button type="submit" name="action" value="save_report" class="btn btn-outline-secondary btn-lg px-4 font-weight-bold">
-                                        <i class="fas fa-save me-2"></i> Save Draft
-                                    </button>
-                                    <button type="submit" name="action" value="submit_approval" class="btn <?= $btnThemeClass ?> btn-lg px-4 font-weight-bold">
+                                    <button type="submit" name="action" value="submit_approval" class="btn btn-action-submit">
                                         <i class="fas fa-paper-plane me-2"></i> Submit for Approval
                                     </button>
                                 <?php else: ?>
-                                    <!-- SUPER ADMIN BUTTONS -->
-                                    <button type="submit" name="action" value="save_report" class="btn btn-secondary btn-lg px-4 font-weight-bold">
+                                    <!-- SUPER ADMIN / HUB ADMIN BUTTONS -->
+                                    <button type="submit" name="action" value="save_report" class="btn btn-action-save-super">
                                         <i class="fas fa-save me-2"></i> Save Changes
                                     </button>
                                     <?php if ($reportStatus !== 'Approved'): ?>
-                                        <button type="submit" name="action" value="approve_report" class="btn btn-success btn-lg px-4 font-weight-bold">
+                                        <button type="submit" name="action" value="approve_report" class="btn btn-action-approve-super">
                                             <i class="fas fa-check-circle me-2"></i> Approve
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($reportStatus !== 'Rejected'): ?>
-                                        <button type="submit" name="action" value="reject_report" class="btn btn-danger btn-lg px-4 font-weight-bold">
+                                        <button type="submit" name="action" value="reject_report" class="btn btn-action-reject-super">
                                             <i class="fas fa-times-circle me-2"></i> Reject
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($reportStatus === 'Approved' && $selectedReportId > 0): ?>
-                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $selectedReportId ?>" target="_blank" class="btn btn-primary btn-lg px-4 font-weight-bold">
+                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $selectedReportId ?>" target="_blank" class="btn btn-primary btn-action-super">
                                             <i class="fas fa-file-pdf me-2"></i> Export PDF
                                         </a>
                                     <?php endif; ?>
@@ -659,10 +824,10 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
             </div>
             <div class="modal-body p-3">
                 <!-- Search Box -->
-                <div class="input-group mb-3">
-                    <input type="text" id="kpiSearchInput" class="form-control" placeholder="Search records..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
-                    <button class="btn <?= $btnThemeClass ?> font-weight-bold" type="button" onclick="performKpiSearch()">
-                        <i class="fas fa-search me-1"></i> Search
+                <div class="input-group mb-3" style="border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1;">
+                    <input type="text" id="kpiSearchInput" class="form-control border-0 shadow-none px-3" placeholder="Search records by title, PI, or keywords..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
+                    <button class="btn <?= $btnThemeClass ?> font-weight-bold px-4" type="button" onclick="performKpiSearch()">
+                        <i class="fas fa-search me-1.5"></i> Search
                     </button>
                 </div>
 
@@ -786,15 +951,15 @@ function renderCategoryDisplay(cat) {
 
     var html = '<div class="list-group gap-2">';
     items.forEach(function(it, idx) {
-        html += '<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center rounded border p-2 bg-light">';
+        html += '<div class="list-group-item d-flex justify-content-between align-items-center rounded-3 border p-2.5" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">';
         html += '  <div>';
-        html += '    <div class="font-weight-bold text-dark"><i class="fas fa-check-square text-success me-1"></i> ' + escapeHtml(it.title) + (it.task_no ? ' <span class="badge bg-secondary ms-1">Task: ' + escapeHtml(it.task_no) + '</span>' : '') + '</div>';
+        html += '    <div class="font-weight-bold text-dark mb-0.5"><i class="fas fa-check-circle text-success me-1.5"></i> ' + escapeHtml(it.title) + (it.task_no ? ' <span class="badge ms-1.5" style="background-color: #e2e8f0; color: #334155; font-weight: 600; font-size: 0.72rem;">Task: ' + escapeHtml(it.task_no) + '</span>' : '') + '</div>';
         if (it.subtitle) {
-            html += '    <div class="small text-muted ms-3">' + escapeHtml(it.subtitle) + '</div>';
+            html += '    <div class="small text-muted ms-4">' + escapeHtml(it.subtitle) + '</div>';
         }
         html += '  </div>';
         html += '  <div>';
-        html += '    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(\'' + cat + '\', ' + it.id + ')">';
+        html += '    <button type="button" class="btn btn-sm btn-outline-danger font-weight-bold px-2.5 py-1" style="font-size: 0.75rem; border-radius: 6px;" onclick="removeItem(\'' + cat + '\', ' + it.id + ')">';
         html += '      <i class="fas fa-trash-alt me-1"></i> Remove';
         html += '    </button>';
         html += '  </div>';

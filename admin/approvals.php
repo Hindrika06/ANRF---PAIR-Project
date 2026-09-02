@@ -112,6 +112,135 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
 <?php include 'sidebar.php'; ?>
 <?php include 'loader.php'; ?>
 
+<style>
+/* ── HUB ADMIN APPROVAL BUTTON COLORS & SIZING ── */
+.btn-appr-details,
+.btn-appr-approve,
+.btn-appr-reject {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 36px !important;
+    padding: 0 14px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+.btn-appr-details i,
+.btn-appr-approve i,
+.btn-appr-reject i {
+    margin-right: 6px !important;
+    font-size: 0.78rem !important;
+}
+.btn-appr-details {
+    background: #024283 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #024283 !important;
+    box-shadow: 0 2px 6px rgba(2, 66, 131, 0.2) !important;
+}
+.btn-appr-details:hover {
+    background: #0856a4 !important;
+    border-color: #0856a4 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(2, 66, 131, 0.3) !important;
+}
+.btn-appr-approve {
+    background: #09BD3C !important;
+    color: #ffffff !important;
+    border: 1.5px solid #09BD3C !important;
+    box-shadow: 0 2px 6px rgba(9, 189, 60, 0.2) !important;
+}
+.btn-appr-approve:hover {
+    background: #07a033 !important;
+    border-color: #07a033 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(9, 189, 60, 0.35) !important;
+}
+.btn-appr-reject {
+    background: #bc2121 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #bc2121 !important;
+    box-shadow: 0 2px 6px rgba(188, 33, 33, 0.2) !important;
+}
+.btn-appr-reject:hover {
+    background: #a01b1b !important;
+    border-color: #a01b1b !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(188, 33, 33, 0.35) !important;
+}
+
+/* ── BADGES ── */
+.badge-inst-hub {
+    display: inline-block !important;
+    background-color: #024283 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    letter-spacing: 0.03em !important;
+}
+.badge-act-create {
+    display: inline-block !important;
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+}
+.badge-act-update {
+    display: inline-block !important;
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+}
+.badge-act-delete {
+    display: inline-block !important;
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+}
+
+/* ── HIGH VISIBILITY TABLE TEXT & HEADER BACKGROUND ── */
+.table-header-custom th {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    padding: 12px 16px !important;
+    vertical-align: middle !important;
+}
+.table td, .table th {
+    color: #0f172a !important;
+}
+.text-dark-visible {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+.text-muted-visible {
+    color: #334155 !important;
+    font-weight: 500 !important;
+}
+</style>
+
 <div id="main-wrapper">
     <div class="content-body default-height">
         <div class="container-fluid">
@@ -171,13 +300,15 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                 
                 <!-- Pending Approvals Card -->
                 <div class="card mb-4">
-                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(90deg, #B71C1C, #C62828) !important;">
-                        <h4 class="card-title mb-0" style="color: #ffffff !important; font-weight: 700;">Pending Approvals (<?= count($pendingRequests) ?>)</h4>
+                    <div class="card-header text-white py-3 d-flex align-items-center" style="background: linear-gradient(135deg, #024283, #0856a4) !important;">
+                        <h4 class="card-title mb-0 text-white font-weight-bold" style="color: #ffffff !important; font-size: 1.05rem;">
+                            <i class="fas fa-clock me-2"></i> Pending Approvals (<?= count($pendingRequests) ?>)
+                        </h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="thead-dark">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-header-custom">
                                     <tr>
                                         <th>ID</th>
                                         <th>Requester</th>
@@ -185,7 +316,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                         <th>Module</th>
                                         <th>Action</th>
                                         <th>Date Submitted</th>
-                                        <th style="width: 250px; text-align: center;">Review Actions</th>
+                                        <th style="width: 280px; text-align: center;">Review Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -196,21 +327,31 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                     <?php else: ?>
                                         <?php foreach ($pendingRequests as $r): ?>
                                             <tr>
-                                                <td><strong>#<?= $r['id'] ?></strong></td>
-                                                <td><?= htmlspecialchars($r['requested_by']) ?></td>
-                                                <td><span class="badge bg-secondary"><?= htmlspecialchars(strtoupper($r['institute_prefix'])) ?></span></td>
-                                                <td><?= htmlspecialchars($r['module_name']) ?></td>
+                                                <td><strong class="text-dark-visible"><?= $r['id'] ?></strong></td>
+                                                <td><span class="text-dark-visible"><?= htmlspecialchars($r['requested_by']) ?></span></td>
+                                                <td><span class="badge-inst-hub"><?= htmlspecialchars(strtoupper($r['institute_prefix'])) ?></span></td>
+                                                <td><span class="text-dark-visible"><?= htmlspecialchars($r['module_name']) ?></span></td>
                                                 <td>
-                                                    <span class="badge <?= $r['action_type'] === 'CREATE' ? 'bg-success text-white' : ($r['action_type'] === 'UPDATE' ? 'bg-warning text-dark' : 'bg-danger text-white') ?>">
-                                                        <?= htmlspecialchars($r['action_type']) ?>
-                                                    </span>
+                                                    <?php if ($r['action_type'] === 'CREATE'): ?>
+                                                        <span class="badge-act-create">CREATE</span>
+                                                    <?php elseif ($r['action_type'] === 'UPDATE'): ?>
+                                                        <span class="badge-act-update">UPDATE</span>
+                                                    <?php else: ?>
+                                                        <span class="badge-act-delete"><?= htmlspecialchars($r['action_type']) ?></span>
+                                                    <?php endif; ?>
                                                 </td>
-                                                <td><?= htmlspecialchars($r['requested_at']) ?></td>
+                                                <td><span class="text-muted-visible"><?= htmlspecialchars($r['requested_at']) ?></span></td>
                                                 <td>
                                                     <div class="d-flex gap-2 justify-content-center">
-                                                        <button class="btn btn-xs btn-info" onclick="showDetails(<?= $r['id'] ?>)">View Details</button>
-                                                        <button type="button" class="btn btn-success btn-xs text-white" onclick="openApproveModal(<?= $r['id'] ?>)">Approve</button>
-                                                        <button class="btn btn-xs btn-danger" onclick="openRejectModal(<?= $r['id'] ?>)">Reject</button>
+                                                        <button class="btn btn-appr-details" onclick="showDetails(<?= $r['id'] ?>)">
+                                                            <i class="fas fa-eye me-1.5" style="font-size: 0.75rem;"></i> View Details
+                                                        </button>
+                                                        <button type="button" class="btn btn-appr-approve" onclick="openApproveModal(<?= $r['id'] ?>)">
+                                                            <i class="fas fa-check me-1.5" style="font-size: 0.75rem;"></i> Approve
+                                                        </button>
+                                                        <button type="button" class="btn btn-appr-reject" onclick="openRejectModal(<?= $r['id'] ?>)">
+                                                            <i class="fas fa-times me-1.5" style="font-size: 0.75rem;"></i> Reject
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -229,8 +370,8 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-header-custom">
                                     <tr>
                                         <th>ID</th>
                                         <th>Requester</th>
@@ -250,7 +391,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                     <?php else: ?>
                                         <?php foreach ($historyRequests as $r): ?>
                                             <tr>
-                                                <td>#<?= $r['id'] ?></td>
+                                                <td><?= $r['id'] ?></td>
                                                 <td><?= htmlspecialchars($r['requested_by']) ?></td>
                                                 <td><?= htmlspecialchars($r['module_name']) ?></td>
                                                 <td>
@@ -291,8 +432,8 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-header-custom">
                                     <tr>
                                         <th>ID</th>
                                         <th>Module</th>
@@ -311,7 +452,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                     <?php else: ?>
                                         <?php foreach ($myRequests as $r): ?>
                                             <tr>
-                                                <td>#<?= $r['id'] ?></td>
+                                                <td><?= $r['id'] ?></td>
                                                 <td><strong><?= htmlspecialchars($r['module_name']) ?></strong></td>
                                                 <td>
                                                     <span class="badge <?= $r['action_type'] === 'CREATE' ? 'bg-success text-white' : ($r['action_type'] === 'UPDATE' ? 'bg-warning text-dark' : 'bg-danger text-white') ?>">
