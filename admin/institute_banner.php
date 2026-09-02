@@ -153,5 +153,5 @@ $__ownPrefix    = $_SESSION['institute_prefix'] ?? '';
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
-.badge-super { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #fff; }
+.badge-super { background: #28a745 !important; color: #fff; }
 </style>

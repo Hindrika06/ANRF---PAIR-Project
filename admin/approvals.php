@@ -131,6 +131,18 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                     <strong>Success!</strong> <?= htmlspecialchars($success_msg) ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (window.ANRFToast) {
+                            ANRFToast.show({
+                                title: 'Approval Updated',
+                                message: <?= json_encode($success_msg) ?>,
+                                type: 'success',
+                                duration: 6000
+                            });
+                        }
+                    });
+                </script>
             <?php endif; ?>
 
             <?php if (!empty($error_msg)): ?>
@@ -138,6 +150,18 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                     <strong>Error:</strong> <?= htmlspecialchars($error_msg) ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (window.ANRFToast) {
+                            ANRFToast.show({
+                                title: 'Approval Error',
+                                message: <?= json_encode($error_msg) ?>,
+                                type: 'danger',
+                                duration: 6000
+                            });
+                        }
+                    });
+                </script>
             <?php endif; ?>
 
             <?php if ($is_super): ?>
