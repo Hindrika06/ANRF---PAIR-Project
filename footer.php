@@ -112,13 +112,11 @@ $uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
         </div>
     </section><!-- /#footer-content -->
 
-    <!-- Bottom bar: copyright + developer credit (Centered) -->
+    <!-- Bottom bar: copyright -->
     <section id="footer-bottom" style="position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; width: 100vw; max-width: 100vw; background-color: #012447; padding: 16px 0; border-top: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; clear: both; overflow: hidden; text-align: center;">
         <div class="container" style="max-width: 1170px; margin: 0 auto; padding: 0 15px; text-align: center;">
-            <div class="footer-bottom-info" style="text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
-                <div>
-                    &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. <span class="nowrap">All rights reserved.</span>
-                </div>
+            <div class="footer-bottom-info" style="text-align: center; margin: 0 auto; color: rgba(255, 255, 255, 0.75); font-size: 12px; line-height: 1.6;">
+                &copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved.
             </div>
         </div><!-- /.container -->
     </section><!-- /#footer-bottom -->
