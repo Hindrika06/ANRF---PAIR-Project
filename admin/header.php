@@ -609,6 +609,7 @@ $__activeInstContext = getActiveInstituteContext();
         }
         /* --- NOTIFICATION BELL BUTTON STYLES --- */
         .nav-notification-bell-btn {
+            position: relative;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -624,6 +625,86 @@ $__activeInstContext = getActiveInstituteContext();
             box-shadow: 0 2px 6px rgba(198, 40, 40, 0.2);
             padding: 0;
         }
+
+        .nav-notification-bell-btn .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background-color: #ef4444;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+            line-height: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .dropdown-menu-notifications {
+            width: 330px;
+            max-width: 90vw;
+        }
+
+        .notification-item:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* --- TOAST POPUP CONTAINER --- */
+        .anrf-toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .anrf-toast {
+            pointer-events: auto;
+            min-width: 300px;
+            max-width: 380px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 16px;
+            gap: 12px;
+            border-left: 4px solid #3b82f6;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .anrf-toast-show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .anrf-toast-hiding {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .anrf-toast-success { border-left-color: #10b981; }
+        .anrf-toast-danger { border-left-color: #ef4444; }
+        .anrf-toast-warning { border-left-color: #f59e0b; }
+        .anrf-toast-info { border-left-color: #3b82f6; }
+
+        .anrf-toast-icon { font-size: 20px; margin-top: 2px; }
+        .anrf-toast-success .anrf-toast-icon { color: #10b981; }
+        .anrf-toast-danger .anrf-toast-icon { color: #ef4444; }
+        .anrf-toast-warning .anrf-toast-icon { color: #f59e0b; }
+        .anrf-toast-info .anrf-toast-icon { color: #3b82f6; }
+
+        .anrf-toast-content { flex-grow: 1; }
+        .anrf-toast-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 2px; }
+        .anrf-toast-message { font-size: 12px; color: #475569; line-height: 1.3; }
+        .anrf-toast-close { background: none; border: 0; font-size: 18px; color: #94a3b8; cursor: pointer; padding: 0; line-height: 1; }
+        .anrf-toast-close:hover { color: #0f172a; }
 
         .nav-notification-bell-btn i {
             font-size: 18px;
@@ -1137,10 +1218,16 @@ $__activeInstContext = getActiveInstituteContext();
 							</li>
 						
 							<!-- Notification Bell Icon (between search bar and profile image) -->
-							<li class="nav-item d-flex align-items-center" style="margin-left: 15px;">
-								<button type="button" class="nav-notification-bell-btn" title="Notifications" aria-label="Notifications">
+							<li class="nav-item d-flex align-items-center" style="margin-left: 15px; position: relative;">
+								<button type="button" class="nav-notification-bell-btn" id="notificationDropdownTrigger" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
 									<i class="fas fa-bell"></i>
+									<span class="notification-badge" style="display: none;">0</span>
 								</button>
+								
+								<!-- Notification Dropdown Menu -->
+								<div class="dropdown-menu-custom dropdown-menu-notifications" id="notificationDropdownMenu" aria-labelledby="notificationDropdownTrigger">
+									<!-- Dynamically populated by notifications.js -->
+								</div>
 							</li>
 							
 							<li class="nav-item header-profile d-flex align-items-center" style="margin-left: 15px; position: relative;">
@@ -1196,3 +1283,4 @@ $__activeInstContext = getActiveInstituteContext();
             </div>
             <?php unset($_SESSION['approval_message']); ?>
         <?php endif; ?>
+        <script src="assets/js/notifications.js"></script>
