@@ -10,8 +10,13 @@ $isHomePage = (basename($_SERVER['PHP_SELF']) === 'index.php' && strpos($_SERVER
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="ANRF–PAIR Project, University of Hyderabad">
 
-    <link rel="icon" href="2.png" type="image/png" sizes="32x32">
-    <link rel="apple-touch-icon" href="2.png">
+    <!-- HIGH-DEFINITION CRISP MULTI-RESOLUTION FAVICONS -->
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="favicon-16x16.png" type="image/png" sizes="16x16">
+    <link rel="icon" href="favicon-48x48.png" type="image/png" sizes="48x48">
+    <link rel="icon" href="favicon-64x64.png" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
     <link href="assets/css/font-awesome.css"              rel="stylesheet" type="text/css">
