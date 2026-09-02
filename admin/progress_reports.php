@@ -18,7 +18,7 @@ require_once 'includes/progress_reports_helper.php';
 
 global $pdo;
 
-// 1. UNIVERSITY CONTEXT & AUTHENTICATION GUARD
+// 1. UNIVERSITY CONTEXT & AUTHENTICATION GUARD (STRICT SERVER-SIDE AUTHORIZATION)
 $prefix = resolveAdminPrefix($_GET['prefix'] ?? null);
 $allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
@@ -30,79 +30,147 @@ if (!in_array($prefix, $allowedPrefixes, true) || !canEditInstitute($prefix)) {
 // Ensure database schema is up-to-date
 ensureProgressReportsSchema($pdo);
 
+// 2. AJAX SEARCH ENDPOINT FOR KPI SELECTION MODALS (CURRENT INSTITUTE ONLY)
+if (isset($_GET['action']) && $_GET['action'] === 'ajax_search_kpi') {
+    header('Content-Type: application/json');
+    $category = $_GET['category'] ?? '';
+    $q        = $_GET['q'] ?? '';
+    // Enforces candidate discovery strictly within current authorized institute ($prefix) across ALL Task IDs
+    $results  = searchKpiCategoryRecords($pdo, $prefix, $category, $q);
+    echo json_encode(['status' => 'success', 'data' => $results]);
+    exit();
+}
+
 $success_msg = $_SESSION['success_msg'] ?? '';
 $error_msg   = $_SESSION['error_msg'] ?? '';
 unset($_SESSION['success_msg'], $_SESSION['error_msg']);
 
-// 2. DISCOVER TASK IDs & RESOLVE ACTIVE TASK ID
-$availableTaskIds = getInstituteTaskIds($pdo, $prefix);
-$selectedTaskId   = trim($_REQUEST['task_id'] ?? $_POST['task_no'] ?? '');
+// 3. FETCH ALL EXISTING REPORTS FOR THIS INSTITUTE
+$allReports = getAllInstituteProgressReports($pdo, $prefix);
 
-if ($selectedTaskId === '' && !empty($availableTaskIds)) {
-    $selectedTaskId = $availableTaskIds[0];
-}
-
-// 3. FETCH EXISTING REPORTS FOR SELECTED TASK ID
-$taskReports = ($selectedTaskId !== '') ? getReportsForTask($pdo, $prefix, $selectedTaskId) : [];
-
-// Determine active Report ID
 $selectedReportId = 0;
 if (isset($_GET['report_id'])) {
     $selectedReportId = (int)$_GET['report_id'];
 } elseif (isset($_GET['action']) && $_GET['action'] === 'new') {
     $selectedReportId = 0;
-} elseif (!empty($taskReports)) {
-    $selectedReportId = (int)$taskReports[0]['id'];
+} elseif (!empty($allReports)) {
+    $selectedReportId = (int)$allReports[0]['id'];
 }
 
-// 4. POST FORM PROCESSING (SAVE & DELETE)
+// 4. POST FORM PROCESSING (SAVE, SUBMIT, APPROVE, REJECT, DELETE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrfToken();
     $action = $_POST['action'] ?? '';
 
-    if ($action === 'save_report') {
+    if (in_array($action, ['save_report', 'submit_approval', 'approve_report', 'reject_report'], true)) {
         $reportId   = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
-        $taskNo     = trim($_POST['task_no'] ?? '');
         $projTitle  = trim($_POST['project_title'] ?? '');
         $piName     = trim($_POST['pi_name'] ?? '');
         $coPiName   = trim($_POST['co_pi_name'] ?? '');
         $workPkg    = trim($_POST['work_package_no'] ?? '');
+        $taskNo     = trim($_POST['task_no'] ?? '');
         $appObjects = trim($_POST['approved_objects'] ?? '');
         $method     = trim($_POST['methodology'] ?? '');
         $sumProg    = trim($_POST['summary_progress'] ?? '');
 
-        // Toggles
-        $incPubs     = isset($_POST['include_publications']) ? 1 : 0;
-        $incCapacity = isset($_POST['include_capacity_building']) ? 1 : 0;
-        $incWshops   = ($incCapacity && isset($_POST['include_workshops'])) ? 1 : 0;
-        $incTrain    = ($incCapacity && isset($_POST['include_training'])) ? 1 : 0;
-        $incInterns  = ($incCapacity && isset($_POST['include_interns'])) ? 1 : 0;
+        // Selected KPI IDs (JSON format strings)
+        $selPubsStr  = trim($_POST['selected_publication_ids'] ?? '[]');
+        $selConfsStr = trim($_POST['selected_conference_ids'] ?? '[]');
+        $selWebsStr  = trim($_POST['selected_webinar_ids'] ?? '[]');
+        $selIntsStr  = trim($_POST['selected_internship_ids'] ?? '[]');
+        $selPatsStr  = trim($_POST['selected_patent_ids'] ?? '[]');
+        $selWshopsStr= trim($_POST['selected_workshop_ids'] ?? '[]');
+        $selTrainsStr= trim($_POST['selected_training_ids'] ?? '[]');
 
-        $wshopNarrative = trim($_POST['workshops_narrative'] ?? '');
-        $trainNarrative = trim($_POST['training_narrative'] ?? '');
+        // Validate JSON
+        $selPubs  = json_decode($selPubsStr, true) ?: [];
+        $selConfs = json_decode($selConfsStr, true) ?: [];
+        $selWebs  = json_decode($selWebsStr, true) ?: [];
+        $selInts  = json_decode($selIntsStr, true) ?: [];
+        $selPats  = json_decode($selPatsStr, true) ?: [];
+        $selWshops= json_decode($selWshopsStr, true) ?: [];
+        $selTrains= json_decode($selTrainsStr, true) ?: [];
 
-        if ($taskNo === '') {
-            $_SESSION['error_msg'] = 'Task ID is required.';
-            adminRedirect(['task_id' => $selectedTaskId, 'report_id' => $reportId]);
-        }
+        // Checkbox toggles
+        $incPubs     = !empty($selPubs) ? 1 : 0;
+        $incConfs    = !empty($selConfs) ? 1 : 0;
+        $incWebs     = !empty($selWebs) ? 1 : 0;
+        $incInts     = !empty($selInts) ? 1 : 0;
+        $incPats     = !empty($selPats) ? 1 : 0;
+
+        $incWshops   = isset($_POST['include_workshops']) ? 1 : 0;
+        $incTrain    = isset($_POST['include_training']) ? 1 : 0;
+        $incInterns  = isset($_POST['include_interns']) ? 1 : 0;
+        $incCapacity = ($incWshops || $incTrain || $incInterns) ? 1 : 0;
+
+        $internsCount = isset($_POST['interns_trained_count']) ? max(0, (int)$_POST['interns_trained_count']) : 0;
+
         if ($projTitle === '') {
             $_SESSION['error_msg'] = 'Project Title is required.';
-            adminRedirect(['task_id' => $taskNo, 'report_id' => $reportId]);
+            adminRedirect(['report_id' => $reportId]);
         }
         if ($piName === '') {
             $_SESSION['error_msg'] = 'Principal Investigator (PI) Name is required.';
-            adminRedirect(['task_id' => $taskNo, 'report_id' => $reportId]);
+            adminRedirect(['report_id' => $reportId]);
         }
-
-        // Derive intern count from KPI internships
-        $internsCount = getKpiInternCountForTask($pdo, $prefix, $taskNo);
-
-        // Approval status
-        $approvalStatus = isSuperAdmin() ? 'Approved' : 'Pending';
 
         $table = "{$prefix}_progress_reports";
 
+        // Fetch existing status
+        $existingStatus = 'Pending';
+        if ($reportId > 0) {
+            try {
+                $chkStmt = $pdo->prepare("SELECT approval_status FROM `$table` WHERE id = ?");
+                $chkStmt->execute([$reportId]);
+                $existingStatus = $chkStmt->fetchColumn() ?: 'Pending';
+            } catch (Exception $e) {}
+        }
+
+        // STRICT ROLE PERMISSION GUARD
+        if (!isSuperAdmin()) {
+            // Normal Admin: CAN NEVER APPROVE DIRECTLY OR MARK APPROVED VIA POST MANIPULATION
+            $approvalStatus = 'Pending';
+        } else {
+            // Super Admin: Moderation logic
+            if ($action === 'approve_report') {
+                $approvalStatus = 'Approved';
+            } elseif ($action === 'reject_report') {
+                $approvalStatus = 'Rejected';
+            } else {
+                $approvalStatus = $existingStatus ?: 'Approved';
+            }
+        }
+
         try {
+            $params = [
+                ':project_title'            => $projTitle,
+                ':pi_name'                  => $piName,
+                ':co_pi_name'               => $coPiName,
+                ':task_no'                  => $taskNo,
+                ':work_package_no'          => $workPkg,
+                ':approved_objects'         => $appObjects,
+                ':methodology'              => $method,
+                ':summary_progress'         => $sumProg,
+                ':selected_publication_ids' => json_encode(array_values(array_map('intval', $selPubs))),
+                ':selected_conference_ids'  => json_encode(array_values(array_map('intval', $selConfs))),
+                ':selected_webinar_ids'     => json_encode(array_values(array_map('intval', $selWebs))),
+                ':selected_internship_ids'  => json_encode(array_values(array_map('intval', $selInts))),
+                ':selected_patent_ids'      => json_encode(array_values(array_map('intval', $selPats))),
+                ':selected_workshop_ids'    => json_encode(array_values(array_map('intval', $selWshops))),
+                ':selected_training_ids'    => json_encode(array_values(array_map('intval', $selTrains))),
+                ':include_publications'     => $incPubs,
+                ':include_conferences'      => $incConfs,
+                ':include_webinars'         => $incWebs,
+                ':include_internships'      => $incInts,
+                ':include_patents'          => $incPats,
+                ':include_capacity_building' => $incCapacity,
+                ':include_workshops'        => $incWshops,
+                ':include_training'         => $incTrain,
+                ':include_interns'          => $incInterns,
+                ':interns_trained_count'    => $internsCount,
+                ':approval_status'          => $approvalStatus,
+            ];
+
             if ($reportId > 0) {
                 // Update existing report
                 $sql = "UPDATE `$table` SET 
@@ -114,40 +182,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             `approved_objects`         = :approved_objects,
                             `methodology`              = :methodology,
                             `summary_progress`         = :summary_progress,
-                            `interns_trained_count`    = :interns_trained_count,
+                            `selected_publication_ids` = :selected_publication_ids,
+                            `selected_conference_ids`  = :selected_conference_ids,
+                            `selected_webinar_ids`     = :selected_webinar_ids,
+                            `selected_internship_ids`  = :selected_internship_ids,
+                            `selected_patent_ids`      = :selected_patent_ids,
+                            `selected_workshop_ids`    = :selected_workshop_ids,
+                            `selected_training_ids`    = :selected_training_ids,
                             `include_publications`     = :include_publications,
+                            `include_conferences`      = :include_conferences,
+                            `include_webinars`         = :include_webinars,
+                            `include_internships`      = :include_internships,
+                            `include_patents`          = :include_patents,
                             `include_capacity_building` = :include_capacity_building,
                             `include_workshops`        = :include_workshops,
                             `include_training`         = :include_training,
                             `include_interns`          = :include_interns,
-                            `workshops_narrative`      = :workshops_narrative,
-                            `training_narrative`       = :training_narrative,
+                            `interns_trained_count`    = :interns_trained_count,
                             `approval_status`          = :approval_status
                         WHERE `id` = :id";
-
+                $params[':id'] = $reportId;
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ':project_title'            => $projTitle,
-                    ':pi_name'                  => $piName,
-                    ':co_pi_name'               => $coPiName,
-                    ':task_no'                  => $taskNo,
-                    ':work_package_no'          => $workPkg,
-                    ':approved_objects'         => $appObjects,
-                    ':methodology'              => $method,
-                    ':summary_progress'         => $sumProg,
-                    ':interns_trained_count'    => $internsCount,
-                    ':include_publications'     => $incPubs,
-                    ':include_capacity_building' => $incCapacity,
-                    ':include_workshops'        => $incWshops,
-                    ':include_training'         => $incTrain,
-                    ':include_interns'          => $incInterns,
-                    ':workshops_narrative'      => $wshopNarrative,
-                    ':training_narrative'       => $trainNarrative,
-                    ':approval_status'          => $approvalStatus,
-                    ':id'                       => $reportId
-                ]);
+                $stmt->execute($params);
 
-                if (!isSuperAdmin()) {
+                if (!isSuperAdmin() && ($action === 'submit_approval' || $action === 'save_report')) {
                     submitKpiApprovalRequest($pdo, 'Progress Reports', $table, $prefix, $reportId, 'UPDATE', [
                         'task_no' => $taskNo,
                         'project_title' => $projTitle,
@@ -155,45 +213,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
 
-                $_SESSION['success_msg'] = "Progress Report #{$reportId} updated successfully (" . ($approvalStatus === 'Approved' ? 'Approved' : 'Pending Approval') . ").";
-                adminRedirect(['task_id' => $taskNo, 'report_id' => $reportId]);
+                if ($action === 'approve_report' && isSuperAdmin()) {
+                    $_SESSION['success_msg'] = "Progress Report #{$reportId} approved successfully.";
+                } elseif ($action === 'reject_report' && isSuperAdmin()) {
+                    $_SESSION['success_msg'] = "Progress Report #{$reportId} rejected.";
+                } elseif ($action === 'submit_approval') {
+                    $_SESSION['success_msg'] = "Progress Report #{$reportId} submitted for approval successfully.";
+                } else {
+                    $_SESSION['success_msg'] = "Progress Report #{$reportId} saved successfully.";
+                }
+
+                adminRedirect(['report_id' => $reportId]);
             } else {
                 // Insert new report
                 $sql = "INSERT INTO `$table` (
-                            `task_no`, `project_title`, `pi_name`, `co_pi_name`, `work_package_no`,
-                            `approved_objects`, `methodology`, `summary_progress`, `interns_trained_count`,
-                            `include_publications`, `include_capacity_building`, `include_workshops`,
-                            `include_training`, `include_interns`, `workshops_narrative`, `training_narrative`,
-                            `approval_status`, `created_at`
+                            `project_title`, `pi_name`, `co_pi_name`, `task_no`, `work_package_no`,
+                            `approved_objects`, `methodology`, `summary_progress`,
+                            `selected_publication_ids`, `selected_conference_ids`, `selected_webinar_ids`,
+                            `selected_internship_ids`, `selected_patent_ids`, `selected_workshop_ids`, `selected_training_ids`,
+                            `include_publications`, `include_conferences`, `include_webinars`, `include_internships`, `include_patents`,
+                            `include_capacity_building`, `include_workshops`, `include_training`, `include_interns`,
+                            `interns_trained_count`, `approval_status`, `created_at`
                         ) VALUES (
-                            :task_no, :project_title, :pi_name, :co_pi_name, :work_package_no,
-                            :approved_objects, :methodology, :summary_progress, :interns_trained_count,
-                            :include_publications, :include_capacity_building, :include_workshops,
-                            :include_training, :include_interns, :workshops_narrative, :training_narrative,
-                            :approval_status, NOW()
+                            :project_title, :pi_name, :co_pi_name, :task_no, :work_package_no,
+                            :approved_objects, :methodology, :summary_progress,
+                            :selected_publication_ids, :selected_conference_ids, :selected_webinar_ids,
+                            :selected_internship_ids, :selected_patent_ids, :selected_workshop_ids, :selected_training_ids,
+                            :include_publications, :include_conferences, :include_webinars, :include_internships, :include_patents,
+                            :include_capacity_building, :include_workshops, :include_training, :include_interns,
+                            :interns_trained_count, :approval_status, NOW()
                         )";
-
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ':task_no'                  => $taskNo,
-                    ':project_title'            => $projTitle,
-                    ':pi_name'                  => $piName,
-                    ':co_pi_name'               => $coPiName,
-                    ':work_package_no'          => $workPkg,
-                    ':approved_objects'         => $appObjects,
-                    ':methodology'              => $method,
-                    ':summary_progress'         => $sumProg,
-                    ':interns_trained_count'    => $internsCount,
-                    ':include_publications'     => $incPubs,
-                    ':include_capacity_building' => $incCapacity,
-                    ':include_workshops'        => $incWshops,
-                    ':include_training'         => $incTrain,
-                    ':include_interns'          => $incInterns,
-                    ':workshops_narrative'      => $wshopNarrative,
-                    ':training_narrative'       => $trainNarrative,
-                    ':approval_status'          => $approvalStatus
-                ]);
-
+                $stmt->execute($params);
                 $newId = (int)$pdo->lastInsertId();
 
                 if (!isSuperAdmin()) {
@@ -204,14 +255,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
 
-                $_SESSION['success_msg'] = "Progress Report created successfully (Report #{$newId}).";
-                adminRedirect(['task_id' => $taskNo, 'report_id' => $newId]);
+                if ($action === 'submit_approval') {
+                    $_SESSION['success_msg'] = "Progress Report created and submitted for approval (Report #{$newId}).";
+                } else {
+                    $_SESSION['success_msg'] = "Progress Report draft created (Report #{$newId}).";
+                }
+                adminRedirect(['report_id' => $newId]);
             }
         } catch (Exception $e) {
             $_SESSION['error_msg'] = "Database error saving report: " . $e->getMessage();
-            adminRedirect(['task_id' => $taskNo, 'report_id' => $reportId]);
+            adminRedirect(['report_id' => $reportId]);
         }
-    } elseif ($action === 'delete_report') {
+    } elseif ($action === 'delete_report' && isSuperAdmin()) {
         $reportId = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
         if ($reportId > 0) {
             try {
@@ -222,21 +277,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error_msg'] = "Error deleting report: " . $e->getMessage();
             }
         }
-        adminRedirect(['task_id' => $selectedTaskId, 'action' => 'new']);
+        adminRedirect(['action' => 'new']);
     }
 }
 
 // 5. LOAD ACTIVE REPORT DATA FOR DISPLAY
 $activeReport = null;
 if ($selectedReportId > 0) {
-    foreach ($taskReports as $r) {
+    foreach ($allReports as $r) {
         if ((int)$r['id'] === $selectedReportId) {
             $activeReport = $r;
             break;
         }
     }
     if (!$activeReport) {
-        // Fallback fetch if not in initial list
         try {
             $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_progress_reports` WHERE id = ?");
             $stmt->execute([$selectedReportId]);
@@ -245,36 +299,82 @@ if ($selectedReportId > 0) {
     }
 }
 
-// Form Field Values
+// Form Values
 $valProjectTitle = $activeReport['project_title'] ?? '';
 $valPiName       = $activeReport['pi_name'] ?? '';
 $valCoPiName     = $activeReport['co_pi_name'] ?? '';
 $valWorkPkg      = $activeReport['work_package_no'] ?? '';
+$valTaskNo       = $activeReport['task_no'] ?? '';
 $valAppObjects   = $activeReport['approved_objects'] ?? '';
 $valMethodology  = $activeReport['methodology'] ?? '';
 $valSumProgress  = $activeReport['summary_progress'] ?? '';
-$valWshopNarr    = $activeReport['workshops_narrative'] ?? '';
-$valTrainNarr    = $activeReport['training_narrative'] ?? '';
+$reportStatus    = $activeReport['approval_status'] ?? 'Pending';
 
-// Checkboxes (Default to 1 if new report)
-$chkPubs     = isset($activeReport) ? !empty($activeReport['include_publications']) : true;
-$chkCapacity = isset($activeReport) ? !empty($activeReport['include_capacity_building']) : true;
-$chkWshops   = isset($activeReport) ? !empty($activeReport['include_workshops']) : true;
-$chkTraining = isset($activeReport) ? !empty($activeReport['include_training']) : true;
-$chkInterns  = isset($activeReport) ? !empty($activeReport['include_interns']) : true;
+// Selected ID arrays
+$pubIds   = json_decode($activeReport['selected_publication_ids'] ?? '[]', true) ?: [];
+$confIds  = json_decode($activeReport['selected_conference_ids'] ?? '[]', true) ?: [];
+$webIds   = json_decode($activeReport['selected_webinar_ids'] ?? '[]', true) ?: [];
+$intIds   = json_decode($activeReport['selected_internship_ids'] ?? '[]', true) ?: [];
+$patIds   = json_decode($activeReport['selected_patent_ids'] ?? '[]', true) ?: [];
+$wshopIds = json_decode($activeReport['selected_workshop_ids'] ?? '[]', true) ?: [];
+$trainIds = json_decode($activeReport['selected_training_ids'] ?? '[]', true) ?: [];
 
-// 6. FETCH KPI REFERENCE DATA FOR PREVIEWS (SINGLE SOURCE OF TRUTH)
-$kpiPubs     = ($selectedTaskId !== '') ? getKpiPublicationsForTask($pdo, $prefix, $selectedTaskId) : [];
-$kpiConfs    = ($selectedTaskId !== '') ? getKpiConferencesForTask($pdo, $prefix, $selectedTaskId) : [];
-$kpiWebs     = ($selectedTaskId !== '') ? getKpiWebinarsForTask($pdo, $prefix, $selectedTaskId) : [];
-$kpiInterns  = ($selectedTaskId !== '') ? getKpiInternCountForTask($pdo, $prefix, $selectedTaskId) : 0;
+// Checkboxes
+$chkWshops   = isset($activeReport) ? !empty($activeReport['include_workshops']) : false;
+$chkTraining = isset($activeReport) ? !empty($activeReport['include_training']) : false;
+$chkInterns  = isset($activeReport) ? !empty($activeReport['include_interns']) : false;
+$valInternsCount = (int)($activeReport['interns_trained_count'] ?? 0);
+
+// Fetch ONLY explicitly selected full objects for rendering on main form
+$selPubRows   = getKpiCategoryRecordsByIds($pdo, $prefix, 'publications', $pubIds);
+$selConfRows  = getKpiCategoryRecordsByIds($pdo, $prefix, 'conferences', $confIds);
+$selWebRows   = getKpiCategoryRecordsByIds($pdo, $prefix, 'webinars', $webIds);
+$selIntRows   = getKpiCategoryRecordsByIds($pdo, $prefix, 'internships', $intIds);
+$selPatRows   = getKpiCategoryRecordsByIds($pdo, $prefix, 'patents', $patIds);
+$selWshopRows = getKpiCategoryRecordsByIds($pdo, $prefix, 'workshops', $wshopIds);
+$selTrainRows = getKpiCategoryRecordsByIds($pdo, $prefix, 'trainings', $trainIds);
 
 $instituteFullName = getInstituteFullName($prefix);
+
+// ROLE-BASED STRICT THEME COLOR DEFINITION
+$isSuper = isSuperAdmin();
+$primaryThemeColor = $isSuper ? '#024283' : '#7a0e0e';
+$btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
 ?>
 <?php include 'nav_header.php'; ?>
 <?php include 'header.php'; ?>
 <?php include 'sidebar.php'; ?>
 <?php include 'loader.php'; ?>
+
+<style>
+.btn-theme-red {
+    background-color: #7a0e0e !important;
+    border-color: #7a0e0e !important;
+    color: #ffffff !important;
+}
+.btn-theme-red:hover, .btn-theme-red:focus {
+    background-color: #bc2121 !important;
+    border-color: #bc2121 !important;
+    color: #ffffff !important;
+}
+.btn-outline-theme-red {
+    border-color: #7a0e0e !important;
+    color: #7a0e0e !important;
+}
+.btn-outline-theme-red:hover {
+    background-color: #7a0e0e !important;
+    color: #ffffff !important;
+}
+.progress-report-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+.kpi-row-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+</style>
 
 <div id="main-wrapper">
     <div class="content-body default-height">
@@ -282,428 +382,539 @@ $instituteFullName = getInstituteFullName($prefix);
 
             <?php include 'institute_banner.php'; ?>
 
-            <!-- Page Title & Breadcrumb -->
-            <div class="row page-titles">
-                <div class="col-md-6 col-12 align-self-center">
-                    <h3 class="text-themecolor font-weight-bold mb-0">Progress Reports</h3>
-                    <small class="text-muted">Report Generator & Narrative Management</small>
-                </div>
-                <div class="col-md-6 col-12 align-self-center text-md-end">
-                    <ol class="breadcrumb d-inline-flex bg-transparent p-0 m-0">
-                        <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Progress Reports</li>
-                    </ol>
-                </div>
-            </div>
-
-            <!-- Messages -->
+            <!-- Notifications -->
             <?php if (!empty($success_msg)): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert">
                     <i class="fas fa-check-circle me-2"></i> <strong>Success:</strong> <?= htmlspecialchars($success_msg) ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($error_msg)): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-3" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i> <strong>Error:</strong> <?= htmlspecialchars($error_msg) ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
 
-            <!-- TASK ID SELECTOR CARD -->
-            <div class="card border-0 shadow-sm mb-4" style="border-top: 4px solid #0f4c81 !important;">
-                <div class="card-body py-3">
-                    <div class="row align-items-center">
-                        <div class="col-lg-4 col-md-5 mb-2 mb-md-0">
-                            <label class="form-label font-weight-bold text-dark mb-1">
-                                <i class="fas fa-tasks text-primary me-1"></i> Select Task ID (From KPI Data):
-                            </label>
-                            <form method="GET" action="<?= buildNavUrl('progress_reports.php') ?>" id="taskSelectForm">
-                                <?php if (isSuperAdmin()): ?>
-                                    <input type="hidden" name="prefix" value="<?= htmlspecialchars($prefix) ?>">
-                                <?php endif; ?>
-                                <?php if (!empty($_SESSION['tab_token'])): ?>
-                                    <input type="hidden" name="tab_token" value="<?= htmlspecialchars($_SESSION['tab_token']) ?>">
-                                <?php endif; ?>
-
-                                <div class="input-group">
-                                    <select name="task_id" class="form-select form-select-lg font-weight-bold border-primary" onchange="document.getElementById('taskSelectForm').submit();">
-                                        <?php if (empty($availableTaskIds)): ?>
-                                            <option value="">No Task IDs Found</option>
-                                        <?php else: ?>
-                                            <?php foreach ($availableTaskIds as $tId): ?>
-                                                <option value="<?= htmlspecialchars($tId) ?>" <?= ($tId === $selectedTaskId) ? 'selected' : '' ?>>
-                                                    Task ID: <?= htmlspecialchars($tId) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- KPI Source Badges -->
-                        <div class="col-lg-8 col-md-7 text-md-end">
-                            <div class="d-inline-flex flex-wrap gap-2 justify-content-md-end align-items-center">
-                                <span class="badge bg-light text-dark border p-2">
-                                    <i class="fas fa-book text-info me-1"></i> Publications KPI: <strong><?= count($kpiPubs) ?></strong>
-                                </span>
-                                <span class="badge bg-light text-dark border p-2">
-                                    <i class="fas fa-chalkboard-teacher text-success me-1"></i> Conferences KPI: <strong><?= count($kpiConfs) ?></strong>
-                                </span>
-                                <span class="badge bg-light text-dark border p-2">
-                                    <i class="fas fa-video text-warning me-1"></i> Trainings KPI: <strong><?= count($kpiWebs) ?></strong>
-                                </span>
-                                <span class="badge bg-light text-dark border p-2">
-                                    <i class="fas fa-user-graduate text-primary me-1"></i> Interns Trained KPI: <strong><?= $kpiInterns ?></strong>
-                                </span>
-                            </div>
+            <!-- ONE SINGLE COMPACT FORM CARD FOR THE ENTIRE PROGRESS REPORT -->
+            <div class="card progress-report-card shadow-sm mb-5">
+                <div class="card-header text-white py-3" style="background: <?= $primaryThemeColor ?> !important;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-white mb-0 font-weight-bold">
+                            <i class="fas fa-file-alt me-2"></i> Progress Report
+                        </h4>
+                        <div>
+                            <?php if ($reportStatus === 'Approved'): ?>
+                                <span class="badge bg-success fs-6 p-2"><i class="fas fa-check-circle me-1"></i> Approved</span>
+                            <?php elseif ($reportStatus === 'Rejected'): ?>
+                                <span class="badge bg-danger fs-6 p-2"><i class="fas fa-times-circle me-1"></i> Rejected</span>
+                            <?php else: ?>
+                                <span class="badge bg-warning text-dark fs-6 p-2"><i class="fas fa-clock me-1"></i> Pending Approval</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <?php if ($selectedTaskId === ''): ?>
-                <div class="card border-0 shadow-sm p-5 text-center">
-                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                    <h4>No Task IDs Available</h4>
-                    <p class="text-muted mb-0">No KPI records with a Task ID were found for <strong><?= htmlspecialchars($instituteFullName) ?></strong>. Enter KPI records (Publications, Conferences, etc.) first to create reports.</p>
-                </div>
-            <?php else: ?>
+                <div class="card-body p-4">
+                    <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>" id="progressReportForm">
+                        <?= getCsrfInputField() ?>
+                        <input type="hidden" name="report_id" value="<?= $selectedReportId ?>">
 
-                <!-- EXISTING REPORTS SWITCHER BAR -->
-                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 bg-white p-3 rounded shadow-sm border">
-                    <div>
-                        <span class="text-dark font-weight-bold me-2"><i class="fas fa-history text-secondary me-1"></i> Reports for Task ID "<?= htmlspecialchars($selectedTaskId) ?>":</span>
-                        <?php if (empty($taskReports)): ?>
-                            <span class="badge bg-warning text-dark"><i class="fas fa-info-circle me-1"></i> No report exists for this Task ID yet</span>
-                        <?php else: ?>
-                            <div class="btn-group" role="group">
-                                <?php foreach ($taskReports as $r): ?>
-                                    <a href="<?= buildNavUrl('progress_reports.php') ?>&task_id=<?= urlencode($selectedTaskId) ?>&report_id=<?= $r['id'] ?>" 
-                                       class="btn btn-sm <?= ((int)$r['id'] === $selectedReportId) ? 'btn-primary' : 'btn-outline-secondary' ?>">
-                                        <i class="fas fa-file-alt me-1"></i> Report #<?= $r['id'] ?>
-                                        <small>(<?= !empty($r['created_at']) ? date('M d, Y', strtotime($r['created_at'])) : 'Draft' ?>)</small>
-                                        <?php if (($r['approval_status'] ?? '') === 'Approved'): ?>
-                                            <span class="badge bg-success ms-1">Approved</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-warning text-dark ms-1">Pending</span>
-                                        <?php endif; ?>
-                                    </a>
-                                <?php endforeach; ?>
+                        <!-- REPORT DETAILS -->
+                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2">Report Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold text-dark mb-1">Project Title <span class="text-danger">*</span></label>
+                                <input type="text" name="project_title" class="form-control" required placeholder="Enter complete project title..." value="<?= htmlspecialchars($valProjectTitle) ?>">
                             </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div>
-                        <a href="<?= buildNavUrl('progress_reports.php') ?>&task_id=<?= urlencode($selectedTaskId) ?>&action=new" 
-                           class="btn btn-sm btn-outline-success">
-                            <i class="fas fa-plus-circle me-1"></i> Create New Report for Task <?= htmlspecialchars($selectedTaskId) ?>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- MAIN REPORT EDITOR FORM -->
-                <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>" id="progressReportForm">
-                    <?= getCsrfInputField() ?>
-                    <input type="hidden" name="action" value="save_report">
-                    <input type="hidden" name="report_id" value="<?= $selectedReportId ?>">
-                    <input type="hidden" name="task_no" value="<?= htmlspecialchars($selectedTaskId) ?>">
-
-                    <!-- SECTION 1: PROJECT INFORMATION -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header text-white py-3" style="background: linear-gradient(90deg, #0f4c81, #1e6fa8) !important;">
-                            <h5 class="card-title text-white mb-0 font-weight-bold">
-                                <i class="fas fa-info-circle me-2"></i> Project Information — Task ID: <?= htmlspecialchars($selectedTaskId) ?>
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label font-weight-bold">Project Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="project_title" class="form-control" required placeholder="Enter project title..." value="<?= htmlspecialchars($valProjectTitle) ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label font-weight-bold">Work Package No / Details</label>
-                                    <input type="text" name="work_package_no" class="form-control" placeholder="e.g. WP-01 (or leave blank)" value="<?= htmlspecialchars($valWorkPkg) ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label font-weight-bold">Principal Investigator (PI) <span class="text-danger">*</span></label>
-                                    <input type="text" name="pi_name" class="form-control" required placeholder="Enter PI name..." value="<?= htmlspecialchars($valPiName) ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label font-weight-bold">Co-Principal Investigator (Co-PI)</label>
-                                    <input type="text" name="co_pi_name" class="form-control" placeholder="Enter Co-PI name (if applicable)..." value="<?= htmlspecialchars($valCoPiName) ?>">
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label font-weight-bold text-dark mb-1">Work Package</label>
+                                <input type="text" name="work_package_no" class="form-control" placeholder="e.g. Work Package 1" value="<?= htmlspecialchars($valWorkPkg) ?>">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold text-dark mb-1">Principal Investigator (PI) <span class="text-danger">*</span></label>
+                                <input type="text" name="pi_name" class="form-control" required placeholder="Enter PI Name..." value="<?= htmlspecialchars($valPiName) ?>">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold text-dark mb-1">Co-PI</label>
+                                <input type="text" name="co_pi_name" class="form-control" placeholder="Enter Co-PI Name..." value="<?= htmlspecialchars($valCoPiName) ?>">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label font-weight-bold text-dark mb-1">Task ID <small class="text-muted">(Text metadata)</small></label>
+                                <input type="text" name="task_no" class="form-control" placeholder="e.g. Task 4.5" value="<?= htmlspecialchars($valTaskNo) ?>">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SECTION 2: PROGRESS REPORT NARRATIVE -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light py-3 border-bottom">
-                            <h5 class="card-title text-dark mb-0 font-weight-bold">
-                                <i class="fas fa-align-left text-primary me-2"></i> Progress Report Details
-                            </h5>
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold text-dark mb-1">Approved Objectives</label>
+                            <textarea name="approved_objects" class="form-control" rows="3" placeholder="Enter approved project objectives..."><?= htmlspecialchars($valAppObjects) ?></textarea>
                         </div>
-                        <div class="card-body">
-                            <div class="mb-4">
-                                <label class="form-label font-weight-bold text-dark">Approved Objectives</label>
-                                <textarea name="approved_objects" class="form-control" rows="4" placeholder="Enter the approved project objectives..."><?= htmlspecialchars($valAppObjects) ?></textarea>
-                            </div>
 
-                            <div class="mb-4">
-                                <label class="form-label font-weight-bold text-dark">Methodology</label>
-                                <textarea name="methodology" class="form-control" rows="4" placeholder="Describe the methodology adopted..."><?= htmlspecialchars($valMethodology) ?></textarea>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold text-dark mb-1">Methodology</label>
+                            <textarea name="methodology" class="form-control" rows="3" placeholder="Describe the research methodology adopted..."><?= htmlspecialchars($valMethodology) ?></textarea>
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label font-weight-bold text-dark">Summary of Progress</label>
-                                <textarea name="summary_progress" class="form-control" rows="5" placeholder="Provide a detailed summary of progress achieved during this reporting period..."><?= htmlspecialchars($valSumProgress) ?></textarea>
+                        <div class="mb-4">
+                            <label class="form-label font-weight-bold text-dark mb-1">Summary of Progress</label>
+                            <textarea name="summary_progress" class="form-control" rows="4" placeholder="Provide a summary of progress achieved..."><?= htmlspecialchars($valSumProgress) ?></textarea>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- KPI SELECTION -->
+                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2"><i class="fas fa-chart-line me-2" style="color: <?= $primaryThemeColor ?>;"></i> Key Performance Indicators</h5>
+
+                        <!-- Publications -->
+                        <div class="mb-4 border rounded bg-white">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                                <label class="form-label font-weight-bold text-dark mb-0 fs-6">Publications</label>
+                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('publications')">
+                                    <i class="fas fa-plus me-1"></i> Select Publications
+                                </button>
+                            </div>
+                            <input type="hidden" name="selected_publication_ids" id="selected_publication_ids" value='<?= json_encode($pubIds) ?>'>
+                            <div id="selected_publications_display" class="p-3"></div>
+                        </div>
+
+                        <!-- Conferences -->
+                        <div class="mb-4 border rounded bg-white">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                                <label class="form-label font-weight-bold text-dark mb-0 fs-6">Conferences</label>
+                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('conferences')">
+                                    <i class="fas fa-plus me-1"></i> Select Conferences
+                                </button>
+                            </div>
+                            <input type="hidden" name="selected_conference_ids" id="selected_conference_ids" value='<?= json_encode($confIds) ?>'>
+                            <div id="selected_conferences_display" class="p-3"></div>
+                        </div>
+
+                        <!-- Webinars -->
+                        <div class="mb-4 border rounded bg-white">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                                <label class="form-label font-weight-bold text-dark mb-0 fs-6">Webinars</label>
+                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('webinars')">
+                                    <i class="fas fa-plus me-1"></i> Select Webinars
+                                </button>
+                            </div>
+                            <input type="hidden" name="selected_webinar_ids" id="selected_webinar_ids" value='<?= json_encode($webIds) ?>'>
+                            <div id="selected_webinars_display" class="p-3"></div>
+                        </div>
+
+                        <!-- Internships -->
+                        <div class="mb-4 border rounded bg-white">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                                <label class="form-label font-weight-bold text-dark mb-0 fs-6">Internships</label>
+                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('internships')">
+                                    <i class="fas fa-plus me-1"></i> Select Internships
+                                </button>
+                            </div>
+                            <input type="hidden" name="selected_internship_ids" id="selected_internship_ids" value='<?= json_encode($intIds) ?>'>
+                            <div id="selected_internships_display" class="p-3"></div>
+                        </div>
+
+                        <!-- Patents -->
+                        <div class="mb-4 border rounded bg-white">
+                            <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header">
+                                <label class="form-label font-weight-bold text-dark mb-0 fs-6">Patents</label>
+                                <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('patents')">
+                                    <i class="fas fa-plus me-1"></i> Select Patents
+                                </button>
+                            </div>
+                            <input type="hidden" name="selected_patent_ids" id="selected_patent_ids" value='<?= json_encode($patIds) ?>'>
+                            <div id="selected_patents_display" class="p-3"></div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- CAPACITY BUILDING -->
+                        <h5 class="font-weight-bold text-dark mb-3 border-bottom pb-2"><i class="fas fa-graduation-cap me-2" style="color: <?= $primaryThemeColor ?>;"></i> Capacity Building</h5>
+
+                        <div class="mb-3 border rounded p-3 bg-light">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="include_workshops" id="chkWorkshops" value="1" <?= $chkWshops ? 'checked' : '' ?> onchange="toggleCapacitySection('workshopsGroup', this.checked)">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkWorkshops">
+                                    Workshops / Conferences Conducted
+                                </label>
+                            </div>
+                            <div id="workshopsGroup" class="ms-4 mt-2" style="display: <?= $chkWshops ? 'block' : 'none' ?>;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Select workshop/conference records conducted under capacity building:</span>
+                                    <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('workshops')">
+                                        <i class="fas fa-plus me-1"></i> Select Workshops / Conferences
+                                    </button>
+                                </div>
+                                <input type="hidden" name="selected_workshop_ids" id="selected_workshop_ids" value='<?= json_encode($wshopIds) ?>'>
+                                <div id="selected_workshops_display" class="mt-2"></div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- SECTION 3: ADD TO THIS REPORT (OPTIONAL SECTIONS & LIVE KPI PREVIEWS) -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light py-3 border-bottom d-flex justify-content-between align-items-center">
-                            <h5 class="card-title text-dark mb-0 font-weight-bold">
-                                <i class="fas fa-layer-group text-success me-2"></i> Add To This Report
-                            </h5>
-                            <small class="text-muted">Select additional sections to include in the generated report</small>
-                        </div>
-                        <div class="card-body">
-
-                            <!-- OPTION A: PUBLICATIONS -->
-                            <div class="border rounded p-3 mb-4 bg-white shadow-xs">
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" name="include_publications" id="chkPubs" value="1" <?= $chkPubs ? 'checked' : '' ?> onchange="toggleSectionVisibility('pubsPreview', this.checked)">
-                                    <label class="form-check-label font-weight-bold text-dark fs-5 me-2" for="chkPubs">
-                                        <i class="fas fa-book text-info me-1"></i> Publications
-                                    </label>
-                                    <span class="badge bg-info text-white">Derived from KPI Data</span>
-                                </div>
-
-                                <div id="pubsPreview" class="ms-4 mt-3" style="display: <?= $chkPubs ? 'block' : 'none' ?>;">
-                                    <?php if (empty($kpiPubs)): ?>
-                                        <div class="alert alert-light border text-muted mb-0">
-                                            <i class="fas fa-info-circle me-1"></i> No publication KPI records exist for Task ID "<strong><?= htmlspecialchars($selectedTaskId) ?></strong>". You can add publications in the <a href="publications.php" target="_blank" class="fw-bold">Publications KPI module</a>, and they will automatically appear here.
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-bordered table-hover align-middle mb-0">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th style="width: 40px;">#</th>
-                                                        <th>Publication Title</th>
-                                                        <th>Author(s)</th>
-                                                        <th>Journal</th>
-                                                        <th>Date</th>
-                                                        <th>DOI</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php $idx = 1; foreach ($kpiPubs as $pub): ?>
-                                                        <tr>
-                                                            <td><?= $idx++ ?></td>
-                                                            <td class="fw-bold text-dark"><?= htmlspecialchars($pub['publication_title'] ?? '') ?></td>
-                                                            <td><?= htmlspecialchars($pub['author_name'] ?? '-') ?></td>
-                                                            <td><?= htmlspecialchars($pub['publication_journal'] ?? '-') ?></td>
-                                                            <td><?= !empty($pub['publication_date']) ? date('d M Y', strtotime($pub['publication_date'])) : '-' ?></td>
-                                                            <td><?= htmlspecialchars($pub['doi_number'] ?? '-') ?></td>
-                                                        </tr>
-                                                    <?php endforeach; ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <small class="text-muted d-block mt-1"><i class="fas fa-check-circle text-success me-1"></i> These publication records will be automatically included in the generated report PDF.</small>
-                                    <?php endif; ?>
-                                </div>
+                        <div class="mb-3 border rounded p-3 bg-light">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="include_training" id="chkTraining" value="1" <?= $chkTraining ? 'checked' : '' ?> onchange="toggleCapacitySection('trainingGroup', this.checked)">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkTraining">
+                                    Training Programs Conducted
+                                </label>
                             </div>
-
-                            <!-- OPTION B: CAPACITY BUILDING -->
-                            <div class="border rounded p-3 bg-white shadow-xs">
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" name="include_capacity_building" id="chkCapacity" value="1" <?= $chkCapacity ? 'checked' : '' ?> onchange="toggleSectionVisibility('capacityGroup', this.checked)">
-                                    <label class="form-check-label font-weight-bold text-dark fs-5 me-2" for="chkCapacity">
-                                        <i class="fas fa-graduation-cap text-success me-1"></i> Capacity Building
-                                    </label>
+                            <div id="trainingGroup" class="ms-4 mt-2" style="display: <?= $chkTraining ? 'block' : 'none' ?>;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Select training program / webinar records conducted:</span>
+                                    <button type="button" class="btn btn-sm <?= $btnThemeClass ?> font-weight-bold" onclick="openKpiModal('trainings')">
+                                        <i class="fas fa-plus me-1"></i> Select Training Programs
+                                    </button>
                                 </div>
+                                <input type="hidden" name="selected_training_ids" id="selected_training_ids" value='<?= json_encode($trainIds) ?>'>
+                                <div id="selected_trainings_display" class="mt-2"></div>
+                            </div>
+                        </div>
 
-                                <div id="capacityGroup" class="ms-4 mt-3" style="display: <?= $chkCapacity ? 'block' : 'none' ?>;">
-
-                                    <!-- B.1 WORKSHOPS / CONFERENCES -->
-                                    <div class="card card-body bg-light border mb-3">
-                                        <div class="form-check form-checkbox mb-2">
-                                            <input class="form-check-input" type="checkbox" name="include_workshops" id="chkWshops" value="1" <?= $chkWshops ? 'checked' : '' ?> onchange="toggleSectionVisibility('wshopsPreview', this.checked)">
-                                            <label class="form-check-label font-weight-bold text-dark me-2" for="chkWshops">
-                                                Workshops / Conferences Conducted
-                                            </label>
-                                        </div>
-
-                                        <div id="wshopsPreview" style="display: <?= $chkWshops ? 'block' : 'none' ?>;" class="mt-2">
-                                            <div class="mb-2">
-                                                <label class="form-label text-muted small font-weight-bold mb-1">Optional Workshop Summary / Notes:</label>
-                                                <textarea name="workshops_narrative" class="form-control form-control-sm" rows="2" placeholder="Add specific report notes regarding workshops or conferences conducted..."><?= htmlspecialchars($valWshopNarr) ?></textarea>
-                                            </div>
-
-                                            <?php if (empty($kpiConfs)): ?>
-                                                <div class="small text-muted italic"><i class="fas fa-info-circle me-1"></i> No conference KPI records found for Task ID "<?= htmlspecialchars($selectedTaskId) ?>".</div>
-                                            <?php else: ?>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered bg-white mb-0 small">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>#</th>
-                                                                <th>Title</th>
-                                                                <th>Organizer</th>
-                                                                <th>Date</th>
-                                                                <th>Location</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php $cIdx = 1; foreach ($kpiConfs as $conf): ?>
-                                                                <tr>
-                                                                    <td><?= $cIdx++ ?></td>
-                                                                    <td class="fw-bold"><?= htmlspecialchars($conf['title'] ?? '') ?></td>
-                                                                    <td><?= htmlspecialchars($conf['organizer'] ?? ($conf['organisers'] ?? '-')) ?></td>
-                                                                    <td><?= !empty($conf['start_date']) ? date('d M Y', strtotime($conf['start_date'])) : (!empty($conf['conf_date']) ? date('d M Y', strtotime($conf['conf_date'])) : '-') ?></td>
-                                                                    <td><?= htmlspecialchars($conf['location'] ?? '-') ?></td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
+                        <div class="mb-4 border rounded p-3 bg-light">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="include_interns" id="chkInterns" value="1" <?= $chkInterns ? 'checked' : '' ?> onchange="toggleCapacitySection('internsGroup', this.checked)">
+                                <label class="form-check-label font-weight-bold text-dark me-2" for="chkInterns">
+                                    Number of Interns Trained
+                                </label>
+                            </div>
+                            <div id="internsGroup" class="ms-4 mt-2" style="display: <?= $chkInterns ? 'block' : 'none' ?>;">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <label class="form-label font-weight-bold text-dark mb-0">Number of Interns Trained:</label>
                                     </div>
-
-                                    <!-- B.2 TRAINING PROGRAMS -->
-                                    <div class="card card-body bg-light border mb-3">
-                                        <div class="form-check form-checkbox mb-2">
-                                            <input class="form-check-input" type="checkbox" name="include_training" id="chkTraining" value="1" <?= $chkTraining ? 'checked' : '' ?> onchange="toggleSectionVisibility('trainingPreview', this.checked)">
-                                            <label class="form-check-label font-weight-bold text-dark me-2" for="chkTraining">
-                                                Training Programs Conducted
-                                            </label>
-                                        </div>
-
-                                        <div id="trainingPreview" style="display: <?= $chkTraining ? 'block' : 'none' ?>;" class="mt-2">
-                                            <div class="mb-2">
-                                                <label class="form-label text-muted small font-weight-bold mb-1">Optional Training Summary / Notes:</label>
-                                                <textarea name="training_narrative" class="form-control form-control-sm" rows="2" placeholder="Add specific report notes regarding training programs conducted..."><?= htmlspecialchars($valTrainNarr) ?></textarea>
-                                            </div>
-
-                                            <?php if (empty($kpiWebs)): ?>
-                                                <div class="small text-muted italic"><i class="fas fa-info-circle me-1"></i> No webinar/training KPI records found for Task ID "<?= htmlspecialchars($selectedTaskId) ?>".</div>
-                                            <?php else: ?>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered bg-white mb-0 small">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>#</th>
-                                                                <th>Title</th>
-                                                                <th>Speaker</th>
-                                                                <th>Date</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php $wIdx = 1; foreach ($kpiWebs as $web): ?>
-                                                                <tr>
-                                                                    <td><?= $wIdx++ ?></td>
-                                                                    <td class="fw-bold"><?= htmlspecialchars($web['title'] ?? '') ?></td>
-                                                                    <td><?= htmlspecialchars($web['speaker_name'] ?? '-') ?></td>
-                                                                    <td><?= !empty($web['webinar_date']) ? date('d M Y', strtotime($web['webinar_date'])) : '-' ?></td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
+                                    <div class="col-auto">
+                                        <input type="number" min="0" name="interns_trained_count" class="form-control font-weight-bold" style="width: 150px;" value="<?= $valInternsCount ?>">
                                     </div>
-
-                                    <!-- B.3 NUMBER OF INTERNS TRAINED -->
-                                    <div class="card card-body bg-light border mb-0">
-                                        <div class="form-check form-checkbox mb-2">
-                                            <input class="form-check-input" type="checkbox" name="include_interns" id="chkInterns" value="1" <?= $chkInterns ? 'checked' : '' ?> onchange="toggleSectionVisibility('internsPreview', this.checked)">
-                                            <label class="form-check-label font-weight-bold text-dark me-2" for="chkInterns">
-                                                Number of Interns Trained
-                                            </label>
-                                        </div>
-
-                                        <div id="internsPreview" style="display: <?= $chkInterns ? 'block' : 'none' ?>;" class="mt-2">
-                                            <div class="d-flex align-items-center gap-3 bg-white p-3 rounded border">
-                                                <div class="display-6 font-weight-bold text-primary"><?= $kpiInterns ?></div>
-                                                <div>
-                                                    <div class="font-weight-bold text-dark">Total Interns Trained</div>
-                                                    <div class="small text-muted">
-                                                        <i class="fas fa-check-circle text-success me-1"></i> Derived automatically from Internship KPI records (SUM of <code>no_students_trained</code> for Task ID: <?= htmlspecialchars($selectedTaskId) ?>)
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
-
                         </div>
-                    </div>
 
-                    <!-- FORM ACTIONS -->
-                    <div class="card border-0 shadow-sm mb-5">
-                        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <hr class="my-4">
+
+                        <!-- FORM ACTIONS AT BOTTOM OF THE ONE FORM CARD -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <div>
-                                <?php if ($selectedReportId > 0): ?>
+                                <?php if ($selectedReportId > 0 && isSuperAdmin()): ?>
                                     <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteReport();">
                                         <i class="fas fa-trash-alt me-1"></i> Delete Report
                                     </button>
                                 <?php endif; ?>
                             </div>
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success btn-lg px-4 font-weight-bold">
-                                    <i class="fas fa-save me-2"></i> Save Report
-                                </button>
-
-                                <?php if ($selectedReportId > 0): ?>
-                                    <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $selectedReportId ?>" 
-                                       target="_blank" 
-                                       class="btn btn-primary btn-lg px-4 font-weight-bold">
-                                        <i class="fas fa-file-pdf me-2"></i> Generate Report (PDF)
-                                    </a>
-                                <?php else: ?>
-                                    <button type="button" class="btn btn-secondary btn-lg px-4" disabled title="Save report first to generate PDF">
-                                        <i class="fas fa-file-pdf me-2"></i> Generate Report (PDF)
+                            <div class="d-flex gap-2 flex-wrap">
+                                <?php if (!isSuperAdmin()): ?>
+                                    <!-- SPOKE ADMIN BUTTONS -->
+                                    <button type="submit" name="action" value="save_report" class="btn btn-outline-secondary btn-lg px-4 font-weight-bold">
+                                        <i class="fas fa-save me-2"></i> Save Draft
                                     </button>
+                                    <button type="submit" name="action" value="submit_approval" class="btn <?= $btnThemeClass ?> btn-lg px-4 font-weight-bold">
+                                        <i class="fas fa-paper-plane me-2"></i> Submit for Approval
+                                    </button>
+                                <?php else: ?>
+                                    <!-- SUPER ADMIN BUTTONS -->
+                                    <button type="submit" name="action" value="save_report" class="btn btn-secondary btn-lg px-4 font-weight-bold">
+                                        <i class="fas fa-save me-2"></i> Save Changes
+                                    </button>
+                                    <?php if ($reportStatus !== 'Approved'): ?>
+                                        <button type="submit" name="action" value="approve_report" class="btn btn-success btn-lg px-4 font-weight-bold">
+                                            <i class="fas fa-check-circle me-2"></i> Approve
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($reportStatus !== 'Rejected'): ?>
+                                        <button type="submit" name="action" value="reject_report" class="btn btn-danger btn-lg px-4 font-weight-bold">
+                                            <i class="fas fa-times-circle me-2"></i> Reject
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if ($reportStatus === 'Approved' && $selectedReportId > 0): ?>
+                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $selectedReportId ?>" target="_blank" class="btn btn-primary btn-lg px-4 font-weight-bold">
+                                            <i class="fas fa-file-pdf me-2"></i> Export PDF
+                                        </a>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
-                    </div>
-                </form>
 
-                <!-- Hidden Delete Form -->
-                <?php if ($selectedReportId > 0): ?>
-                    <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>" id="deleteReportForm" style="display:none;">
-                        <?= getCsrfInputField() ?>
-                        <input type="hidden" name="action" value="delete_report">
-                        <input type="hidden" name="report_id" value="<?= $selectedReportId ?>">
-                        <input type="hidden" name="task_no" value="<?= htmlspecialchars($selectedTaskId) ?>">
                     </form>
-                <?php endif; ?>
+                </div>
+            </div>
 
+            <?php if ($selectedReportId > 0 && isSuperAdmin()): ?>
+                <form method="POST" action="<?= buildNavUrl('progress_reports.php') ?>" id="deleteReportForm" style="display:none;">
+                    <?= getCsrfInputField() ?>
+                    <input type="hidden" name="action" value="delete_report">
+                    <input type="hidden" name="report_id" value="<?= $selectedReportId ?>">
+                </form>
             <?php endif; ?>
 
         </div>
     </div>
 </div>
 
+<!-- REUSABLE KPI SELECTION MODAL -->
+<div class="modal fade" id="kpiSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background: <?= $primaryThemeColor ?>;">
+                <h5 class="modal-title text-white font-weight-bold" id="kpiModalTitle">Select Records</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <!-- Search Box -->
+                <div class="input-group mb-3">
+                    <input type="text" id="kpiSearchInput" class="form-control" placeholder="Search records..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
+                    <button class="btn <?= $btnThemeClass ?> font-weight-bold" type="button" onclick="performKpiSearch()">
+                        <i class="fas fa-search me-1"></i> Search
+                    </button>
+                </div>
+
+                <!-- Record List Container -->
+                <div id="kpiModalList" class="list-group shadow-xs" style="max-height: 380px; overflow-y: auto;">
+                    <div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Loading records...</div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="kpiSelectedCountBadge" class="badge bg-secondary fs-6 p-2">0 selected</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn <?= $btnThemeClass ?> font-weight-bold" onclick="confirmKpiSelection()">Add Selected</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function toggleSectionVisibility(elementId, isVisible) {
-    var el = document.getElementById(elementId);
+// INITIAL DATA FROM SERVER (EXPLICITLY SELECTED ITEMS ONLY)
+var currentPrefix = <?= json_encode($prefix) ?>;
+var initialData = {
+    publications: <?= json_encode($selPubRows) ?>,
+    conferences: <?= json_encode($selConfRows) ?>,
+    webinars: <?= json_encode($selWebRows) ?>,
+    internships: <?= json_encode($selIntRows) ?>,
+    patents: <?= json_encode($selPatRows) ?>,
+    workshops: <?= json_encode($selWshopRows) ?>,
+    trainings: <?= json_encode($selTrainRows) ?>
+};
+
+// GLOBAL SELECTION STATE (dictionary of item objects keyed by category)
+var selectedItemsMap = {
+    publications: {},
+    conferences: {},
+    webinars: {},
+    internships: {},
+    patents: {},
+    workshops: {},
+    trainings: {}
+};
+
+// Initialize selectedItemsMap strictly from explicitly saved server data
+for (var cat in initialData) {
+    if (initialData.hasOwnProperty(cat) && Array.isArray(initialData[cat])) {
+        initialData[cat].forEach(function(row) {
+            selectedItemsMap[cat][row.id] = formatRowObj(cat, row);
+        });
+    }
+}
+
+function formatRowObj(cat, r) {
+    var title = '', subtitle = '', task_no = r.task_no || r.taskno || '';
+    if (cat === 'publications') {
+        title = r.publication_title || 'Untitled Publication';
+        var parts = [];
+        if (r.author_name) parts.push("Author: " + r.author_name);
+        if (r.publication_journal) parts.push("Journal: " + r.publication_journal);
+        if (r.publication_date) parts.push("Date: " + r.publication_date);
+        subtitle = parts.join(" | ");
+    } else if (cat === 'conferences' || cat === 'workshops') {
+        title = r.title || 'Untitled Event';
+        var parts = [];
+        if (r.organisers || r.organizer) parts.push("Organizer: " + (r.organisers || r.organizer));
+        if (r.conf_date || r.start_date) parts.push("Date: " + (r.conf_date || r.start_date));
+        if (r.institute) parts.push("Venue: " + r.institute);
+        subtitle = parts.join(" | ");
+    } else if (cat === 'webinars' || cat === 'trainings') {
+        title = r.title || 'Untitled Webinar / Training';
+        var parts = [];
+        if (r.speaker_name) parts.push("Speaker: " + r.speaker_name);
+        if (r.webinar_date) parts.push("Date: " + r.webinar_date);
+        subtitle = parts.join(" | ");
+    } else if (cat === 'internships') {
+        title = r.title || 'Untitled Internship';
+        var parts = [];
+        if (r.project_investigator) parts.push("PI: " + r.project_investigator);
+        if (r.no_students_trained) parts.push("Interns: " + r.no_students_trained);
+        subtitle = parts.join(" | ");
+    } else if (cat === 'patents') {
+        title = r.patent_title || 'Untitled Patent';
+        var parts = [];
+        if (r.inventor_name) parts.push("Inventor: " + r.inventor_name);
+        if (r.patent_number) parts.push("Patent No: " + r.patent_number);
+        subtitle = parts.join(" | ");
+    }
+    return { id: parseInt(r.id), title: title, subtitle: subtitle, task_no: task_no };
+}
+
+// RENDER DISPLAY ON LOAD (NO UNSELECTED OR AUTOMATIC DATA RENDERED)
+document.addEventListener('DOMContentLoaded', function() {
+    ['publications', 'conferences', 'webinars', 'internships', 'patents', 'workshops', 'trainings'].forEach(function(c) {
+        renderCategoryDisplay(c);
+    });
+});
+
+function renderCategoryDisplay(cat) {
+    var container = document.getElementById('selected_' + cat + '_display');
+    var hiddenInput = document.getElementById('selected_' + (cat === 'workshops' ? 'workshop' : (cat === 'trainings' ? 'training' : cat.replace(/s$/, ''))) + '_ids');
+    
+    if (!hiddenInput) {
+        hiddenInput = document.getElementById('selected_' + cat + '_ids');
+    }
+
+    var items = Object.values(selectedItemsMap[cat]);
+    var ids = items.map(function(it) { return it.id; });
+
+    if (hiddenInput) {
+        hiddenInput.value = JSON.stringify(ids);
+    }
+
+    if (!container) return;
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-muted small py-2"><i class="fas fa-info-circle me-1"></i> No records selected yet.</div>';
+        return;
+    }
+
+    var html = '<div class="list-group gap-2">';
+    items.forEach(function(it, idx) {
+        html += '<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center rounded border p-2 bg-light">';
+        html += '  <div>';
+        html += '    <div class="font-weight-bold text-dark"><i class="fas fa-check-square text-success me-1"></i> ' + escapeHtml(it.title) + (it.task_no ? ' <span class="badge bg-secondary ms-1">Task: ' + escapeHtml(it.task_no) + '</span>' : '') + '</div>';
+        if (it.subtitle) {
+            html += '    <div class="small text-muted ms-3">' + escapeHtml(it.subtitle) + '</div>';
+        }
+        html += '  </div>';
+        html += '  <div>';
+        html += '    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(\'' + cat + '\', ' + it.id + ')">';
+        html += '      <i class="fas fa-trash-alt me-1"></i> Remove';
+        html += '    </button>';
+        html += '  </div>';
+        html += '</div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function removeItem(cat, id) {
+    if (selectedItemsMap[cat] && selectedItemsMap[cat][id]) {
+        delete selectedItemsMap[cat][id];
+        renderCategoryDisplay(cat);
+    }
+}
+
+function toggleCapacitySection(groupId, isChecked) {
+    var el = document.getElementById(groupId);
     if (el) {
-        el.style.display = isVisible ? 'block' : 'none';
+        el.style.display = isChecked ? 'block' : 'none';
+    }
+}
+
+// MODAL VARIABLES & FUNCTIONS
+var activeModalCategory = '';
+var candidateItems = [];
+
+function openKpiModal(category) {
+    activeModalCategory = category;
+    document.getElementById('kpiModalTitle').innerText = 'Select ' + capitalize(category);
+    document.getElementById('kpiSearchInput').value = '';
+    
+    var modalEl = document.getElementById('kpiSelectionModal');
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    performKpiSearch();
+}
+
+function performKpiSearch() {
+    var q = document.getElementById('kpiSearchInput').value.trim();
+    var listEl = document.getElementById('kpiModalList');
+    listEl.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Loading records for ' + escapeHtml(currentPrefix.toUpperCase()) + '...</div>';
+
+    var url = 'progress_reports.php?action=ajax_search_kpi&prefix=' + encodeURIComponent(currentPrefix) + '&category=' + encodeURIComponent(activeModalCategory) + '&q=' + encodeURIComponent(q);
+
+    fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            if (json.status === 'success') {
+                candidateItems = json.data || [];
+                renderModalCandidates();
+            } else {
+                listEl.innerHTML = '<div class="alert alert-danger m-3">Failed to load records.</div>';
+            }
+        })
+        .catch(function(err) {
+            listEl.innerHTML = '<div class="alert alert-danger m-3">Error fetching records.</div>';
+        });
+}
+
+function renderModalCandidates() {
+    var listEl = document.getElementById('kpiModalList');
+    if (!candidateItems || candidateItems.length === 0) {
+        listEl.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-search me-1"></i> No matching records found for ' + escapeHtml(currentPrefix.toUpperCase()) + '.</div>';
+        updateModalBadge();
+        return;
+    }
+
+    var selectedMap = selectedItemsMap[activeModalCategory] || {};
+    var html = '';
+
+    candidateItems.forEach(function(item) {
+        var isChecked = !!selectedMap[item.id];
+        html += '<label class="list-group-item d-flex align-items-start gap-3 p-3 style-pointer">';
+        html += '  <input class="form-check-input flex-shrink-0 mt-1 modal-kpi-checkbox" type="checkbox" data-id="' + item.id + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateModalBadge()">';
+        html += '  <div class="flex-grow-1">';
+        html += '    <div class="font-weight-bold text-dark">' + escapeHtml(item.title) + (item.task_no ? ' <span class="badge bg-secondary ms-1">Task: ' + escapeHtml(item.task_no) + '</span>' : '') + '</div>';
+        if (item.subtitle) {
+            html += '    <div class="small text-muted mt-1">' + escapeHtml(item.subtitle) + '</div>';
+        }
+        html += '  </div>';
+        html += '</label>';
+    });
+
+    listEl.innerHTML = html;
+    updateModalBadge();
+}
+
+function updateModalBadge() {
+    var checkboxes = document.querySelectorAll('.modal-kpi-checkbox:checked');
+    var count = checkboxes.length;
+    document.getElementById('kpiSelectedCountBadge').innerText = count + ' selected';
+}
+
+function confirmKpiSelection() {
+    var checkboxes = document.querySelectorAll('.modal-kpi-checkbox');
+    var newMap = Object.assign({}, selectedItemsMap[activeModalCategory] || {});
+
+    checkboxes.forEach(function(cb) {
+        var id = parseInt(cb.getAttribute('data-id'));
+        if (cb.checked) {
+            var itemObj = candidateItems.find(function(it) { return it.id === id; });
+            if (itemObj) {
+                newMap[id] = itemObj;
+            } else if (selectedItemsMap[activeModalCategory] && selectedItemsMap[activeModalCategory][id]) {
+                newMap[id] = selectedItemsMap[activeModalCategory][id];
+            }
+        } else {
+            delete newMap[id];
+        }
+    });
+
+    selectedItemsMap[activeModalCategory] = newMap;
+    renderCategoryDisplay(activeModalCategory);
+
+    var modalEl = document.getElementById('kpiSelectionModal');
+    var modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+        modal.hide();
     }
 }
 
@@ -712,6 +923,20 @@ function confirmDeleteReport() {
         document.getElementById('deleteReportForm').submit();
     }
 }
+
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 </script>
 
+<script src="vendor/global/global.min.js"></script>
+<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
+<script src="js/custom.min.js"></script>
+<script src="js/dlabnav-init.js"></script>
 <?php include 'footer.php'; ?>

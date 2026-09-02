@@ -2,8 +2,8 @@
 /**
  * ANRF-PAIR Progress Reports Helper Functions
  * 
- * Provides database schema auto-migration, Task ID discovery across KPI tables,
- * KPI reference retrieval (single source of truth), and report management.
+ * Provides database schema auto-migration, independent KPI record discovery/search,
+ * JSON reference retrieval (single source of truth), and report management.
  */
 
 if (!function_exists('ensureProgressReportsSchema')) {
@@ -19,11 +19,22 @@ if (!function_exists('ensureProgressReportsSchema')) {
         $colsToAdd = [
             'work_package_no'          => "VARCHAR(100) DEFAULT NULL",
             'interns_trained_count'    => "INT UNSIGNED NOT NULL DEFAULT 0",
-            'include_publications'     => "TINYINT(1) NOT NULL DEFAULT 1",
-            'include_capacity_building'=> "TINYINT(1) NOT NULL DEFAULT 1",
-            'include_workshops'        => "TINYINT(1) NOT NULL DEFAULT 1",
-            'include_training'         => "TINYINT(1) NOT NULL DEFAULT 1",
-            'include_interns'          => "TINYINT(1) NOT NULL DEFAULT 1",
+            'include_publications'     => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_conferences'      => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_webinars'         => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_internships'      => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_patents'          => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_capacity_building'=> "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_workshops'        => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_training'         => "TINYINT(1) NOT NULL DEFAULT 0",
+            'include_interns'          => "TINYINT(1) NOT NULL DEFAULT 0",
+            'selected_publication_ids' => "TEXT DEFAULT NULL",
+            'selected_conference_ids'  => "TEXT DEFAULT NULL",
+            'selected_webinar_ids'     => "TEXT DEFAULT NULL",
+            'selected_internship_ids'  => "TEXT DEFAULT NULL",
+            'selected_patent_ids'      => "TEXT DEFAULT NULL",
+            'selected_workshop_ids'    => "TEXT DEFAULT NULL",
+            'selected_training_ids'    => "TEXT DEFAULT NULL",
             'workshops_narrative'      => "TEXT DEFAULT NULL",
             'training_narrative'       => "TEXT DEFAULT NULL",
         ];
@@ -31,7 +42,6 @@ if (!function_exists('ensureProgressReportsSchema')) {
         foreach ($prefixes as $p) {
             $tbl = "{$p}_progress_reports";
             try {
-                // Check if table exists
                 $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
                 if (!$chk || count($chk->fetchAll()) === 0) continue;
 
@@ -43,123 +53,237 @@ if (!function_exists('ensureProgressReportsSchema')) {
                     }
                 }
             } catch (Exception $e) {
-                // Log silently or ignore if already present
                 error_log("Schema update notice for $tbl: " . $e->getMessage());
             }
         }
     }
 }
 
-if (!function_exists('getInstituteTaskIds')) {
+if (!function_exists('getAllInstituteProgressReports')) {
     /**
-     * Discovers all distinct Task IDs for an institute across all existing KPI tables.
+     * Fetches all existing progress reports for an institute.
      */
+    function getAllInstituteProgressReports($pdo, $prefix) {
+        $tbl = "{$prefix}_progress_reports";
+        try {
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($chk === 0) return [];
+
+            $stmt = $pdo->query("SELECT * FROM `$tbl` ORDER BY id DESC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+}
+
+if (!function_exists('getKpiCategoryTableName')) {
+    function getKpiCategoryTableName($prefix, $category) {
+        $category = strtolower(trim($category));
+        if ($category === 'workshops') $category = 'conferences';
+        if ($category === 'trainings' || $category === 'training') $category = 'webinars';
+        
+        $validMap = [
+            'publications' => "{$prefix}_publications",
+            'conferences'  => "{$prefix}_conferences",
+            'webinars'     => "{$prefix}_webinars",
+            'internships'  => "{$prefix}_internships",
+            'patents'      => "{$prefix}_patents",
+        ];
+        return $validMap[$category] ?? null;
+    }
+}
+
+if (!function_exists('searchKpiCategoryRecords')) {
+    /**
+     * Searches existing KPI records for selection modals WITHOUT Task-ID restriction.
+     */
+    function searchKpiCategoryRecords($pdo, $prefix, $category, $searchQuery = '') {
+        $tbl = getKpiCategoryTableName($prefix, $category);
+        if (!$tbl) return [];
+
+        try {
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($chk === 0) return [];
+
+            $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+
+            $sql = "SELECT * FROM `$tbl` WHERE 1=1";
+            $params = [];
+
+            $searchQuery = trim($searchQuery);
+            if ($searchQuery !== '') {
+                $term = "%{$searchQuery}%";
+                $cat = strtolower(trim($category));
+
+                $targetFields = [];
+                if ($cat === 'publications') {
+                    $targetFields = ['publication_title', 'author_name', 'publication_journal', 'doi_number', 'task_no'];
+                } elseif ($cat === 'conferences' || $cat === 'workshops') {
+                    $targetFields = ['title', 'organisers', 'institute', 'investigator', 'taskno', 'task_no'];
+                } elseif ($cat === 'webinars' || $cat === 'trainings' || $cat === 'training') {
+                    $targetFields = ['title', 'speaker_name', 'affiliation', 'organisers', 'institute', 'investigator', 'taskno', 'task_no'];
+                } elseif ($cat === 'internships') {
+                    $targetFields = ['title', 'project_investigator', 'students_names', 'task_no'];
+                } elseif ($cat === 'patents') {
+                    $targetFields = ['patent_title', 'inventor_name', 'patent_number', 'application_number', 'task_no'];
+                }
+
+                $validFields = array_values(array_intersect($targetFields, $existingCols));
+                if (!empty($validFields)) {
+                    $whereClauses = [];
+                    foreach ($validFields as $f) {
+                        $whereClauses[] = "`$f` LIKE ?";
+                        $params[] = $term;
+                    }
+                    $sql .= " AND (" . implode(' OR ', $whereClauses) . ")";
+                }
+            }
+
+            $sql .= " ORDER BY id DESC LIMIT 100";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            $formatted = [];
+            $catKey = strtolower(trim($category));
+            foreach ($rows as $r) {
+                $item = [
+                    'id' => (int)$r['id'],
+                    'task_no' => $r['task_no'] ?? ($r['taskno'] ?? ''),
+                ];
+
+                if ($catKey === 'publications') {
+                    $item['title'] = $r['publication_title'] ?? 'Untitled Publication';
+                    $sub = [];
+                    if (!empty($r['author_name'])) $sub[] = "Authors: " . $r['author_name'];
+                    if (!empty($r['publication_journal'])) $sub[] = "Journal: " . $r['publication_journal'];
+                    if (!empty($r['publication_date'])) $sub[] = "Date: " . date('d M Y', strtotime($r['publication_date']));
+                    if (!empty($r['doi_number'])) $sub[] = "DOI: " . $r['doi_number'];
+                    $item['subtitle'] = implode(' | ', $sub);
+                } elseif ($catKey === 'conferences' || $catKey === 'workshops') {
+                    $item['title'] = $r['title'] ?? 'Untitled Event';
+                    $sub = [];
+                    if (!empty($r['organisers'])) $sub[] = "Organizers: " . $r['organisers'];
+                    if (!empty($r['conf_date'])) $sub[] = "Date: " . date('d M Y', strtotime($r['conf_date']));
+                    if (!empty($r['institute'])) $sub[] = "Venue: " . $r['institute'];
+                    $item['subtitle'] = implode(' | ', $sub);
+                } elseif ($catKey === 'webinars' || $catKey === 'trainings' || $catKey === 'training') {
+                    $item['title'] = $r['title'] ?? 'Untitled Webinar / Training';
+                    $sub = [];
+                    if (!empty($r['speaker_name'])) $sub[] = "Speaker: " . $r['speaker_name'];
+                    if (!empty($r['webinar_date'])) $sub[] = "Date: " . date('d M Y', strtotime($r['webinar_date']));
+                    if (!empty($r['organisers'])) $sub[] = "Organizers: " . $r['organisers'];
+                    if (!empty($r['affiliation'])) $sub[] = "Affiliation: " . $r['affiliation'];
+                    $item['subtitle'] = implode(' | ', $sub);
+                } elseif ($catKey === 'internships') {
+                    $item['title'] = $r['title'] ?? 'Untitled Internship Program';
+                    $sub = [];
+                    if (!empty($r['project_investigator'])) $sub[] = "PI: " . $r['project_investigator'];
+                    if (!empty($r['no_students_trained'])) $sub[] = "Interns: " . $r['no_students_trained'];
+                    if (!empty($r['students_names'])) $sub[] = "Students: " . $r['students_names'];
+                    $item['subtitle'] = implode(' | ', $sub);
+                } elseif ($catKey === 'patents') {
+                    $item['title'] = $r['patent_title'] ?? 'Untitled Patent';
+                    $sub = [];
+                    if (!empty($r['inventor_name'])) $sub[] = "Inventor(s): " . $r['inventor_name'];
+                    if (!empty($r['patent_number'])) $sub[] = "Patent No: " . $r['patent_number'];
+                    if (!empty($r['application_number'])) $sub[] = "App No: " . $r['application_number'];
+                    if (!empty($r['patent_status'])) $sub[] = "Status: " . $r['patent_status'];
+                    $item['subtitle'] = implode(' | ', $sub);
+                }
+
+                $formatted[] = $item;
+            }
+
+            return $formatted;
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+}
+
+if (!function_exists('getKpiCategoryRecordsByIds')) {
+    /**
+     * Retrieves full KPI record rows for a specific list of integer IDs (READ-ONLY).
+     */
+    function getKpiCategoryRecordsByIds($pdo, $prefix, $category, $ids) {
+        if (empty($ids) || !is_array($ids)) return [];
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) return [];
+
+        $tbl = getKpiCategoryTableName($prefix, $category);
+        if (!$tbl) return [];
+
+        try {
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
+            if ($chk === 0) return [];
+
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            // Sort rows in order of original IDs array
+            $idMap = [];
+            foreach ($rows as $r) {
+                $idMap[(int)$r['id']] = $r;
+            }
+
+            $sorted = [];
+            foreach ($ids as $id) {
+                if (isset($idMap[$id])) {
+                    $sorted[] = $idMap[$id];
+                }
+            }
+            return $sorted;
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+}
+
+if (!function_exists('getInstituteTaskIds')) {
     function getInstituteTaskIds($pdo, $prefix) {
         $taskMap = [];
+        $tables = [
+            "{$prefix}_publications" => ['task_no'],
+            "{$prefix}_conferences"  => ['taskno', 'task_no'],
+            "{$prefix}_webinars"     => ['taskno', 'task_no'],
+            "{$prefix}_internships"  => ['task_no'],
+            "{$prefix}_patents"      => ['task_no'],
+            "{$prefix}_progress_reports" => ['task_no'],
+        ];
 
-        // 1. Publications (task_no)
-        try {
-            $tbl = "{$prefix}_publications";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $rows = $pdo->query("SELECT DISTINCT task_no FROM `$tbl` WHERE task_no IS NOT NULL AND TRIM(task_no) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                foreach ($rows as $r) {
-                    $t = trim($r);
-                    if ($t !== '') $taskMap[$t] = true;
-                }
-            }
-        } catch (Exception $e) {}
-
-        // 2. Conferences (taskno or task_no)
-        try {
-            $tbl = "{$prefix}_conferences";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $col = in_array('taskno', $cols, true) ? 'taskno' : (in_array('task_no', $cols, true) ? 'task_no' : null);
-                if ($col) {
-                    $rows = $pdo->query("SELECT DISTINCT `$col` FROM `$tbl` WHERE `$col` IS NOT NULL AND TRIM(`$col`) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($rows as $r) {
-                        $t = trim($r);
-                        if ($t !== '') $taskMap[$t] = true;
+        foreach ($tables as $tbl => $possibleCols) {
+            try {
+                if ($pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount() > 0) {
+                    $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                    foreach ($possibleCols as $c) {
+                        if (in_array($c, $cols, true)) {
+                            $rows = $pdo->query("SELECT DISTINCT `$c` FROM `$tbl` WHERE `$c` IS NOT NULL AND TRIM(`$c`) != ''")->fetchAll(PDO::FETCH_COLUMN);
+                            foreach ($rows as $r) {
+                                $t = trim($r);
+                                if ($t !== '') $taskMap[$t] = true;
+                            }
+                            break;
+                        }
                     }
                 }
-            }
-        } catch (Exception $e) {}
-
-        // 3. Webinars (taskno or task_no)
-        try {
-            $tbl = "{$prefix}_webinars";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                $col = in_array('taskno', $cols, true) ? 'taskno' : (in_array('task_no', $cols, true) ? 'task_no' : null);
-                if ($col) {
-                    $rows = $pdo->query("SELECT DISTINCT `$col` FROM `$tbl` WHERE `$col` IS NOT NULL AND TRIM(`$col`) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($rows as $r) {
-                        $t = trim($r);
-                        if ($t !== '') $taskMap[$t] = true;
-                    }
-                }
-            }
-        } catch (Exception $e) {}
-
-        // 4. Internships (task_no)
-        try {
-            $tbl = "{$prefix}_internships";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $rows = $pdo->query("SELECT DISTINCT task_no FROM `$tbl` WHERE task_no IS NOT NULL AND TRIM(task_no) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                foreach ($rows as $r) {
-                    $t = trim($r);
-                    if ($t !== '') $taskMap[$t] = true;
-                }
-            }
-        } catch (Exception $e) {}
-
-        // 5. Patents (task_no)
-        try {
-            $tbl = "{$prefix}_patents";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $rows = $pdo->query("SELECT DISTINCT task_no FROM `$tbl` WHERE task_no IS NOT NULL AND TRIM(task_no) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                foreach ($rows as $r) {
-                    $t = trim($r);
-                    if ($t !== '') $taskMap[$t] = true;
-                }
-            }
-        } catch (Exception $e) {}
-
-        // 6. Progress Reports (task_no)
-        try {
-            $tbl = "{$prefix}_progress_reports";
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk > 0) {
-                $rows = $pdo->query("SELECT DISTINCT task_no FROM `$tbl` WHERE task_no IS NOT NULL AND TRIM(task_no) != ''")->fetchAll(PDO::FETCH_COLUMN);
-                foreach ($rows as $r) {
-                    $t = trim($r);
-                    if ($t !== '') $taskMap[$t] = true;
-                }
-            }
-        } catch (Exception $e) {}
+            } catch (Exception $e) {}
+        }
 
         $tasks = array_keys($taskMap);
-        $tasks = array_unique(array_map('trim', $tasks));
         natsort($tasks);
         return array_values($tasks);
     }
 }
 
 if (!function_exists('getReportsForTask')) {
-    /**
-     * Fetches all existing progress reports for a specific Institute + Task ID.
-     */
     function getReportsForTask($pdo, $prefix, $taskId) {
         $tbl = "{$prefix}_progress_reports";
         try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
-
+            if ($pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount() === 0) return [];
             $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE task_no = ? ORDER BY id DESC");
             $stmt->execute([$taskId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -169,89 +293,3 @@ if (!function_exists('getReportsForTask')) {
     }
 }
 
-if (!function_exists('getKpiPublicationsForTask')) {
-    /**
-     * Retrieves existing publication KPI records for a specific Task ID (READ-ONLY).
-     */
-    function getKpiPublicationsForTask($pdo, $prefix, $taskId) {
-        $tbl = "{$prefix}_publications";
-        try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
-
-            $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE task_no = ? ORDER BY id DESC");
-            $stmt->execute([$taskId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
-            return [];
-        }
-    }
-}
-
-if (!function_exists('getKpiConferencesForTask')) {
-    /**
-     * Retrieves existing conference KPI records for a specific Task ID (READ-ONLY).
-     */
-    function getKpiConferencesForTask($pdo, $prefix, $taskId) {
-        $tbl = "{$prefix}_conferences";
-        try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
-
-            $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-            $col = in_array('taskno', $cols, true) ? 'taskno' : (in_array('task_no', $cols, true) ? 'task_no' : null);
-
-            if (!$col) return [];
-
-            $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE `$col` = ? ORDER BY id DESC");
-            $stmt->execute([$taskId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
-            return [];
-        }
-    }
-}
-
-if (!function_exists('getKpiWebinarsForTask')) {
-    /**
-     * Retrieves existing webinar / training KPI records for a specific Task ID (READ-ONLY).
-     */
-    function getKpiWebinarsForTask($pdo, $prefix, $taskId) {
-        $tbl = "{$prefix}_webinars";
-        try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
-
-            $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-            $col = in_array('taskno', $cols, true) ? 'taskno' : (in_array('task_no', $cols, true) ? 'task_no' : null);
-
-            if (!$col) return [];
-
-            $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE `$col` = ? ORDER BY id DESC");
-            $stmt->execute([$taskId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
-            return [];
-        }
-    }
-}
-
-if (!function_exists('getKpiInternCountForTask')) {
-    /**
-     * Calculates total interns trained by summing `no_students_trained` from internship KPI records.
-     */
-    function getKpiInternCountForTask($pdo, $prefix, $taskId) {
-        $tbl = "{$prefix}_internships";
-        try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return 0;
-
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM(no_students_trained), 0) AS total_trained FROM `$tbl` WHERE task_no = ?");
-            $stmt->execute([$taskId]);
-            $res = $stmt->fetch(PDO::FETCH_ASSOC);
-            return (int)($res['total_trained'] ?? 0);
-        } catch (Exception $e) {
-            return 0;
-        }
-    }
-}

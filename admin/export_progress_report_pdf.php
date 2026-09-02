@@ -54,7 +54,13 @@ if (!$reportId || $reportId <= 0) {
 $prefix = resolveAdminPrefix($requestedPrefix);
 $allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
-if ($requestedPrefix && !isSuperAdmin() && strtolower($requestedPrefix) !== strtolower($prefix)) {
+// STRICT SERVER-SIDE AUTHORIZATION FOR PDF EXPORT:
+// Only Super Admin can export/generate the final Progress Report PDF.
+if (!isSuperAdmin()) {
+    safeExportExit('Unauthorized access: Progress Report PDF Export is strictly restricted to Super Admin after approval.', 403);
+}
+
+if ($requestedPrefix && strtolower($requestedPrefix) !== strtolower($prefix)) {
     safeExportExit('Unauthorized access: Cross-institute export is forbidden.', 403);
 }
 
@@ -79,19 +85,27 @@ try {
     safeExportExit('Database query failed: ' . $e->getMessage(), 500);
 }
 
-// 4. FETCH KPI DATA (SINGLE SOURCE OF TRUTH) FOR REPORT'S TASK ID
-$taskId       = $report['task_no'] ?? '';
-$publications = getKpiPublicationsForTask($pdo, $prefix, $taskId);
-$conferences  = getKpiConferencesForTask($pdo, $prefix, $taskId);
-$webinars     = getKpiWebinarsForTask($pdo, $prefix, $taskId);
-$internsCount = getKpiInternCountForTask($pdo, $prefix, $taskId);
+// 4. FETCH SELECTED KPI RECORDS
+$pubIds   = json_decode($report['selected_publication_ids'] ?? '[]', true) ?: [];
+$confIds  = json_decode($report['selected_conference_ids'] ?? '[]', true) ?: [];
+$webIds   = json_decode($report['selected_webinar_ids'] ?? '[]', true) ?: [];
+$intIds   = json_decode($report['selected_internship_ids'] ?? '[]', true) ?: [];
+$patIds   = json_decode($report['selected_patent_ids'] ?? '[]', true) ?: [];
+$wshopIds = json_decode($report['selected_workshop_ids'] ?? '[]', true) ?: [];
+$trainIds = json_decode($report['selected_training_ids'] ?? '[]', true) ?: [];
 
-// Section Toggles
-$incPubs     = !empty($report['include_publications']);
-$incCapacity = !empty($report['include_capacity_building']);
-$incWorkshops= $incCapacity && !empty($report['include_workshops']);
-$incTraining = $incCapacity && !empty($report['include_training']);
-$incInterns  = $incCapacity && !empty($report['include_interns']);
+$publications = getKpiCategoryRecordsByIds($pdo, $prefix, 'publications', $pubIds);
+$conferences  = getKpiCategoryRecordsByIds($pdo, $prefix, 'conferences', $confIds);
+$webinars     = getKpiCategoryRecordsByIds($pdo, $prefix, 'webinars', $webIds);
+$internships  = getKpiCategoryRecordsByIds($pdo, $prefix, 'internships', $intIds);
+$patents      = getKpiCategoryRecordsByIds($pdo, $prefix, 'patents', $patIds);
+$workshops    = getKpiCategoryRecordsByIds($pdo, $prefix, 'workshops', $wshopIds);
+$trainings    = getKpiCategoryRecordsByIds($pdo, $prefix, 'trainings', $trainIds);
+
+$incWorkshops = !empty($report['include_workshops']);
+$incTraining  = !empty($report['include_training']);
+$incInterns   = !empty($report['include_interns']);
+$internsCount = (int)($report['interns_trained_count'] ?? 0);
 
 $instituteFullName = getInstituteFullName($prefix);
 
@@ -101,7 +115,6 @@ class ProgressReportPDF extends FPDF {
     public $taskNo = '';
 
     function Header() {
-        // Banner
         $this->SetFillColor(15, 76, 129); // Premium Navy Blue
         $this->Rect(0, 0, 210, 24, 'F');
         
@@ -112,7 +125,7 @@ class ProgressReportPDF extends FPDF {
         
         $this->SetFont('Helvetica', 'I', 10);
         $this->SetXY(10, 13);
-        $this->Cell(0, 6, pdfTxt($this->instituteName . '  |  Task ID: ' . $this->taskNo), 0, 1, 'L');
+        $this->Cell(0, 6, pdfTxt($this->instituteName . ($this->taskNo ? '  |  Task ID: ' . $this->taskNo : '')), 0, 1, 'L');
         
         $this->Ln(8);
     }
@@ -128,7 +141,7 @@ class ProgressReportPDF extends FPDF {
 // 6. GENERATE PDF DOCUMENT
 $pdf = new ProgressReportPDF('P', 'mm', 'A4');
 $pdf->instituteName = $instituteFullName;
-$pdf->taskNo = $taskId;
+$pdf->taskNo = $report['task_no'] ?? '';
 $pdf->AliasNbPages();
 $pdf->SetMargins(12, 12, 12);
 $pdf->AddPage();
@@ -148,19 +161,15 @@ $pdf->SetTextColor(15, 76, 129);
 $pdf->Cell(0, 7, pdfTxt('  PROJECT INFORMATION'), 0, 1, 'L', true);
 $pdf->Ln(2);
 
-$pdf->SetFont('Helvetica', '', 10);
-$pdf->SetTextColor(40, 40, 40);
-
-// Two-Column Meta Table
 $meta = [
-    'Institute'                => $instituteFullName,
-    'Task ID'                  => $taskId,
-    'Project Title'            => $report['project_title'] ?? 'N/A',
-    'Principal Investigator'   => $report['pi_name'] ?? 'N/A',
+    'Institute'                 => $instituteFullName,
+    'Project Title'             => $report['project_title'] ?? 'N/A',
+    'Principal Investigator'    => $report['pi_name'] ?? 'N/A',
     'Co-Principal Investigator' => $report['co_pi_name'] ?: 'N/A',
-    'Work Package'             => $report['work_package_no'] ?: 'N/A',
-    'Approval Status'          => $report['approval_status'] ?? 'Pending',
-    'Report Date'              => !empty($report['created_at']) ? date('d M Y', strtotime($report['created_at'])) : date('d M Y'),
+    'Work Package'              => $report['work_package_no'] ?: 'N/A',
+    'Task ID'                   => $report['task_no'] ?: 'N/A',
+    'Approval Status'           => $report['approval_status'] ?? 'Pending',
+    'Report Date'               => !empty($report['created_at']) ? date('d M Y', strtotime($report['created_at'])) : date('d M Y'),
 ];
 
 foreach ($meta as $label => $val) {
@@ -173,190 +182,296 @@ foreach ($meta as $label => $val) {
 }
 $pdf->Ln(4);
 
-// SECTION 1: PROGRESS REPORT NARRATIVE
-$pdf->SetFillColor(240, 244, 248);
-$pdf->SetFont('Helvetica', 'B', 11);
-$pdf->SetTextColor(15, 76, 129);
-$pdf->Cell(0, 7, pdfTxt('  1. PROGRESS REPORT DETAILS'), 0, 1, 'L', true);
-$pdf->Ln(2);
-
-// Approved Objectives
-$pdf->SetFont('Helvetica', 'B', 10);
-$pdf->SetTextColor(40, 40, 40);
-$pdf->Cell(0, 6, pdfTxt('Approved Objectives:'), 0, 1, 'L');
-$pdf->SetFont('Helvetica', '', 9.5);
-$pdf->SetTextColor(60, 60, 60);
-$objText = trim($report['approved_objects'] ?? '') ?: 'None specified.';
-$pdf->MultiCell(0, 5, pdfTxt($objText), 0, 'L');
-$pdf->Ln(3);
-
-// Methodology
-$pdf->SetFont('Helvetica', 'B', 10);
-$pdf->SetTextColor(40, 40, 40);
-$pdf->Cell(0, 6, pdfTxt('Methodology:'), 0, 1, 'L');
-$pdf->SetFont('Helvetica', '', 9.5);
-$pdf->SetTextColor(60, 60, 60);
-$methText = trim($report['methodology'] ?? '') ?: 'None specified.';
-$pdf->MultiCell(0, 5, pdfTxt($methText), 0, 'L');
-$pdf->Ln(3);
-
-// Summary of Progress
-$pdf->SetFont('Helvetica', 'B', 10);
-$pdf->SetTextColor(40, 40, 40);
-$pdf->Cell(0, 6, pdfTxt('Summary of Progress:'), 0, 1, 'L');
-$pdf->SetFont('Helvetica', '', 9.5);
-$pdf->SetTextColor(60, 60, 60);
-$sumText = trim($report['summary_progress'] ?? '') ?: 'None specified.';
-$pdf->MultiCell(0, 5, pdfTxt($sumText), 0, 'L');
-$pdf->Ln(5);
-
-// SECTION 2: PUBLICATIONS (ONLY IF ENABLED)
-if ($incPubs) {
+// SECTION 1: PROGRESS DETAILS (OBJECTIVES, METHODOLOGY, SUMMARY)
+if (!empty($report['approved_objects']) || !empty($report['methodology']) || !empty($report['summary_progress'])) {
     $pdf->SetFillColor(240, 244, 248);
     $pdf->SetFont('Helvetica', 'B', 11);
     $pdf->SetTextColor(15, 76, 129);
-    $pdf->Cell(0, 7, pdfTxt('  2. PUBLICATIONS (Derived from KPI Module)'), 0, 1, 'L', true);
+    $pdf->Cell(0, 7, pdfTxt('  PROGRESS REPORT DETAILS'), 0, 1, 'L', true);
     $pdf->Ln(2);
 
-    if (empty($publications)) {
-        $pdf->SetFont('Helvetica', 'I', 9.5);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->Cell(0, 6, pdfTxt('No publication KPI records found for Task ID: ' . $taskId), 0, 1, 'L');
-    } else {
-        $count = 1;
-        foreach ($publications as $pub) {
-            $pdf->SetFont('Helvetica', 'B', 9.5);
-            $pdf->SetTextColor(0, 0, 0);
-            $titleStr = $count . '. ' . ($pub['publication_title'] ?? 'Untitled Paper');
-            $pdf->MultiCell(0, 5, pdfTxt($titleStr), 0, 'L');
-            
+    if (!empty($report['approved_objects'])) {
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->SetTextColor(40, 40, 40);
+        $pdf->Cell(0, 6, pdfTxt('Approved Objectives:'), 0, 1, 'L');
+        $pdf->SetFont('Helvetica', '', 9.5);
+        $pdf->SetTextColor(60, 60, 60);
+        $pdf->MultiCell(0, 5, pdfTxt($report['approved_objects']), 0, 'L');
+        $pdf->Ln(3);
+    }
+
+    if (!empty($report['methodology'])) {
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->SetTextColor(40, 40, 40);
+        $pdf->Cell(0, 6, pdfTxt('Methodology:'), 0, 1, 'L');
+        $pdf->SetFont('Helvetica', '', 9.5);
+        $pdf->SetTextColor(60, 60, 60);
+        $pdf->MultiCell(0, 5, pdfTxt($report['methodology']), 0, 'L');
+        $pdf->Ln(3);
+    }
+
+    if (!empty($report['summary_progress'])) {
+        $pdf->SetFont('Helvetica', 'B', 10);
+        $pdf->SetTextColor(40, 40, 40);
+        $pdf->Cell(0, 6, pdfTxt('Summary of Progress:'), 0, 1, 'L');
+        $pdf->SetFont('Helvetica', '', 9.5);
+        $pdf->SetTextColor(60, 60, 60);
+        $pdf->MultiCell(0, 5, pdfTxt($report['summary_progress']), 0, 'L');
+        $pdf->Ln(3);
+    }
+    $pdf->Ln(2);
+}
+
+// SECTION 2: SELECTED PUBLICATIONS (ONLY IF SELECTED ITEMS EXIST)
+if (!empty($publications)) {
+    $pdf->SetFillColor(240, 244, 248);
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->SetTextColor(15, 76, 129);
+    $pdf->Cell(0, 7, pdfTxt('  PUBLICATIONS'), 0, 1, 'L', true);
+    $pdf->Ln(2);
+
+    $count = 1;
+    foreach ($publications as $pub) {
+        $pdf->SetFont('Helvetica', 'B', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
+        $titleStr = $count . '. ' . ($pub['publication_title'] ?? 'Untitled Paper');
+        $pdf->MultiCell(0, 5, pdfTxt($titleStr), 0, 'L');
+        
+        $details = [];
+        if (!empty($pub['author_name'])) $details[] = 'Authors: ' . $pub['author_name'];
+        if (!empty($pub['publication_journal'])) $details[] = 'Journal: ' . $pub['publication_journal'];
+        if (!empty($pub['publication_date'])) $details[] = 'Date: ' . date('d M Y', strtotime($pub['publication_date']));
+        if (!empty($pub['doi_number'])) $details[] = 'DOI: ' . $pub['doi_number'];
+
+        if ($details) {
             $pdf->SetFont('Helvetica', '', 9);
             $pdf->SetTextColor(80, 80, 80);
-            $details = [];
-            if (!empty($pub['author_name'])) $details[] = 'Authors: ' . $pub['author_name'];
-            if (!empty($pub['publication_journal'])) $details[] = 'Journal: ' . $pub['publication_journal'];
-            if (!empty($pub['publication_date'])) $details[] = 'Date: ' . date('d M Y', strtotime($pub['publication_date']));
-            if (!empty($pub['doi_number'])) $details[] = 'DOI: ' . $pub['doi_number'];
-            if (!empty($pub['impact_factor'])) $details[] = 'IF: ' . $pub['impact_factor'];
-
-            if ($details) {
-                $pdf->SetX(16);
-                $pdf->MultiCell(0, 4.5, pdfTxt(implode(' | ', $details)), 0, 'L');
-            }
-            $pdf->Ln(2);
-            $count++;
+            $pdf->SetX(16);
+            $pdf->MultiCell(0, 4.5, pdfTxt(implode(' | ', $details)), 0, 'L');
         }
+        $pdf->Ln(2);
+        $count++;
     }
     $pdf->Ln(3);
 }
 
-// SECTION 3: CAPACITY BUILDING (ONLY IF ENABLED)
-if ($incCapacity) {
+// SECTION 3: SELECTED CONFERENCES (ONLY IF SELECTED ITEMS EXIST)
+if (!empty($conferences)) {
     $pdf->SetFillColor(240, 244, 248);
     $pdf->SetFont('Helvetica', 'B', 11);
     $pdf->SetTextColor(15, 76, 129);
-    $pdf->Cell(0, 7, pdfTxt('  3. CAPACITY BUILDING'), 0, 1, 'L', true);
+    $pdf->Cell(0, 7, pdfTxt('  CONFERENCES'), 0, 1, 'L', true);
     $pdf->Ln(2);
 
-    // 3.1 Workshops / Conferences Conducted
-    if ($incWorkshops) {
+    $count = 1;
+    foreach ($conferences as $conf) {
+        $pdf->SetFont('Helvetica', 'B', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
+        $cTitle = $conf['title'] ?? 'Untitled Conference';
+        $pdf->Cell(0, 5, pdfTxt("  {$count}. {$cTitle}"), 0, 1, 'L');
+
+        $cOrg  = $conf['organisers'] ?? ($conf['organizer'] ?? '');
+        $cDate = !empty($conf['conf_date']) ? date('d M Y', strtotime($conf['conf_date'])) : '';
+        $cLoc  = $conf['institute'] ?? '';
+
+        $cDetails = [];
+        if ($cOrg) $cDetails[] = 'Organizer: ' . $cOrg;
+        if ($cDate) $cDetails[] = 'Date: ' . $cDate;
+        if ($cLoc) $cDetails[] = 'Venue: ' . $cLoc;
+
+        if ($cDetails) {
+            $pdf->SetFont('Helvetica', '', 8.5);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->SetX(16);
+            $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $cDetails)), 0, 1, 'L');
+        }
+        $pdf->Ln(2);
+        $count++;
+    }
+    $pdf->Ln(3);
+}
+
+// SECTION 4: SELECTED WEBINARS (ONLY IF SELECTED ITEMS EXIST)
+if (!empty($webinars)) {
+    $pdf->SetFillColor(240, 244, 248);
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->SetTextColor(15, 76, 129);
+    $pdf->Cell(0, 7, pdfTxt('  WEBINARS'), 0, 1, 'L', true);
+    $pdf->Ln(2);
+
+    $count = 1;
+    foreach ($webinars as $web) {
+        $pdf->SetFont('Helvetica', 'B', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
+        $wTitle = $web['title'] ?? 'Untitled Webinar';
+        $pdf->Cell(0, 5, pdfTxt("  {$count}. {$wTitle}"), 0, 1, 'L');
+
+        $wSpeaker = $web['speaker_name'] ?? '';
+        $wDate    = !empty($web['webinar_date']) ? date('d M Y', strtotime($web['webinar_date'])) : '';
+
+        $wDetails = [];
+        if ($wSpeaker) $wDetails[] = 'Speaker: ' . $wSpeaker;
+        if ($wDate) $wDetails[] = 'Date: ' . $wDate;
+
+        if ($wDetails) {
+            $pdf->SetFont('Helvetica', '', 8.5);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->SetX(16);
+            $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $wDetails)), 0, 1, 'L');
+        }
+        $pdf->Ln(2);
+        $count++;
+    }
+    $pdf->Ln(3);
+}
+
+// SECTION 5: SELECTED INTERNSHIPS (ONLY IF SELECTED ITEMS EXIST)
+if (!empty($internships)) {
+    $pdf->SetFillColor(240, 244, 248);
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->SetTextColor(15, 76, 129);
+    $pdf->Cell(0, 7, pdfTxt('  INTERNSHIPS'), 0, 1, 'L', true);
+    $pdf->Ln(2);
+
+    $count = 1;
+    foreach ($internships as $intern) {
+        $pdf->SetFont('Helvetica', 'B', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
+        $iTitle = $intern['title'] ?? 'Untitled Internship';
+        $pdf->Cell(0, 5, pdfTxt("  {$count}. {$iTitle}"), 0, 1, 'L');
+
+        $iPi    = $intern['project_investigator'] ?? '';
+        $iCount = $intern['no_students_trained'] ?? 0;
+
+        $iDetails = [];
+        if ($iPi) $iDetails[] = 'PI: ' . $iPi;
+        if ($iCount) $iDetails[] = 'Students Trained: ' . $iCount;
+
+        if ($iDetails) {
+            $pdf->SetFont('Helvetica', '', 8.5);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->SetX(16);
+            $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $iDetails)), 0, 1, 'L');
+        }
+        $pdf->Ln(2);
+        $count++;
+    }
+    $pdf->Ln(3);
+}
+
+// SECTION 6: SELECTED PATENTS (ONLY IF SELECTED ITEMS EXIST)
+if (!empty($patents)) {
+    $pdf->SetFillColor(240, 244, 248);
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->SetTextColor(15, 76, 129);
+    $pdf->Cell(0, 7, pdfTxt('  PATENTS'), 0, 1, 'L', true);
+    $pdf->Ln(2);
+
+    $count = 1;
+    foreach ($patents as $pat) {
+        $pdf->SetFont('Helvetica', 'B', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
+        $pTitle = $pat['patent_title'] ?? 'Untitled Patent';
+        $pdf->Cell(0, 5, pdfTxt("  {$count}. {$pTitle}"), 0, 1, 'L');
+
+        $pInv  = $pat['inventor_name'] ?? '';
+        $pNo   = $pat['patent_number'] ?? ($pat['application_number'] ?? '');
+        $pStat = $pat['patent_status'] ?? '';
+
+        $pDetails = [];
+        if ($pInv) $pDetails[] = 'Inventor: ' . $pInv;
+        if ($pNo) $pDetails[] = 'Patent/App No: ' . $pNo;
+        if ($pStat) $pDetails[] = 'Status: ' . $pStat;
+
+        if ($pDetails) {
+            $pdf->SetFont('Helvetica', '', 8.5);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->SetX(16);
+            $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $pDetails)), 0, 1, 'L');
+        }
+        $pdf->Ln(2);
+        $count++;
+    }
+    $pdf->Ln(3);
+}
+
+// SECTION 7: CAPACITY BUILDING (ONLY IF ENABLED & HAS CONTENT)
+$showCapacity = ($incWorkshops && !empty($workshops)) || ($incTraining && !empty($trainings)) || ($incInterns && $internsCount > 0);
+if ($showCapacity) {
+    $pdf->SetFillColor(240, 244, 248);
+    $pdf->SetFont('Helvetica', 'B', 11);
+    $pdf->SetTextColor(15, 76, 129);
+    $pdf->Cell(0, 7, pdfTxt('  CAPACITY BUILDING'), 0, 1, 'L', true);
+    $pdf->Ln(2);
+
+    if ($incWorkshops && !empty($workshops)) {
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->SetTextColor(40, 40, 40);
-        $pdf->Cell(0, 6, pdfTxt('3.1 Workshops / Conferences Conducted:'), 0, 1, 'L');
+        $pdf->Cell(0, 6, pdfTxt('Workshops / Conferences Conducted:'), 0, 1, 'L');
 
-        if (!empty($report['workshops_narrative'])) {
-            $pdf->SetFont('Helvetica', '', 9.5);
-            $pdf->SetTextColor(60, 60, 60);
-            $pdf->MultiCell(0, 5, pdfTxt($report['workshops_narrative']), 0, 'L');
-            $pdf->Ln(2);
-        }
+        $wIdx = 1;
+        foreach ($workshops as $w) {
+            $wTitle = $w['title'] ?? 'Untitled Workshop';
+            $wOrg   = $w['organisers'] ?? ($w['organizer'] ?? '');
+            $wDate  = !empty($w['conf_date']) ? date('d M Y', strtotime($w['conf_date'])) : '';
 
-        if (empty($conferences)) {
-            $pdf->SetFont('Helvetica', 'I', 9);
-            $pdf->SetTextColor(100, 100, 100);
-            $pdf->Cell(0, 5, pdfTxt('No conference KPI records found for Task ID: ' . $taskId), 0, 1, 'L');
-        } else {
-            $cIdx = 1;
-            foreach ($conferences as $conf) {
-                $cTitle = $conf['title'] ?? 'Untitled Conference';
-                $cOrg   = $conf['organizer'] ?? ($conf['organisers'] ?? '');
-                $cDate  = !empty($conf['start_date']) ? date('d M Y', strtotime($conf['start_date'])) : (!empty($conf['conf_date']) ? date('d M Y', strtotime($conf['conf_date'])) : '');
-                $cLoc   = $conf['location'] ?? '';
+            $pdf->SetFont('Helvetica', 'B', 9);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->Cell(0, 5, pdfTxt("    {$wIdx}. {$wTitle}"), 0, 1, 'L');
 
-                $pdf->SetFont('Helvetica', 'B', 9);
-                $pdf->SetTextColor(0, 0, 0);
-                $pdf->Cell(0, 5, pdfTxt("    {$cIdx}. {$cTitle}"), 0, 1, 'L');
+            $wDetails = [];
+            if ($wOrg) $wDetails[] = 'Organizer: ' . $wOrg;
+            if ($wDate) $wDetails[] = 'Date: ' . $wDate;
 
-                $cDetails = [];
-                if ($cOrg) $cDetails[] = 'Organizer: ' . $cOrg;
-                if ($cDate) $cDetails[] = 'Date: ' . $cDate;
-                if ($cLoc) $cDetails[] = 'Location: ' . $cLoc;
-
-                if ($cDetails) {
-                    $pdf->SetFont('Helvetica', '', 8.5);
-                    $pdf->SetTextColor(80, 80, 80);
-                    $pdf->SetX(20);
-                    $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $cDetails)), 0, 1, 'L');
-                }
-                $cIdx++;
+            if ($wDetails) {
+                $pdf->SetFont('Helvetica', '', 8.5);
+                $pdf->SetTextColor(80, 80, 80);
+                $pdf->SetX(20);
+                $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $wDetails)), 0, 1, 'L');
             }
+            $wIdx++;
         }
         $pdf->Ln(3);
     }
 
-    // 3.2 Training Programs Conducted
-    if ($incTraining) {
+    if ($incTraining && !empty($trainings)) {
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->SetTextColor(40, 40, 40);
-        $pdf->Cell(0, 6, pdfTxt('3.2 Training Programs Conducted:'), 0, 1, 'L');
+        $pdf->Cell(0, 6, pdfTxt('Training Programs Conducted:'), 0, 1, 'L');
 
-        if (!empty($report['training_narrative'])) {
-            $pdf->SetFont('Helvetica', '', 9.5);
-            $pdf->SetTextColor(60, 60, 60);
-            $pdf->MultiCell(0, 5, pdfTxt($report['training_narrative']), 0, 'L');
-            $pdf->Ln(2);
-        }
+        $tIdx = 1;
+        foreach ($trainings as $t) {
+            $tTitle   = $t['title'] ?? 'Untitled Training Program';
+            $tSpeaker = $t['speaker_name'] ?? '';
+            $tDate    = !empty($t['webinar_date']) ? date('d M Y', strtotime($t['webinar_date'])) : '';
 
-        if (empty($webinars)) {
-            $pdf->SetFont('Helvetica', 'I', 9);
-            $pdf->SetTextColor(100, 100, 100);
-            $pdf->Cell(0, 5, pdfTxt('No training/webinar KPI records found for Task ID: ' . $taskId), 0, 1, 'L');
-        } else {
-            $wIdx = 1;
-            foreach ($webinars as $web) {
-                $wTitle   = $web['title'] ?? 'Untitled Training';
-                $wSpeaker = $web['speaker_name'] ?? '';
-                $wDate    = !empty($web['webinar_date']) ? date('d M Y', strtotime($web['webinar_date'])) : '';
+            $pdf->SetFont('Helvetica', 'B', 9);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->Cell(0, 5, pdfTxt("    {$tIdx}. {$tTitle}"), 0, 1, 'L');
 
-                $pdf->SetFont('Helvetica', 'B', 9);
-                $pdf->SetTextColor(0, 0, 0);
-                $pdf->Cell(0, 5, pdfTxt("    {$wIdx}. {$wTitle}"), 0, 1, 'L');
+            $tDetails = [];
+            if ($tSpeaker) $tDetails[] = 'Speaker: ' . $tSpeaker;
+            if ($tDate) $tDetails[] = 'Date: ' . $tDate;
 
-                $wDetails = [];
-                if ($wSpeaker) $wDetails[] = 'Speaker: ' . $wSpeaker;
-                if ($wDate) $wDetails[] = 'Date: ' . $wDate;
-
-                if ($wDetails) {
-                    $pdf->SetFont('Helvetica', '', 8.5);
-                    $pdf->SetTextColor(80, 80, 80);
-                    $pdf->SetX(20);
-                    $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $wDetails)), 0, 1, 'L');
-                }
-                $wIdx++;
+            if ($tDetails) {
+                $pdf->SetFont('Helvetica', '', 8.5);
+                $pdf->SetTextColor(80, 80, 80);
+                $pdf->SetX(20);
+                $pdf->Cell(0, 4.5, pdfTxt(implode(' | ', $tDetails)), 0, 1, 'L');
             }
+            $tIdx++;
         }
         $pdf->Ln(3);
     }
 
-    // 3.3 Number of Interns Trained
-    if ($incInterns) {
+    if ($incInterns && $internsCount > 0) {
         $pdf->SetFont('Helvetica', 'B', 10);
         $pdf->SetTextColor(40, 40, 40);
-        $pdf->Cell(0, 6, pdfTxt('3.3 Number of Interns Trained:'), 0, 1, 'L');
+        $pdf->Cell(0, 6, pdfTxt('Number of Interns Trained:'), 0, 1, 'L');
 
         $pdf->SetFont('Helvetica', 'B', 11);
         $pdf->SetTextColor(15, 76, 129);
-        $pdf->Cell(0, 6, pdfTxt("    Total Interns Trained: {$internsCount}  (Derived from Internship KPI records)"), 0, 1, 'L');
+        $pdf->Cell(0, 6, pdfTxt("    Total Interns Trained: {$internsCount}"), 0, 1, 'L');
         $pdf->Ln(3);
     }
 }
@@ -370,7 +485,7 @@ $pdf->Ln(4);
 $pdf->SetFont('Helvetica', 'B', 9.5);
 $pdf->SetTextColor(40, 40, 40);
 $pdf->Cell(93, 5, pdfTxt('Prepared By: Principal Investigator'), 0, 0, 'L');
-$filename = 'Progress_Report_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $prefix . '_Task_' . $taskId) . '.pdf';
+$filename = 'Progress_Report_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $prefix . '_Report_' . $reportId) . '.pdf';
 
 if (PHP_SAPI !== 'cli') {
     if (ob_get_length()) {
