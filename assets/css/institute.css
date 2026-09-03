@@ -493,8 +493,8 @@
         .b-rejected::before { background: var(--red-mid); }
         .b-pending   { background: #f3f4f6; color: #4b5563; }
         .b-pending::before { background: #9ca3af; }
-        .b-webinar   { background: #ede9fe; color: #4c1d95; }
-        .b-webinar::before { background: #7c3aed; }
+        .b-webinar   { background: #fdf2f2; color: #bc2121; }
+        .b-webinar::before { background: #bc2121; }
         .b-conf      { background: #e0f5ea; color: #155c35; }
         .b-conf::before { background: #1a9e55; }
 

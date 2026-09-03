@@ -118,6 +118,74 @@ i.fas, i.far, i.fab, i.fa {
     vertical-align: middle !important;
 }
 
+/* --- SELECTION MODULE BLUE THEME (#0856A4) --- */
+:root {
+    --select-module-blue: #0856A4;
+    --select-module-blue-hover: #064482;
+    --select-module-blue-light: #eff6ff;
+    --select-module-blue-border: #bfdbfe;
+}
+
+/* Modal Blue Buttons (Search & Add Selected inside opened modal) */
+.btn-select-blue {
+    background-color: #0856A4 !important;
+    border-color: #0856A4 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.btn-select-blue:hover,
+.btn-select-blue:focus,
+.btn-select-blue:active {
+    background-color: #064482 !important;
+    border-color: #064482 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(8, 86, 164, 0.3) !important;
+}
+
+/* Modal Header Background */
+.kpi-modal-header-blue {
+    background: #0856A4 !important;
+}
+
+/* Selection counter badge in modal footer (0 selected, 1 selected, etc.) */
+#kpiSelectedCountBadge,
+.badge-select-count-blue {
+    background-color: #0856A4 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(8, 86, 164, 0.25) !important;
+}
+
+/* Modal selection checkboxes & highlights */
+.modal-kpi-checkbox:checked {
+    background-color: #0856A4 !important;
+    border-color: #0856A4 !important;
+    box-shadow: 0 0 0 3px rgba(8, 86, 164, 0.18) !important;
+}
+
+.modal-kpi-checkbox:focus {
+    border-color: #0856A4 !important;
+    box-shadow: 0 0 0 3px rgba(8, 86, 164, 0.18) !important;
+}
+
+/* Task badges in candidate lists & selected display boxes */
+.modal-task-tag,
+.badge-task-blue {
+    background-color: #eff6ff !important;
+    color: #0856A4 !important;
+    border: 1px solid #bfdbfe !important;
+    font-weight: 600 !important;
+    font-size: 0.72rem !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+}
+
 /* --- Global & Header Updates --- */
 .nav-header {
     display: flex !important;
