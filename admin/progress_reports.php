@@ -376,41 +376,232 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
     border-bottom: 1px solid #e2e8f0;
 }
 /* ── EQUAL SIZE MINIMAL KPI SELECTION BUTTONS ── */
-.btn-kpi-select {
+.btn-kpi-select,
+button.btn-kpi-select {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     min-width: 175px !important;
     width: 175px !important;
-    height: 36px !important;
-    padding: 0 12px !important;
-    font-size: 0.8rem !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 0.825rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.01em !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     white-space: nowrap !important;
     text-align: center !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
-}
-.btn-primary.btn-kpi-select {
-    background-color: #024283 !important;
-    border-color: #024283 !important;
-    color: #ffffff !important;
-}
-.btn-primary.btn-kpi-select:hover {
     background-color: #0856a4 !important;
-    border-color: #0856a4 !important;
+    border: 1px solid #0856a4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(8, 86, 164, 0.2) !important;
+}
+.btn-kpi-select:hover,
+button.btn-kpi-select:hover {
+    background-color: #064380 !important;
+    border-color: #064380 !important;
+    color: #ffffff !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 10px rgba(2, 66, 131, 0.2) !important;
+    box-shadow: 0 4px 10px rgba(8, 86, 164, 0.35) !important;
 }
 .btn-kpi-select i {
     margin-right: 8px !important;
-    font-size: 0.78rem !important;
+    font-size: 0.8rem !important;
+    display: inline-block !important;
 }
-.btn-kpi-select:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+
+/* ── EXPERT UI DESIGN SYSTEM FOR KPI SELECTION MODAL ── */
+#kpiSelectionModal .modal-content {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    overflow: hidden !important;
+    background-color: #FFFFFF !important;
+}
+
+#kpiSelectionModal .modal-header {
+    background: #bc2121 !important;
+    padding: 1.25rem 1.5rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#kpiSelectionModal .modal-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+    color: #FFFFFF !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+#kpiSelectionModal .btn-close {
+    filter: brightness(0) invert(1) !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.15s ease !important;
+}
+
+#kpiSelectionModal .btn-close:hover {
+    opacity: 1 !important;
+}
+
+#kpiSelectionModal .kpi-search-group {
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    border: 1.5px solid #CBD5E1 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #FFFFFF !important;
+}
+
+#kpiSelectionModal .kpi-search-group:focus-within {
+    border-color: #bc2121 !important;
+    box-shadow: 0 0 0 3px rgba(188, 33, 33, 0.15) !important;
+}
+
+#kpiSelectionModal #kpiSearchInput {
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 0.925rem !important;
+    color: #0F172A !important;
+    background-color: #FFFFFF !important;
+    padding: 0.65rem 1rem !important;
+}
+
+#kpiSelectionModal #kpiSearchInput::placeholder {
+    color: #94A3B8 !important;
+}
+
+#kpiSelectionModal .kpi-search-btn {
+    background-color: #bc2121 !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    padding: 0.65rem 1.4rem !important;
+    font-size: 0.875rem !important;
+    transition: background-color 0.15s ease-in-out !important;
+}
+
+#kpiSelectionModal .kpi-search-btn:hover {
+    background-color: #9f1a1a !important;
+    color: #FFFFFF !important;
+}
+
+/* SEARCH ICON COLOR CONTROL */
+#kpiSelectionModal i.fa-search,
+#kpiSelectionModal .empty-search-icon {
+    color: #bc2121 !important;
+}
+
+#kpiSelectionModal .kpi-candidate-item {
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+    padding: 0.9rem 1.1rem !important;
+    background-color: #FFFFFF !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+#kpiSelectionModal .kpi-candidate-item:hover {
+    background-color: #F8FAFC !important;
+    border-color: #CBD5E1 !important;
+}
+
+#kpiSelectionModal .kpi-candidate-item.is-selected {
+    background-color: #FEF2F2 !important;
+    border-color: #FCA5A5 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+#kpiSelectionModal .modal-kpi-checkbox {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    margin-top: 0.15rem !important;
+    cursor: pointer !important;
+    accent-color: #bc2121 !important;
+}
+
+#kpiSelectionModal .task-badge-pill {
+    background-color: #F1F5F9 !important;
+    color: #334155 !important;
+    border: 1px solid #CBD5E1 !important;
+    font-weight: 600 !important;
+    font-size: 0.725rem !important;
+    padding: 0.2rem 0.55rem !important;
+    border-radius: 6px !important;
+}
+
+#kpiSelectionModal #kpiSelectedCountBadge {
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.01em !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+#kpiSelectionModal #kpiSelectedCountBadge.badge-zero {
+    background-color: #F1F5F9 !important;
+    color: #64748B !important;
+    border: 1px solid #E2E8F0 !important;
+}
+
+#kpiSelectionModal #kpiSelectedCountBadge.badge-active {
+    background-color: #FEE2E2 !important;
+    color: #bc2121 !important;
+    border: 1px solid #FCA5A5 !important;
+    font-weight: 700 !important;
+}
+
+#kpiSelectionModal .modal-footer {
+    padding: 1rem 1.5rem !important;
+    background-color: #F8FAFC !important;
+    border-top: 1px solid #E2E8F0 !important;
+}
+
+#kpiSelectionModal .btn-kpi-cancel,
+#kpiSelectionModal button.btn-kpi-cancel {
+    background-color: #FFFFFF !important;
+    color: #475569 !important;
+    border: 1.5px solid #CBD5E1 !important;
+    font-weight: 600 !important;
+    padding: 0.55rem 1.35rem !important;
+    border-radius: 8px !important;
+    font-size: 0.875rem !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+#kpiSelectionModal .btn-kpi-cancel:hover,
+#kpiSelectionModal button.btn-kpi-cancel:hover {
+    background-color: #F1F5F9 !important;
+    color: #0F172A !important;
+    border-color: #94A3B8 !important;
+}
+
+#kpiSelectionModal .btn-kpi-confirm,
+#kpiSelectionModal button.btn-kpi-confirm {
+    background-color: #bc2121 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 0.55rem 1.5rem !important;
+    border-radius: 8px !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+#kpiSelectionModal .btn-kpi-confirm:hover,
+#kpiSelectionModal button.btn-kpi-confirm:hover {
+    background-color: #9f1a1a !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 10px rgba(188, 33, 33, 0.35) !important;
 }
 
 /* ── BOTTOM ACTION BUTTONS ── */
@@ -637,7 +828,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Publications</label>
                                 <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('publications')">
-                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Publications
+                                    <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Publications
                                 </button>
                             </div>
                             <input type="hidden" name="selected_publication_ids" id="selected_publication_ids" value='<?= json_encode($pubIds) ?>'>
@@ -649,7 +840,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Conferences</label>
                                 <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('conferences')">
-                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Conferences
+                                    <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Conferences
                                 </button>
                             </div>
                             <input type="hidden" name="selected_conference_ids" id="selected_conference_ids" value='<?= json_encode($confIds) ?>'>
@@ -661,7 +852,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Webinars</label>
                                 <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('webinars')">
-                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Webinars
+                                    <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Webinars
                                 </button>
                             </div>
                             <input type="hidden" name="selected_webinar_ids" id="selected_webinar_ids" value='<?= json_encode($webIds) ?>'>
@@ -673,7 +864,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Internships</label>
                                 <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('internships')">
-                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Internships
+                                    <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Internships
                                 </button>
                             </div>
                             <input type="hidden" name="selected_internship_ids" id="selected_internship_ids" value='<?= json_encode($intIds) ?>'>
@@ -685,7 +876,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                             <div class="d-flex justify-content-between align-items-center p-3 kpi-row-header" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
                                 <label class="form-label font-weight-bold text-dark mb-0 fs-6">Patents</label>
                                 <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('patents')">
-                                    <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Patents
+                                    <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Patents
                                 </button>
                             </div>
                             <input type="hidden" name="selected_patent_ids" id="selected_patent_ids" value='<?= json_encode($patIds) ?>'>
@@ -710,7 +901,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                     <span class="text-muted small">Select workshop/conference records conducted under capacity building:</span>
                                     <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('workshops')">
-                                        <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Workshops
+                                        <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Workshops
                                     </button>
                                 </div>
                                 <input type="hidden" name="selected_workshop_ids" id="selected_workshop_ids" value='<?= json_encode($wshopIds) ?>'>
@@ -729,7 +920,7 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                     <span class="text-muted small">Select training program / webinar records conducted:</span>
                                     <button type="button" class="btn <?= $btnThemeClass ?> btn-kpi-select" onclick="openKpiModal('trainings')">
-                                        <i class="fas fa-plus me-1.5" style="font-size: 0.75rem;"></i> Select Trainings
+                                        <i class="fas fa-plus me-2" style="font-size: 0.8rem; margin-right: 8px !important;"></i> Select Trainings
                                     </button>
                                 </div>
                                 <input type="hidden" name="selected_training_ids" id="selected_training_ids" value='<?= json_encode($trainIds) ?>'>
@@ -818,31 +1009,53 @@ $btnThemeClass     = $isSuper ? 'btn-primary' : 'btn-theme-red';
 <div class="modal fade" id="kpiSelectionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
+<<<<<<< HEAD
             <div class="modal-header text-white kpi-modal-header-blue" style="background: #0856A4 !important;">
                 <h5 class="modal-title text-white font-weight-bold" id="kpiModalTitle">Select Records</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+=======
+            <div class="modal-header">
+                <h5 class="modal-title" id="kpiModalTitle">
+                    <i class="fas fa-list me-2"></i> Select Records
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
             </div>
-            <div class="modal-body p-3">
+            <div class="modal-body p-4">
                 <!-- Search Box -->
+<<<<<<< HEAD
                 <div class="input-group mb-3" style="border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1;">
                     <input type="text" id="kpiSearchInput" class="form-control border-0 shadow-none px-3" placeholder="Search records by title, PI, or keywords..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
                     <button class="btn btn-select-blue font-weight-bold px-4" type="button" onclick="performKpiSearch()">
+=======
+                <div class="input-group kpi-search-group mb-4">
+                    <input type="text" id="kpiSearchInput" class="form-control" placeholder="Search records by title, PI, or keywords..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
+                    <button class="btn kpi-search-btn" type="button" onclick="performKpiSearch()">
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
                         <i class="fas fa-search me-1.5"></i> Search
                     </button>
                 </div>
 
                 <!-- Record List Container -->
-                <div id="kpiModalList" class="list-group shadow-xs" style="max-height: 380px; overflow-y: auto;">
+                <div id="kpiModalList" class="list-group" style="max-height: 380px; overflow-y: auto;">
                     <div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i> Loading records...</div>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between align-items-center">
                 <div>
+<<<<<<< HEAD
                     <span id="kpiSelectedCountBadge" class="badge badge-select-count-blue fs-6 p-2">0 selected</span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-select-blue font-weight-bold" onclick="confirmKpiSelection()">Add Selected</button>
+=======
+                    <span id="kpiSelectedCountBadge" class="badge badge-zero">0 selected</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-kpi-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-kpi-confirm" onclick="confirmKpiSelection()">Add Selected</button>
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
                 </div>
             </div>
         </div>
@@ -987,9 +1200,20 @@ function toggleCapacitySection(groupId, isChecked) {
 var activeModalCategory = '';
 var candidateItems = [];
 
+var catIcons = {
+    publications: 'fa-book-open',
+    conferences: 'fa-users',
+    webinars: 'fa-video',
+    internships: 'fa-user-graduate',
+    patents: 'fa-award',
+    workshops: 'fa-chalkboard-teacher',
+    trainings: 'fa-laptop-code'
+};
+
 function openKpiModal(category) {
     activeModalCategory = category;
-    document.getElementById('kpiModalTitle').innerText = 'Select ' + capitalize(category);
+    var iconClass = catIcons[category] || 'fa-list';
+    document.getElementById('kpiModalTitle').innerHTML = '<i class="fas ' + iconClass + ' me-2"></i> Select ' + capitalize(category);
     document.getElementById('kpiSearchInput').value = '';
     
     var modalEl = document.getElementById('kpiSelectionModal');
@@ -1024,7 +1248,7 @@ function performKpiSearch() {
 function renderModalCandidates() {
     var listEl = document.getElementById('kpiModalList');
     if (!candidateItems || candidateItems.length === 0) {
-        listEl.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-search me-1"></i> No matching records found for ' + escapeHtml(currentPrefix.toUpperCase()) + '.</div>';
+        listEl.innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-search fa-2x mb-3 d-block empty-search-icon" style="color: #bc2121 !important;"></i> No matching records found for ' + escapeHtml(currentPrefix.toUpperCase()) + '.</div>';
         updateModalBadge();
         return;
     }
@@ -1034,12 +1258,16 @@ function renderModalCandidates() {
 
     candidateItems.forEach(function(item) {
         var isChecked = !!selectedMap[item.id];
-        html += '<label class="list-group-item d-flex align-items-start gap-3 p-3 style-pointer">';
-        html += '  <input class="form-check-input flex-shrink-0 mt-1 modal-kpi-checkbox" type="checkbox" data-id="' + item.id + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateModalBadge()">';
+        html += '<label class="list-group-item kpi-candidate-item d-flex align-items-start gap-3 style-pointer ' + (isChecked ? 'is-selected' : '') + '">';
+        html += '  <input class="form-check-input flex-shrink-0 modal-kpi-checkbox" type="checkbox" data-id="' + item.id + '" ' + (isChecked ? 'checked' : '') + ' onchange="onModalCheckboxChange(this)">';
         html += '  <div class="flex-grow-1">';
+<<<<<<< HEAD
         html += '    <div class="font-weight-bold text-dark">' + escapeHtml(item.title) + (item.task_no ? ' <span class="badge modal-task-tag ms-1">Task: ' + escapeHtml(item.task_no) + '</span>' : '') + '</div>';
+=======
+        html += '    <div class="font-weight-bold text-dark fs-6 mb-1">' + escapeHtml(item.title) + (item.task_no ? ' <span class="badge task-badge-pill ms-2">Task: ' + escapeHtml(item.task_no) + '</span>' : '') + '</div>';
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
         if (item.subtitle) {
-            html += '    <div class="small text-muted mt-1">' + escapeHtml(item.subtitle) + '</div>';
+            html += '    <div class="small text-muted">' + escapeHtml(item.subtitle) + '</div>';
         }
         html += '  </div>';
         html += '</label>';
@@ -1049,10 +1277,31 @@ function renderModalCandidates() {
     updateModalBadge();
 }
 
+function onModalCheckboxChange(cb) {
+    var label = cb.closest('.kpi-candidate-item');
+    if (label) {
+        if (cb.checked) {
+            label.classList.add('is-selected');
+        } else {
+            label.classList.remove('is-selected');
+        }
+    }
+    updateModalBadge();
+}
+
 function updateModalBadge() {
     var checkboxes = document.querySelectorAll('.modal-kpi-checkbox:checked');
     var count = checkboxes.length;
-    document.getElementById('kpiSelectedCountBadge').innerText = count + ' selected';
+    var badge = document.getElementById('kpiSelectedCountBadge');
+    if (!badge) return;
+    
+    if (count > 0) {
+        badge.className = 'badge badge-active';
+        badge.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + count + ' selected';
+    } else {
+        badge.className = 'badge badge-zero';
+        badge.innerHTML = '0 selected';
+    }
 }
 
 function confirmKpiSelection() {
