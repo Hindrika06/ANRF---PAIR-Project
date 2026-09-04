@@ -1009,17 +1009,29 @@ button.btn-kpi-select:hover {
 <div class="modal fade" id="kpiSelectionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
+<<<<<<< HEAD
+            <div class="modal-header text-white kpi-modal-header-blue" style="background: #0856A4 !important;">
+                <h5 class="modal-title text-white font-weight-bold" id="kpiModalTitle">Select Records</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+=======
             <div class="modal-header">
                 <h5 class="modal-title" id="kpiModalTitle">
                     <i class="fas fa-list me-2"></i> Select Records
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
             </div>
             <div class="modal-body p-4">
                 <!-- Search Box -->
+<<<<<<< HEAD
+                <div class="input-group mb-3" style="border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1;">
+                    <input type="text" id="kpiSearchInput" class="form-control border-0 shadow-none px-3" placeholder="Search records by title, PI, or keywords..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
+                    <button class="btn btn-select-blue font-weight-bold px-4" type="button" onclick="performKpiSearch()">
+=======
                 <div class="input-group kpi-search-group mb-4">
                     <input type="text" id="kpiSearchInput" class="form-control" placeholder="Search records by title, PI, or keywords..." onkeyup="if(event.key === 'Enter') performKpiSearch();">
                     <button class="btn kpi-search-btn" type="button" onclick="performKpiSearch()">
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
                         <i class="fas fa-search me-1.5"></i> Search
                     </button>
                 </div>
@@ -1031,11 +1043,19 @@ button.btn-kpi-select:hover {
             </div>
             <div class="modal-footer d-flex justify-content-between align-items-center">
                 <div>
+<<<<<<< HEAD
+                    <span id="kpiSelectedCountBadge" class="badge badge-select-count-blue fs-6 p-2">0 selected</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-select-blue font-weight-bold" onclick="confirmKpiSelection()">Add Selected</button>
+=======
                     <span id="kpiSelectedCountBadge" class="badge badge-zero">0 selected</span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-kpi-cancel" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-kpi-confirm" onclick="confirmKpiSelection()">Add Selected</button>
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
                 </div>
             </div>
         </div>
@@ -1146,7 +1166,7 @@ function renderCategoryDisplay(cat) {
     items.forEach(function(it, idx) {
         html += '<div class="list-group-item d-flex justify-content-between align-items-center rounded-3 border p-2.5" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">';
         html += '  <div>';
-        html += '    <div class="font-weight-bold text-dark mb-0.5"><i class="fas fa-check-circle text-success me-1.5"></i> ' + escapeHtml(it.title) + (it.task_no ? ' <span class="badge ms-1.5" style="background-color: #e2e8f0; color: #334155; font-weight: 600; font-size: 0.72rem;">Task: ' + escapeHtml(it.task_no) + '</span>' : '') + '</div>';
+        html += '    <div class="font-weight-bold text-dark mb-0.5"><i class="fas fa-check-circle text-success me-1.5"></i> ' + escapeHtml(it.title) + (it.task_no ? ' <span class="badge modal-task-tag ms-1.5">Task: ' + escapeHtml(it.task_no) + '</span>' : '') + '</div>';
         if (it.subtitle) {
             html += '    <div class="small text-muted ms-4">' + escapeHtml(it.subtitle) + '</div>';
         }
@@ -1241,7 +1261,11 @@ function renderModalCandidates() {
         html += '<label class="list-group-item kpi-candidate-item d-flex align-items-start gap-3 style-pointer ' + (isChecked ? 'is-selected' : '') + '">';
         html += '  <input class="form-check-input flex-shrink-0 modal-kpi-checkbox" type="checkbox" data-id="' + item.id + '" ' + (isChecked ? 'checked' : '') + ' onchange="onModalCheckboxChange(this)">';
         html += '  <div class="flex-grow-1">';
+<<<<<<< HEAD
+        html += '    <div class="font-weight-bold text-dark">' + escapeHtml(item.title) + (item.task_no ? ' <span class="badge modal-task-tag ms-1">Task: ' + escapeHtml(item.task_no) + '</span>' : '') + '</div>';
+=======
         html += '    <div class="font-weight-bold text-dark fs-6 mb-1">' + escapeHtml(item.title) + (item.task_no ? ' <span class="badge task-badge-pill ms-2">Task: ' + escapeHtml(item.task_no) + '</span>' : '') + '</div>';
+>>>>>>> 51b8e2b811a01e8cf933cc6fed064b466d76b509
         if (item.subtitle) {
             html += '    <div class="small text-muted">' + escapeHtml(item.subtitle) + '</div>';
         }
