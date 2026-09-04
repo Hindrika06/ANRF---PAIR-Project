@@ -371,26 +371,7 @@ $countInfrastructure  = getTableCount($pdo, "infrastructure_facilities", "status
                 </div>
             <?php endif; ?>
 
-            <?php if (!$is_super): ?>
-                <?php
-                $adminPendingCount = getTableCount($pdo, "approval_requests", "status = 'Pending' AND requested_by = '" . $_SESSION['username'] . "'");
-                $adminRejectedCount = getTableCount($pdo, "approval_requests", "status = 'Rejected' AND requested_by = '" . $_SESSION['username'] . "'");
-                ?>
-                <?php if ($adminPendingCount > 0 || $adminRejectedCount > 0): ?>
-                    <div class="alert alert-info" style="background-color: #f0f9ff; border: 1px solid #e0f2fe; border-left: 5px solid #0284c7; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span style="font-size: 18px; line-height: 1;">ℹ️</span>
-                            <div>
-                                <strong style="color: #075985; font-size: 14px;">Request Status Tracker</strong>
-                                <p style="color: #0c4a6e; font-size: 12.5px; margin: 2px 0 0 0;">
-                                    You have <strong><?= $adminPendingCount ?></strong> pending and <strong><?= $adminRejectedCount ?></strong> rejected requests.
-                                </p>
-                            </div>
-                        </div>
-                        <a href="approvals.php" class="btn btn-sm btn-info" style="background-color: #0284c7; border-color: #0284c7; color: #fff; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 13px;">View Statuses</a>
-                    </div>
-                <?php endif; ?>
-            <?php endif; ?>
+
 
             <!-- ── SECTION 1: Registry Data ── -->
             <div class="sec-header">

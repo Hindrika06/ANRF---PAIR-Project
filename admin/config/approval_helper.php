@@ -44,11 +44,48 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
         $tableName = $req['table_name'];
         $recordId  = $req['record_id'];
+        $actionType = $req['action_type'];
 
-        // 2. Update target table approval_status to 'Approved'
-        if ($tableName && $recordId) {
-            $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
-            $upd->execute([$recordId]);
+        // 2. Update or insert target table record to 'Approved'
+        if ($tableName) {
+            try {
+                $tableCheck = $pdo->query("SHOW TABLES LIKE '$tableName'");
+                if ($tableCheck && count($tableCheck->fetchAll()) > 0) {
+                    $cols = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
+                    $hasApprovalStatus = in_array('approval_status', $cols, true);
+
+                    if ($recordId) {
+                        $checkStmt = $pdo->prepare("SELECT id FROM `$tableName` WHERE id = ?");
+                        $checkStmt->execute([$recordId]);
+                        $exists = $checkStmt->fetch();
+
+                        if ($exists && $hasApprovalStatus) {
+                            $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
+                            $upd->execute([$recordId]);
+                        } elseif (!$exists && $actionType === 'CREATE' && !empty($req['new_data'])) {
+                            $data = json_decode($req['new_data'], true);
+                            if (is_array($data)) {
+                                if ($hasApprovalStatus) {
+                                    $data['approval_status'] = 'Approved';
+                                }
+                                $dataCols = array_intersect(array_keys($data), $cols);
+                                if (!empty($dataCols)) {
+                                    $colList = "`" . implode("`, `", $dataCols) . "`";
+                                    $paramList = ":" . implode(", :", $dataCols);
+                                    $insStmt = $pdo->prepare("INSERT INTO `$tableName` ($colList) VALUES ($paramList)");
+                                    $insertParams = [];
+                                    foreach ($dataCols as $colName) {
+                                        $insertParams[":$colName"] = $data[$colName];
+                                    }
+                                    $insStmt->execute($insertParams);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Error approving record in target table $tableName: " . $e->getMessage());
+            }
         }
 
         // 3. Update approval_requests log
@@ -75,8 +112,18 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
         // 2. Update target table approval_status to 'Rejected'
         if ($tableName && $recordId) {
-            $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
-            $upd->execute([$recordId]);
+            try {
+                $tableCheck = $pdo->query("SHOW TABLES LIKE '$tableName'");
+                if ($tableCheck && count($tableCheck->fetchAll()) > 0) {
+                    $cols = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
+                    if (in_array('approval_status', $cols, true)) {
+                        $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
+                        $upd->execute([$recordId]);
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Error rejecting record in target table $tableName: " . $e->getMessage());
+            }
         }
 
         // 3. Update approval_requests log
