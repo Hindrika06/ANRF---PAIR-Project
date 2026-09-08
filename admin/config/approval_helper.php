@@ -42,36 +42,13 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         $req = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$req) return false;
 
-        $tableName  = $req['table_name'];
-        $recordId   = $req['record_id'];
-        $actionType = $req['action_type'] ?? '';
+        $tableName = $req['table_name'];
+        $recordId  = $req['record_id'];
 
-        // 2. Update target table record
+        // 2. Update target table approval_status to 'Approved'
         if ($tableName && $recordId) {
-            if ($actionType === 'UPDATE' && !empty($req['new_data'])) {
-                $newData = json_decode($req['new_data'], true);
-                if (is_array($newData)) {
-                    $setParts = [];
-                    $params   = [];
-                    foreach ($newData as $col => $val) {
-                        if ($col === 'id' || $col === 'created_at') continue;
-                        $setParts[] = "`$col` = ?";
-                        $params[]   = $val;
-                    }
-                    $setParts[] = "`approval_status` = 'Approved'";
-                    $params[]   = $recordId;
-
-                    $updSql = "UPDATE `$tableName` SET " . implode(', ', $setParts) . " WHERE id = ?";
-                    $upd    = $pdo->prepare($updSql);
-                    $upd->execute($params);
-                } else {
-                    $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
-                    $upd->execute([$recordId]);
-                }
-            } else {
-                $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
-                $upd->execute([$recordId]);
-            }
+            $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Approved' WHERE id = ?");
+            $upd->execute([$recordId]);
         }
 
         // 3. Update approval_requests log
@@ -99,30 +76,8 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
         // 2. Update target table record (revert fields if UPDATE and old_data available)
         if ($tableName && $recordId) {
-            if ($actionType === 'UPDATE' && !empty($req['old_data'])) {
-                $oldData = json_decode($req['old_data'], true);
-                if (is_array($oldData)) {
-                    $setParts = [];
-                    $params   = [];
-                    foreach ($oldData as $col => $val) {
-                        if ($col === 'id' || $col === 'created_at') continue;
-                        $setParts[] = "`$col` = ?";
-                        $params[]   = $val;
-                    }
-                    $setParts[] = "`approval_status` = 'Rejected'";
-                    $params[]   = $recordId;
-
-                    $updSql = "UPDATE `$tableName` SET " . implode(', ', $setParts) . " WHERE id = ?";
-                    $upd    = $pdo->prepare($updSql);
-                    $upd->execute($params);
-                } else {
-                    $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
-                    $upd->execute([$recordId]);
-                }
-            } else {
-                $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
-                $upd->execute([$recordId]);
-            }
+            $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
+            $upd->execute([$recordId]);
         }
 
         // 3. Update approval_requests log

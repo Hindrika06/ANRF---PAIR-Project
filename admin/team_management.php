@@ -109,11 +109,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
                 }
             }
 
+            $is_super = isSuperAdmin();
+            $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
             if ($edit_id) {
                 // Update
                 if ($profileImage) {
-                    $stmt = $pdo->prepare("UPDATE `team` SET full_name = :full_name, designation = :designation, department = :department, university = :university, profile_image = :profile_image, biography = :biography, email = :email, phone = :phone, linkedin = :linkedin, google_scholar = :google_scholar, orcid = :orcid, research_area = :research_area, display_order = :display_order, status = :status WHERE id = :id");
-                    $stmt->execute([
+                    $stmt = $pdo->prepare("UPDATE `team` SET full_name = :full_name, designation = :designation, department = :department, university = :university, profile_image = :profile_image, biography = :biography, email = :email, phone = :phone, linkedin = :linkedin, google_scholar = :google_scholar, orcid = :orcid, research_area = :research_area, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                    $params = [
                         ':full_name'      => $full_name,
                         ':designation'    => $designation,
                         ':department'     => $department,
@@ -128,11 +131,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
                         ':research_area'  => $research_area,
                         ':display_order'  => $display_order,
                         ':status'         => $status,
+                        ':approval_status'=> $approvalStatus,
                         ':id'             => $edit_id
-                    ]);
+                    ];
+                    $stmt->execute($params);
                 } else {
-                    $stmt = $pdo->prepare("UPDATE `team` SET full_name = :full_name, designation = :designation, department = :department, university = :university, biography = :biography, email = :email, phone = :phone, linkedin = :linkedin, google_scholar = :google_scholar, orcid = :orcid, research_area = :research_area, display_order = :display_order, status = :status WHERE id = :id");
-                    $stmt->execute([
+                    $stmt = $pdo->prepare("UPDATE `team` SET full_name = :full_name, designation = :designation, department = :department, university = :university, biography = :biography, email = :email, phone = :phone, linkedin = :linkedin, google_scholar = :google_scholar, orcid = :orcid, research_area = :research_area, display_order = :display_order, status = :status, approval_status = :approval_status WHERE id = :id");
+                    $params = [
                         ':full_name'      => $full_name,
                         ':designation'    => $designation,
                         ':department'     => $department,
@@ -146,14 +151,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
                         ':research_area'  => $research_area,
                         ':display_order'  => $display_order,
                         ':status'         => $status,
+                        ':approval_status'=> $approvalStatus,
                         ':id'             => $edit_id
-                    ]);
+                    ];
+                    $stmt->execute($params);
                 }
-                adminRedirect(['success_msg' => 'updated']);
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Team Management', 'team', $prefix, $edit_id, 'UPDATE', $params);
+                    adminRedirect(['success_msg' => 'submitted']);
+                } else {
+                    adminRedirect(['success_msg' => 'updated']);
+                }
             } else {
                 // Insert
-                $stmt = $pdo->prepare("INSERT INTO `team` (full_name, designation, department, university, profile_image, biography, email, phone, linkedin, google_scholar, orcid, research_area, display_order, status) VALUES (:full_name, :designation, :department, :university, :profile_image, :biography, :email, :phone, :linkedin, :google_scholar, :orcid, :research_area, :display_order, :status)");
-                $stmt->execute([
+                $stmt = $pdo->prepare("INSERT INTO `team` (full_name, designation, department, university, profile_image, biography, email, phone, linkedin, google_scholar, orcid, research_area, display_order, status, approval_status) VALUES (:full_name, :designation, :department, :university, :profile_image, :biography, :email, :phone, :linkedin, :google_scholar, :orcid, :research_area, :display_order, :status, :approval_status)");
+                $params = [
                     ':full_name'      => $full_name,
                     ':designation'    => $designation,
                     ':department'     => $department,
@@ -167,9 +180,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
                     ':orcid'          => $orcid,
                     ':research_area'  => $research_area,
                     ':display_order'  => $display_order,
-                    ':status'         => $status
-                ]);
-                adminRedirect(['success_msg' => 'added']);
+                    ':status'         => $status,
+                    ':approval_status'=> $approvalStatus
+                ];
+                $stmt->execute($params);
+                $new_id = (int)$pdo->lastInsertId();
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Team Management', 'team', $prefix, $new_id, 'CREATE', $params);
+                    adminRedirect(['success_msg' => 'submitted']);
+                } else {
+                    adminRedirect(['success_msg' => 'added']);
+                }
             }
             exit;
         } catch (Exception $e) {
