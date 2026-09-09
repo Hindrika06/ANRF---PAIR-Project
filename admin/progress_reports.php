@@ -72,7 +72,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'ajax_get_approval_history') {
         $history = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         echo json_encode(['status' => 'success', 'data' => $history]);
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit();
@@ -95,11 +95,21 @@ if ($getParamAction === 'new') {
     $activeAction     = 'new';
     $selectedReportId = 0;
 } elseif ($getParamAction === 'approval_logs' || $getParamAction === 'approval_history') {
-    $activeAction     = 'approval_logs';
-    $selectedReportId = $getParamReportId;
-} elseif ($getParamAction === 'manage' || $getParamReportId > 0) {
-    $activeAction     = 'manage';
-    $selectedReportId = $getParamReportId;
+    if ($getParamReportId > 0) {
+        $activeAction     = 'approval_logs';
+        $selectedReportId = $getParamReportId;
+    } else {
+        $_SESSION['error_msg'] = "Please select a valid report to view approval logs.";
+        adminRedirect([]);
+    }
+} elseif ($getParamAction === 'manage' || ($getParamAction === '' && $getParamReportId > 0)) {
+    if ($getParamReportId > 0) {
+        $activeAction     = 'manage';
+        $selectedReportId = $getParamReportId;
+    } else {
+        $_SESSION['error_msg'] = "Please select a valid report to manage.";
+        adminRedirect([]);
+    }
 } else {
     $activeAction     = 'registry';
     $selectedReportId = 0;
@@ -155,11 +165,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($projTitle === '') {
             $_SESSION['error_msg'] = 'Project Title is required.';
-            adminRedirect(['report_id' => $reportId]);
+            if ($reportId > 0) {
+                adminRedirect(['action' => 'manage', 'report_id' => $reportId]);
+            } else {
+                adminRedirect(['action' => 'new']);
+            }
         }
         if ($piName === '') {
             $_SESSION['error_msg'] = 'Principal Investigator (PI) Name is required.';
-            adminRedirect(['report_id' => $reportId]);
+            if ($reportId > 0) {
+                adminRedirect(['action' => 'manage', 'report_id' => $reportId]);
+            } else {
+                adminRedirect(['action' => 'new']);
+            }
         }
 
         $table = "{$prefix}_progress_reports";
@@ -171,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $chkStmt = $pdo->prepare("SELECT approval_status FROM `$table` WHERE id = ?");
                 $chkStmt->execute([$reportId]);
                 $existingStatus = $chkStmt->fetchColumn() ?: 'Pending';
-            } catch (Exception $e) {}
+            } catch (Throwable $e) {}
         }
 
         // STRICT ROLE PERMISSION GUARD
@@ -309,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['success_msg'] = "Progress Report #{$reportId} submitted for approval successfully.";
                 }
 
-                adminRedirect(['report_id' => $reportId]);
+                adminRedirect(['action' => 'manage', 'report_id' => $reportId]);
             } else {
                 // Insert new report
                 $sql = "INSERT INTO `$table` (
@@ -364,11 +382,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $_SESSION['success_msg'] = "Progress Report draft created (Report #{$newId}).";
                 }
-                adminRedirect(['report_id' => $newId]);
+                adminRedirect(['action' => 'manage', 'report_id' => $newId]);
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $_SESSION['error_msg'] = "Database error saving report: " . $e->getMessage();
-            adminRedirect(['report_id' => $reportId]);
+            if ($reportId > 0) {
+                adminRedirect(['action' => 'manage', 'report_id' => $reportId]);
+            } else {
+                adminRedirect(['action' => 'new']);
+            }
         }
     } elseif ($action === 'delete_report' && isSuperAdmin()) {
         $reportId = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
@@ -377,15 +399,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("DELETE FROM `{$prefix}_progress_reports` WHERE id = ?");
                 $stmt->execute([$reportId]);
                 $_SESSION['success_msg'] = "Progress Report #{$reportId} deleted successfully.";
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $_SESSION['error_msg'] = "Error deleting report: " . $e->getMessage();
             }
         }
-        adminRedirect(['action' => 'new']);
+        adminRedirect([]);
     }
 }
 
-// 5. LOAD ACTIVE REPORT DATA FOR DISPLAY
+// 5. LOAD ACTIVE REPORT DATA FOR DISPLAY (STRICT REPORT ISOLATION, NO SILENT FALLBACK)
 $activeReport = null;
 if ($selectedReportId > 0) {
     foreach ($allReports as $r) {
@@ -398,8 +420,15 @@ if ($selectedReportId > 0) {
         try {
             $stmt = $pdo->prepare("SELECT * FROM `{$prefix}_progress_reports` WHERE id = ?");
             $stmt->execute([$selectedReportId]);
-            $activeReport = $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {}
+            $activeReport = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Throwable $e) {
+            $activeReport = null;
+        }
+    }
+
+    if (!$activeReport && ($activeAction === 'manage' || $activeAction === 'approval_logs')) {
+        $_SESSION['error_msg'] = "Progress Report #{$selectedReportId} not found or access denied.";
+        adminRedirect([]);
     }
 }
 
@@ -856,13 +885,14 @@ button.btn-kpi-select:hover {
                 </div>
             <?php endif; ?>
 
-            <!-- PROGRESS REPORTS REGISTRY TABLE -->
+            <!-- MODE A — REGISTRY PAGE VIEW -->
+            <?php if ($activeAction === 'registry'): ?>
             <div class="card registry-card shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; background: #ffffff;">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background: <?= $isSuper ? 'linear-gradient(135deg, #024283, #0856a4)' : '#bc2121' ?> !important;">
                     <h4 class="card-title text-white mb-0 font-weight-bold" style="font-size: 1.05rem; color: #ffffff !important;">
                         <i class="fas fa-list-alt me-2"></i> Progress Reports Registry (<?= strtoupper($prefix) ?>)
                     </h4>
-                    <a href="<?= buildNavUrl('progress_reports.php') ?>&action=new" class="btn btn-sm btn-light font-weight-bold" style="border-radius: 6px; font-size: 0.8rem; color: #024283;">
+                    <a href="<?= buildNavUrl('progress_reports.php?action=new') ?>" class="btn btn-sm btn-light font-weight-bold" style="border-radius: 6px; font-size: 0.8rem; color: <?= $isSuper ? '#024283' : '#bc2121' ?>;">
                         <i class="fas fa-plus me-1"></i> New Progress Report
                     </a>
                 </div>
@@ -888,7 +918,7 @@ button.btn-kpi-select:hover {
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($allReports as $idx => $rep): ?>
-                                        <tr class="<?= ((int)$rep['id'] === $selectedReportId) ? 'table-active' : '' ?>">
+                                        <tr>
                                             <td style="text-align: center;">
                                                 <span class="badge rounded-pill bg-secondary"><?= $idx + 1 ?></span>
                                             </td>
@@ -918,15 +948,15 @@ button.btn-kpi-select:hover {
                                             </td>
                                             <td style="text-align: right;">
                                                 <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                                                    <?php if ($rep['approval_status'] === 'Approved'): ?>
-                                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $rep['id'] ?>" target="_blank" class="btn btn-xs btn-outline-danger" title="Export PDF" style="font-size: 0.75rem; padding: 2px 8px;">
+                                                    <?php if (isSuperAdmin() && $rep['approval_status'] === 'Approved'): ?>
+                                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $rep['id']) ?>" target="_blank" class="btn btn-xs btn-outline-danger" title="Export PDF" style="font-size: 0.75rem; padding: 2px 8px;">
                                                             <i class="fas fa-file-pdf me-1"></i> Export PDF
                                                         </a>
                                                     <?php endif; ?>
-                                                    <a href="<?= buildNavUrl('progress_reports.php') ?>&action=manage&report_id=<?= $rep['id'] ?>" class="btn btn-xs <?= ((int)$rep['id'] === $selectedReportId && $activeAction === 'manage') ? 'btn-primary' : 'btn-outline-primary' ?>" style="font-size: 0.75rem; padding: 2px 8px;">
+                                                    <a href="<?= buildNavUrl('progress_reports.php?action=manage&report_id=' . $rep['id']) ?>" class="btn btn-xs btn-outline-primary" style="font-size: 0.75rem; padding: 2px 8px;">
                                                         <i class="fas fa-edit me-1"></i> Manage
                                                     </a>
-                                                    <a href="<?= buildNavUrl('progress_reports.php') ?>&action=approval_logs&report_id=<?= $rep['id'] ?>" onclick="openReportApprovalHistory(<?= $rep['id'] ?>, '<?= htmlspecialchars(addslashes($rep['project_title'])) ?>'); return false;" class="btn btn-xs btn-outline-info" style="font-size: 0.75rem; padding: 2px 8px;">
+                                                    <a href="<?= buildNavUrl('progress_reports.php?action=approval_logs&report_id=' . $rep['id']) ?>" class="btn btn-xs btn-outline-info" style="font-size: 0.75rem; padding: 2px 8px;">
                                                         <i class="fas fa-history me-1"></i> Approval Logs
                                                     </a>
                                                 </div>
@@ -939,26 +969,30 @@ button.btn-kpi-select:hover {
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
-            <?php if ($activeAction === 'new' || ($activeAction === 'manage' && $selectedReportId > 0)): ?>
-            <!-- ONE SINGLE COMPACT FORM CARD FOR THE ENTIRE PROGRESS REPORT -->
+            <!-- MODE B & C — NEW DRAFT / MANAGE REPORT FORM -->
+            <?php if ($activeAction === 'new' || ($activeAction === 'manage' && $selectedReportId > 0 && $activeReport)): ?>
             <div class="card progress-report-card shadow-sm mb-5" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
                 <div class="card-header py-3" style="background: <?= $isSuper ? 'linear-gradient(135deg, #024283, #0856a4)' : '#bc2121' ?> !important; border-bottom: none;">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h4 class="card-title text-white mb-0 font-weight-bold" style="font-size: 1.05rem; color: #ffffff !important;">
-                            <i class="fas fa-file-alt me-2"></i> Progress Report Details <?= $selectedReportId > 0 ? "(Report #{$selectedReportId})" : "(New Report Draft)" ?>
+                            <i class="fas fa-file-alt me-2"></i> Progress Report Details <?= $activeAction === 'manage' ? "(Report #{$selectedReportId})" : "(New Report Draft)" ?>
                         </h4>
                         <div class="d-flex align-items-center gap-2">
-                            <?php if ($selectedReportId > 0): ?>
-                                <button type="button" class="btn btn-sm btn-outline-light font-weight-bold" onclick="openReportApprovalHistory(<?= $selectedReportId ?>, '<?= htmlspecialchars(addslashes($valProjectTitle)) ?>')">
+                            <?php if ($activeAction === 'manage' && $selectedReportId > 0): ?>
+                                <a href="<?= buildNavUrl('progress_reports.php?action=approval_logs&report_id=' . $selectedReportId) ?>" class="btn btn-sm btn-outline-light font-weight-bold" style="font-size: 0.8rem;">
                                     <i class="fas fa-history me-1"></i> Approval Logs
-                                </button>
+                                </a>
                             <?php endif; ?>
-                            <?php if ($reportStatus === 'Approved'): ?>
+                            <?php if ($activeAction === 'manage' && $reportStatus === 'Approved'): ?>
                                 <span class="badge rounded-pill px-3 py-2" style="background-color: #dcfce7 !important; color: #166534 !important; font-size: 12px; font-weight: 700; border: 1px solid #bbf7d0;"><i class="fas fa-check-circle me-1"></i> Approved</span>
-                            <?php elseif ($reportStatus === 'Rejected'): ?>
+                            <?php elseif ($activeAction === 'manage' && $reportStatus === 'Rejected'): ?>
                                 <span class="badge rounded-pill px-3 py-2" style="background-color: #fee2e2 !important; color: #991b1b !important; font-size: 12px; font-weight: 700; border: 1px solid #fecaca;"><i class="fas fa-times-circle me-1"></i> Rejected</span>
                             <?php endif; ?>
+                            <a href="<?= buildNavUrl('progress_reports.php') ?>" class="btn btn-sm btn-light font-weight-bold" style="font-size: 0.8rem; color: <?= $isSuper ? '#024283' : '#bc2121' ?>;">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Registry
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1155,9 +1189,9 @@ button.btn-kpi-select:hover {
 
                             <div class="d-flex gap-3 flex-wrap align-items-center">
                                 <?php if ($selectedReportId > 0): ?>
-                                    <button type="button" class="btn btn-outline-info btn-action-super" onclick="openReportApprovalHistory(<?= $selectedReportId ?>, '<?= htmlspecialchars(addslashes($valProjectTitle)) ?>')">
+                                    <a href="<?= buildNavUrl('progress_reports.php?action=approval_logs&report_id=' . $selectedReportId) ?>" class="btn btn-outline-info btn-action-super">
                                         <i class="fas fa-history me-2"></i> Approval Logs
-                                    </button>
+                                    </a>
                                 <?php endif; ?>
                                 <?php if (!isSuperAdmin()): ?>
                                     <!-- SPOKE ADMIN BUTTONS -->
@@ -1183,7 +1217,7 @@ button.btn-kpi-select:hover {
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($reportStatus === 'Approved' && $selectedReportId > 0): ?>
-                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php') ?>&id=<?= $selectedReportId ?>" target="_blank" class="btn btn-primary btn-action-super">
+                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $selectedReportId) ?>" target="_blank" class="btn btn-primary btn-action-super">
                                             <i class="fas fa-file-pdf me-2"></i> Export PDF
                                         </a>
                                     <?php endif; ?>
@@ -1194,6 +1228,168 @@ button.btn-kpi-select:hover {
                     </form>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <!-- MODE D — DEDICATED APPROVAL LOGS PAGE VIEW -->
+            <?php if ($activeAction === 'approval_logs' && $selectedReportId > 0 && $activeReport): ?>
+            <div class="card shadow-sm mb-5" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; background: #ffffff;">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: <?= $isSuper ? 'linear-gradient(135deg, #024283, #0856a4)' : '#bc2121' ?> !important;">
+                    <h4 class="card-title text-white mb-0 font-weight-bold" style="font-size: 1.05rem; color: #ffffff !important;">
+                        <i class="fas fa-history me-2"></i> Progress Report Approval Logs (Report #<?= $selectedReportId ?>)
+                    </h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="<?= buildNavUrl('progress_reports.php?action=manage&report_id=' . $selectedReportId) ?>" class="btn btn-sm btn-outline-light font-weight-bold" style="font-size: 0.8rem;">
+                            <i class="fas fa-edit me-1"></i> Manage Report
+                        </a>
+                        <a href="<?= buildNavUrl('progress_reports.php') ?>" class="btn btn-sm btn-light font-weight-bold" style="font-size: 0.8rem; color: <?= $isSuper ? '#024283' : '#bc2121' ?>;">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Registry
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- REPORT INFORMATION SUMMARY BOX -->
+                    <div class="p-3 mb-4 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-4">
+                                <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Project Title</small>
+                                <strong class="text-dark fs-6 d-block"><?= htmlspecialchars($valProjectTitle ?: 'Untitled Project') ?></strong>
+                                <?php if (!empty($valTaskNo)): ?>
+                                    <small class="text-muted"><i class="fas fa-tasks me-1"></i> Task: <?= htmlspecialchars($valTaskNo) ?></small>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.05em;">PI / Co-PI</small>
+                                <div><strong>PI:</strong> <?= htmlspecialchars($valPiName ?: 'N/A') ?></div>
+                                <?php if (!empty($valCoPiName)): ?>
+                                    <small class="text-muted"><strong>Co-PI:</strong> <?= htmlspecialchars($valCoPiName) ?></small>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.7rem; letter-spacing: 0.05em;">Work Package</small>
+                                <div class="font-weight-bold text-dark"><?= htmlspecialchars($valWorkPkg ?: '—') ?></div>
+                            </div>
+                            <div class="col-md-2 text-md-end">
+                                <small class="text-muted d-block text-uppercase font-weight-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Current Status</small>
+                                <?php if ($reportStatus === 'Approved'): ?>
+                                    <span class="badge bg-success text-white px-3 py-2" style="font-size: 0.8rem;"><i class="fas fa-check-circle me-1"></i> Approved</span>
+                                <?php elseif ($reportStatus === 'Rejected'): ?>
+                                    <span class="badge bg-danger text-white px-3 py-2" style="font-size: 0.8rem;"><i class="fas fa-times-circle me-1"></i> Rejected</span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 0.8rem;"><i class="fas fa-clock me-1"></i> Pending</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- APPROVAL HISTORY AUDIT TRAIL TABLE -->
+                    <h5 class="font-weight-bold mb-3 border-bottom pb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #475569;">
+                        <i class="fas fa-list-ol me-2" style="color: <?= $primaryThemeColor ?>;"></i> Approval History Audit Trail
+                    </h5>
+
+                    <?php
+                    // Fetch approval log history for selected report
+                    $approvalHistory = [];
+                    $table = "{$prefix}_progress_reports";
+                    try {
+                        $stmtLogFetch = $pdo->prepare("
+                            SELECT id, module_name, table_name, institute_prefix, record_id, action_type, 
+                                   old_data, new_data, requested_by, requested_at, status, approved_by, 
+                                   approved_at, rejection_reason
+                            FROM `approval_requests`
+                            WHERE module_name = 'Progress Reports' 
+                              AND record_id = :record_id
+                              AND (institute_prefix = :prefix OR table_name = :table_name)
+                            ORDER BY id ASC
+                        ");
+                        $stmtLogFetch->execute([
+                            ':record_id'  => $selectedReportId,
+                            ':prefix'     => $prefix,
+                            ':table_name' => $table
+                        ]);
+                        $approvalHistory = $stmtLogFetch->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                    } catch (Throwable $e) {
+                        $approvalHistory = [];
+                    }
+                    ?>
+
+                    <?php if (empty($approvalHistory)): ?>
+                        <div class="text-center py-5 text-muted border rounded" style="background-color: #ffffff; border-style: dashed !important; border-color: #cbd5e1 !important;">
+                            <i class="fas fa-info-circle fa-2x mb-3 text-secondary d-block"></i>
+                            No approval history entries recorded yet for Progress Report #<?= $selectedReportId ?>.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0" style="font-size: 0.875rem;">
+                                <thead style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                    <tr>
+                                        <th style="width: 50px; text-align: center;">#</th>
+                                        <th style="width: 100px; text-align: center;">ACTION</th>
+                                        <th style="width: 110px; text-align: center;">STATUS</th>
+                                        <th>REQUESTED BY & DATE</th>
+                                        <th>REVIEWED BY & DATE</th>
+                                        <th style="width: 130px; text-align: center;">DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($approvalHistory as $index => $row): ?>
+                                        <tr>
+                                            <td style="text-align: center; font-weight: bold;"><?= $index + 1 ?></td>
+                                            <td style="text-align: center;">
+                                                <?php if ($row['action_type'] === 'CREATE'): ?>
+                                                    <span class="badge bg-success text-white">CREATE</span>
+                                                <?php elseif ($row['action_type'] === 'UPDATE'): ?>
+                                                    <span class="badge bg-warning text-dark">UPDATE</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary text-white"><?= htmlspecialchars($row['action_type']) ?></span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <?php if ($row['status'] === 'Approved'): ?>
+                                                    <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i> Approved</span>
+                                                <?php elseif ($row['status'] === 'Rejected'): ?>
+                                                    <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i> Rejected</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> Pending</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div><i class="fas fa-user me-1 text-muted"></i> <strong><?= htmlspecialchars($row['requested_by'] ?: 'Spoke Admin') ?></strong></div>
+                                                <small class="text-muted"><i class="far fa-clock me-1"></i> <?= htmlspecialchars($row['requested_at'] ?: '—') ?></small>
+                                            </td>
+                                            <td>
+                                                <?php if (!empty($row['approved_by'])): ?>
+                                                    <div><i class="fas fa-user-shield me-1 text-primary"></i> <strong><?= htmlspecialchars($row['approved_by']) ?></strong></div>
+                                                    <small class="text-muted"><i class="far fa-clock me-1"></i> <?= htmlspecialchars($row['approved_at'] ?: '—') ?></small>
+                                                <?php else: ?>
+                                                    <span class="text-muted">—</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="viewHistoryDiff(<?= $index ?>)" style="font-size: 0.75rem; padding: 2px 8px;">
+                                                    <i class="fas fa-eye me-1"></i> View Changes
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php if (!empty($row['rejection_reason'])): ?>
+                                            <tr class="table-danger">
+                                                <td></td>
+                                                <td colspan="5" class="text-danger small py-1">
+                                                    <strong><i class="fas fa-exclamation-triangle me-1"></i> Rejection Reason:</strong> <?= htmlspecialchars($row['rejection_reason']) ?>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <script>
+                var currentReportHistoryData = <?= json_encode($approvalHistory) ?>;
+            </script>
             <?php endif; ?>
 
             <?php if ($selectedReportId > 0 && isSuperAdmin()): ?>
@@ -1208,27 +1404,7 @@ button.btn-kpi-select:hover {
     </div>
 </div>
 
-<!-- PER-REPORT APPROVAL HISTORY MODAL -->
-<div class="modal fade" id="reportApprovalHistoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header" style="background: #024283 !important; color: #ffffff;">
-                <h5 class="modal-title text-white font-weight-bold" id="reportHistoryModalTitle">
-                    <i class="fas fa-history me-2"></i> Approval History
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4" id="reportHistoryModalBody">
-                <div class="text-center py-4 text-muted">
-                    <i class="fas fa-spinner fa-spin me-2"></i> Loading approval logs...
-                </div>
-            </div>
-            <div class="modal-footer" style="background-color: #f8fafc;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- DATA COMPARISON MODAL FOR DETAILED DIFF -->
 <div class="modal fade" id="reportDiffModal" tabindex="-1" aria-hidden="true">
@@ -1753,12 +1929,6 @@ function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
-<?php if ($activeAction === 'approval_logs' && $selectedReportId > 0): ?>
-document.addEventListener('DOMContentLoaded', function() {
-    openReportApprovalHistory(<?= $selectedReportId ?>, <?= json_encode($valProjectTitle ?: ('Report #' . $selectedReportId)) ?>);
-});
-<?php endif; ?>
 </script>
 
 <script src="vendor/global/global.min.js"></script>

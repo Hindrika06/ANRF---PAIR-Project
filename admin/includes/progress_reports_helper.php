@@ -43,16 +43,18 @@ if (!function_exists('ensureProgressReportsSchema')) {
             $tbl = "{$p}_progress_reports";
             try {
                 $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
-                if (!$chk || count($chk->fetchAll()) === 0) continue;
+                if (!$chk || !$chk->fetch()) continue;
 
-                $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $colsStmt = $pdo->query("SHOW COLUMNS FROM `$tbl`");
+                if (!$colsStmt) continue;
+                $existingCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
 
                 foreach ($colsToAdd as $col => $definition) {
                     if (!in_array($col, $existingCols, true)) {
                         $pdo->exec("ALTER TABLE `$tbl` ADD COLUMN `$col` $definition");
                     }
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 error_log("Schema update notice for $tbl: " . $e->getMessage());
             }
         }
@@ -66,12 +68,13 @@ if (!function_exists('getAllInstituteProgressReports')) {
     function getAllInstituteProgressReports($pdo, $prefix) {
         $tbl = "{$prefix}_progress_reports";
         try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$chk || !$chk->fetch()) return [];
 
             $stmt = $pdo->query("SELECT * FROM `$tbl` ORDER BY id DESC");
+            if (!$stmt) return [];
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -103,10 +106,12 @@ if (!function_exists('searchKpiCategoryRecords')) {
         if (!$tbl) return [];
 
         try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$chk || !$chk->fetch()) return [];
 
-            $existingCols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+            $colsStmt = $pdo->query("SHOW COLUMNS FROM `$tbl`");
+            if (!$colsStmt) return [];
+            $existingCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
 
             $sql = "SELECT * FROM `$tbl` WHERE 1=1";
             $params = [];
@@ -142,6 +147,7 @@ if (!function_exists('searchKpiCategoryRecords')) {
 
             $sql .= " ORDER BY id DESC LIMIT 100";
             $stmt = $pdo->prepare($sql);
+            if (!$stmt) return [];
             $stmt->execute($params);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
@@ -197,7 +203,7 @@ if (!function_exists('searchKpiCategoryRecords')) {
             }
 
             return $formatted;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -216,11 +222,12 @@ if (!function_exists('getKpiCategoryRecordsByIds')) {
         if (!$tbl) return [];
 
         try {
-            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-            if ($chk === 0) return [];
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$chk || !$chk->fetch()) return [];
 
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE id IN ($placeholders)");
+            if (!$stmt) return [];
             $stmt->execute($ids);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
@@ -237,7 +244,7 @@ if (!function_exists('getKpiCategoryRecordsByIds')) {
                 }
             }
             return $sorted;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -257,20 +264,27 @@ if (!function_exists('getInstituteTaskIds')) {
 
         foreach ($tables as $tbl => $possibleCols) {
             try {
-                if ($pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount() > 0) {
-                    $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($possibleCols as $c) {
-                        if (in_array($c, $cols, true)) {
-                            $rows = $pdo->query("SELECT DISTINCT `$c` FROM `$tbl` WHERE `$c` IS NOT NULL AND TRIM(`$c`) != ''")->fetchAll(PDO::FETCH_COLUMN);
+                $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
+                if (!$chk || !$chk->fetch()) continue;
+
+                $colsStmt = $pdo->query("SHOW COLUMNS FROM `$tbl`");
+                if (!$colsStmt) continue;
+                $cols = $colsStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+                foreach ($possibleCols as $c) {
+                    if (in_array($c, $cols, true)) {
+                        $rowStmt = $pdo->query("SELECT DISTINCT `$c` FROM `$tbl` WHERE `$c` IS NOT NULL AND TRIM(`$c`) != ''");
+                        if ($rowStmt) {
+                            $rows = $rowStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
                             foreach ($rows as $r) {
                                 $t = trim($r);
                                 if ($t !== '') $taskMap[$t] = true;
                             }
-                            break;
                         }
+                        break;
                     }
                 }
-            } catch (Exception $e) {}
+            } catch (Throwable $e) {}
         }
 
         $tasks = array_keys($taskMap);
@@ -283,11 +297,13 @@ if (!function_exists('getReportsForTask')) {
     function getReportsForTask($pdo, $prefix, $taskId) {
         $tbl = "{$prefix}_progress_reports";
         try {
-            if ($pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount() === 0) return [];
+            $chk = $pdo->query("SHOW TABLES LIKE '$tbl'");
+            if (!$chk || !$chk->fetch()) return [];
             $stmt = $pdo->prepare("SELECT * FROM `$tbl` WHERE task_no = ? ORDER BY id DESC");
+            if (!$stmt) return [];
             $stmt->execute([$taskId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }

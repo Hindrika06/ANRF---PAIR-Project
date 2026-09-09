@@ -209,9 +209,16 @@ function buildNavUrl($targetPage)
  */
 function adminRedirect($extraParams = [], $targetPage = null)
 {
-    $page = $targetPage ? strtok($targetPage, '?') : strtok($_SERVER["REQUEST_URI"], '?');
+    $reqUri = $_SERVER["REQUEST_URI"] ?? 'progress_reports.php';
+    $page = $targetPage ? strtok($targetPage, '?') : strtok($reqUri, '?');
+    if (!$page) {
+        $page = 'progress_reports.php';
+    }
 
-    $params = $targetPage ? [] : $_GET;
+    $params = ($targetPage ? [] : ($_GET ?? []));
+    if (!is_array($params)) {
+        $params = [];
+    }
 
     unset($params['action'], $params['id'], $params['record_prefix']);
 
@@ -227,11 +234,13 @@ function adminRedirect($extraParams = [], $targetPage = null)
         $params['tab_token'] = $tabToken;
     }
 
-    foreach ($extraParams as $k => $v) {
-        if ($v === null) {
-            unset($params[$k]);
-        } else {
-            $params[$k] = $v;
+    if (is_array($extraParams)) {
+        foreach ($extraParams as $k => $v) {
+            if ($v === null) {
+                unset($params[$k]);
+            } else {
+                $params[$k] = $v;
+            }
         }
     }
 
