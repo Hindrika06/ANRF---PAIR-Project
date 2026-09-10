@@ -70,10 +70,11 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         $req = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$req) return false;
 
-        $tableName = $req['table_name'];
-        $recordId  = $req['record_id'];
+        $tableName  = $req['table_name'];
+        $recordId   = $req['record_id'];
+        $actionType = $req['action_type'] ?? '';
 
-        // 2. Update target table approval_status to 'Rejected'
+        // 2. Update target table record (revert fields if UPDATE and old_data available)
         if ($tableName && $recordId) {
             $upd = $pdo->prepare("UPDATE `$tableName` SET `approval_status` = 'Rejected' WHERE id = ?");
             $upd->execute([$recordId]);
@@ -103,13 +104,14 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
                 $tbl = "{$p}_{$moduleSuffix}";
                 try {
                     $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
-                    if (!$tableCheck || count($tableCheck->fetchAll()) === 0) continue;
+                    if (!$tableCheck || !$tableCheck->fetch()) continue;
                     $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl`");
+                    if (!$stmt) continue;
                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     if ($rows) {
                         $combined = array_merge($combined, $rows);
                     }
-                } catch (Exception $e) {
+                } catch (Throwable $e) {
                     // Ignore single table errors
                 }
             }
@@ -124,11 +126,12 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         $tbl = "{$userPrefix}_{$moduleSuffix}";
         try {
             $tableCheck = $pdo->query("SHOW TABLES LIKE '$tbl'");
-            if (!$tableCheck || count($tableCheck->fetchAll()) === 0) return [];
+            if (!$tableCheck || !$tableCheck->fetch()) return [];
 
             $stmt = $pdo->query("SELECT *, '$userPrefix' AS institute_prefix FROM `$tbl`");
+            if (!$stmt) return [];
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -139,14 +142,17 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     function fetchSingleTableKpiDataset($pdo, $tableName, $userPrefix, $isSuper = false) {
         try {
             $tableCheck = $pdo->query("SHOW TABLES LIKE '$tableName'");
-            if (!$tableCheck || count($tableCheck->fetchAll()) === 0) return [];
+            if (!$tableCheck || !$tableCheck->fetch()) return [];
 
-            $cols = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
+            $colsStmt = $pdo->query("SHOW COLUMNS FROM `$tableName`");
+            if (!$colsStmt) return [];
+            $cols = $colsStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
             $hasApprovalStatus = in_array('approval_status', $cols, true);
 
             if ($isSuper) {
                 $stmt = $pdo->query("SELECT * FROM `$tableName`");
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if (!$stmt) return [];
+                return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
             } else {
                 if ($hasApprovalStatus) {
                     $stmt = $pdo->prepare("
@@ -155,17 +161,19 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
                         OR institute_prefix = ?
                         OR institute_prefix = 'all'
                     ");
+                    if (!$stmt) return [];
                     $stmt->execute([$userPrefix]);
                 } else {
                     $stmt = $pdo->prepare("
                         SELECT * FROM `$tableName`
                         WHERE institute_prefix = ? OR institute_prefix = 'all'
                     ");
+                    if (!$stmt) return [];
                     $stmt->execute([$userPrefix]);
                 }
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -182,10 +190,12 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         foreach ($prefixes as $p) {
             $tbl = "{$p}_{$moduleSuffix}";
             try {
-                $check = $pdo->query("SHOW TABLES LIKE '$tbl'")->rowCount();
-                if ($check === 0) continue;
+                $check = $pdo->query("SHOW TABLES LIKE '$tbl'");
+                if (!$check || !$check->fetch()) continue;
 
-                $cols = $pdo->query("SHOW COLUMNS FROM `$tbl`")->fetchAll(PDO::FETCH_COLUMN);
+                $colsStmt = $pdo->query("SHOW COLUMNS FROM `$tbl`");
+                if (!$colsStmt) continue;
+                $cols = $colsStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
                 $hasApproval = in_array('approval_status', $cols, true);
                 $hasPublish  = in_array('publish_status', $cols, true);
 
@@ -199,11 +209,12 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
                 $whereClause = !empty($whereConditions) ? "WHERE " . implode(' AND ', $whereConditions) : "";
                 $stmt = $pdo->query("SELECT *, '$p' AS institute_prefix FROM `$tbl` $whereClause");
+                if (!$stmt) continue;
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if ($rows) {
                     $combined = array_merge($combined, $rows);
                 }
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 // Ignore single table errors
             }
         }

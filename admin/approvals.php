@@ -228,16 +228,54 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
     padding: 12px 16px !important;
     vertical-align: middle !important;
 }
-.table td, .table th {
-    color: #0f172a !important;
-}
-.text-dark-visible {
-    color: #0f172a !important;
+.btn-view-log {
+    background: #064380 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #064380 !important;
     font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(6, 67, 128, 0.2) !important;
+    transition: all 0.2s ease !important;
 }
-.text-muted-visible {
-    color: #334155 !important;
-    font-weight: 500 !important;
+.btn-view-log:hover {
+    background: #043260 !important;
+    border-color: #043260 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(6, 67, 128, 0.35) !important;
+}
+
+.btn-delete-log {
+    background: #bc2121 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #bc2121 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(188, 33, 33, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-delete-log:hover {
+    background: #a01b1b !important;
+    border-color: #a01b1b !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(188, 33, 33, 0.35) !important;
+}
+
+.btn-close-custom {
+    background: #064380 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #064380 !important;
+    font-weight: 600 !important;
+    padding: 6px 20px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px rgba(6, 67, 128, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+.btn-close-custom:hover {
+    background: #043260 !important;
+    border-color: #043260 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(6, 67, 128, 0.35) !important;
 }
 </style>
 
@@ -408,8 +446,8 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                                                 <td><?= htmlspecialchars($r['approved_at'] ?? '-') ?></td>
                                                 <td>
                                                     <div class="d-flex gap-1 justify-content-center">
-                                                        <button class="btn btn-xxs btn-light" onclick="showDetails(<?= $r['id'] ?>)">View Log</button>
-                                                        <button type="button" class="btn btn-xxs btn-danger text-white" onclick="openDeleteModal(<?= $r['id'] ?>)"><i class="fa fa-trash"></i> Delete</button>
+                                                        <button class="btn btn-xxs btn-view-log text-white" onclick="showDetails(<?= $r['id'] ?>)">View Log</button>
+                                                        <button type="button" class="btn btn-xxs btn-delete-log text-white" onclick="openDeleteModal(<?= $r['id'] ?>)"><i class="fa fa-trash me-1"></i> Delete</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -509,7 +547,7 @@ foreach (array_merge($pendingRequests, $historyRequests, $myRequests) as $r) {
                 <!-- Loaded dynamically by JavaScript -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-close-custom text-white" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

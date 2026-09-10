@@ -351,7 +351,7 @@ try {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Project Key Research Areas (Global)</h4>
                     <?php if (isSuperAdmin()): ?>
-                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openAddResearchModal()">
+                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#researchModal" data-toggle="modal" data-target="#researchModal" onclick="openAddResearchModal()">
                         <i class="fa fa-plus me-1"></i> Add Research Area
                     </button>
                     <?php else: ?>
@@ -422,7 +422,7 @@ try {
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Laboratory Infrastructure & Advanced Facilities</h4>
-                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openAddFacilityModal()">
+                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#facilityModal" data-toggle="modal" data-target="#facilityModal" onclick="openAddFacilityModal()">
                         <i class="fa fa-plus me-1"></i> Add Facility
                     </button>
                 </div>
@@ -541,7 +541,7 @@ try {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn text-white" style="background-color: #064380 !important; border-color: #064380 !important; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;">Save Research Area</button>
                 </div>
             </form>
@@ -596,7 +596,7 @@ try {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn text-white" style="background-color: #064380 !important; border-color: #064380 !important; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn text-white" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;">Save Facility</button>
                 </div>
             </form>
@@ -604,7 +604,23 @@ try {
     </div>
 </div>
 
+<script src="vendor/global/global.min.js"></script>
+<script src="vendor/bootstrap-select/js/bootstrap-select.min.js"></script>
+<script src="js/custom.min.js"></script>
+<script src="js/dlabnav-init.js"></script>
+
 <script>
+    function showResearchModal(modalId) {
+        var modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        if (window.bootstrap && window.bootstrap.Modal) {
+            var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            instance.show();
+        } else if (window.jQuery && jQuery.fn.modal) {
+            jQuery(modalEl).modal('show');
+        }
+    }
+
     function openAddResearchModal() {
         document.getElementById('res_edit_id').value = '';
         document.getElementById('res_title').value = '';
@@ -614,11 +630,7 @@ try {
         var p = document.getElementById('resImagePreviewContainer');
         if (p) p.style.display = 'none';
         document.getElementById('resModalTitle').innerText = 'Add Research Area';
-        var modalEl = document.getElementById('researchModal');
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            bsModal.show();
-        }
+        showResearchModal('researchModal');
     }
 
     function openEditResearchModal(res) {
@@ -635,11 +647,7 @@ try {
             if (p) p.style.display = 'none';
         }
         document.getElementById('resModalTitle').innerText = 'Edit Research Area';
-        var modalEl = document.getElementById('researchModal');
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            bsModal.show();
-        }
+        showResearchModal('researchModal');
     }
 
     function openAddFacilityModal() {
@@ -652,11 +660,7 @@ try {
         var p = document.getElementById('facImagePreviewContainer');
         if (p) p.style.display = 'none';
         document.getElementById('facModalTitle').innerText = 'Add Infrastructure Facility';
-        var modalEl = document.getElementById('facilityModal');
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            bsModal.show();
-        }
+        showResearchModal('facilityModal');
     }
 
     function openEditFacilityModal(fac) {
@@ -674,11 +678,7 @@ try {
             if (p) p.style.display = 'none';
         }
         document.getElementById('facModalTitle').innerText = 'Edit Infrastructure Facility';
-        var modalEl = document.getElementById('facilityModal');
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            bsModal.show();
-        }
+        showResearchModal('facilityModal');
     }
 
     document.addEventListener("DOMContentLoaded", function() {

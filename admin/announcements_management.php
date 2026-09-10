@@ -88,25 +88,45 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
             $error = 'Announcement text/title is required.';
         } else {
             try {
+                $is_super = isSuperAdmin();
+                $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
                 if ($edit_id) {
                     // Update existing record
-                    $stmt = $pdo->prepare("UPDATE `announcements` SET title = :title, link = :link, is_active = :is_active WHERE id = :id");
-                    $stmt->execute([
-                        ':title'     => $title,
-                        ':link'      => $link,
-                        ':is_active' => $is_active,
-                        ':id'        => $edit_id
-                    ]);
-                    adminRedirect(['success_msg' => 'updated']);
+                    $stmt = $pdo->prepare("UPDATE `announcements` SET title = :title, link = :link, is_active = :is_active, approval_status = :approval_status WHERE id = :id");
+                    $params = [
+                        ':title'           => $title,
+                        ':link'            => $link,
+                        ':is_active'       => $is_active,
+                        ':approval_status' => $approvalStatus,
+                        ':id'              => $edit_id
+                    ];
+                    $stmt->execute($params);
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Announcements', 'announcements', $prefix, $edit_id, 'UPDATE', $params);
+                        adminRedirect(['success_msg' => 'submitted']);
+                    } else {
+                        adminRedirect(['success_msg' => 'updated']);
+                    }
                 } else {
                     // Insert new record
-                    $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active) VALUES (:title, :link, :is_active)");
-                    $stmt->execute([
-                        ':title'     => $title,
-                        ':link'      => $link,
-                        ':is_active' => $is_active
-                    ]);
-                    adminRedirect(['success_msg' => 'inserted']);
+                    $stmt = $pdo->prepare("INSERT INTO `announcements` (title, link, is_active, approval_status) VALUES (:title, :link, :is_active, :approval_status)");
+                    $params = [
+                        ':title'           => $title,
+                        ':link'            => $link,
+                        ':is_active'       => $is_active,
+                        ':approval_status' => $approvalStatus
+                    ];
+                    $stmt->execute($params);
+                    $new_id = (int)$pdo->lastInsertId();
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Announcements', 'announcements', $prefix, $new_id, 'CREATE', $params);
+                        adminRedirect(['success_msg' => 'submitted']);
+                    } else {
+                        adminRedirect(['success_msg' => 'inserted']);
+                    }
                 }
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();

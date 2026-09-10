@@ -326,8 +326,13 @@ function openKpiRecordViewModal(options) {
         bodyElem.innerHTML = `<div class="kpi-view-field-item full-width text-center text-muted py-4">No additional details recorded for this entry.</div>`;
     }
 
-    const modalInst = new bootstrap.Modal(document.getElementById('kpiViewModal'));
-    modalInst.show();
+    const viewModalEl = document.getElementById('kpiViewModal');
+    if (window.bootstrap && window.bootstrap.Modal) {
+        const modalInst = bootstrap.Modal.getInstance(viewModalEl) || new bootstrap.Modal(viewModalEl);
+        modalInst.show();
+    } else if (window.jQuery && jQuery.fn.modal) {
+        jQuery(viewModalEl).modal('show');
+    }
 }
 
 function escapeHtml(str) {

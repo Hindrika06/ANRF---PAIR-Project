@@ -25,6 +25,108 @@ $__activeInstContext = getActiveInstituteContext();
     <link href="css/style.css" rel="stylesheet">
     <link href="assets/css/confirm-modal.css?v=<?= filemtime(__DIR__ . '/assets/css/confirm-modal.css') ?>" rel="stylesheet">
 
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           UNIFIED HUB & SPOKE ADMIN ACTION BUTTON THEME
+           View:  #0856a4 (Blue)
+           Edit:  #ffca28 (Yellow)
+           Delete:#bc2121 (Red)
+        ═══════════════════════════════════════════════════════ */
+        .btn-info,
+        .btn-info.btn-xs,
+        .btn-info.btn-sm,
+        .btn-action-compact.btn-info,
+        .view-research-btn,
+        .view-facility-btn,
+        .view-kpi-btn,
+        .view-btn {
+            background-color: #0856a4 !important;
+            border-color: #0856a4 !important;
+            color: #ffffff !important;
+        }
+        .btn-info:hover,
+        .btn-info.btn-xs:hover,
+        .btn-info.btn-sm:hover,
+        .btn-action-compact.btn-info:hover,
+        .view-research-btn:hover,
+        .view-facility-btn:hover,
+        .view-kpi-btn:hover,
+        .view-btn:hover {
+            background-color: #064380 !important;
+            border-color: #064380 !important;
+            color: #ffffff !important;
+        }
+        .btn-info i,
+        .btn-action-compact.btn-info i,
+        .view-research-btn i,
+        .view-facility-btn i,
+        .view-kpi-btn i,
+        .view-btn i {
+            color: #ffffff !important;
+        }
+
+        .btn-warning,
+        .btn-warning.btn-xs,
+        .btn-warning.btn-sm,
+        .btn-action-compact.btn-action-edit-yellow,
+        .edit-btn {
+            background-color: #ffca28 !important;
+            border-color: #ffca28 !important;
+            color: #1a1a1a !important;
+        }
+        .btn-warning:hover,
+        .btn-warning.btn-xs:hover,
+        .btn-warning.btn-sm:hover,
+        .btn-action-compact.btn-action-edit-yellow:hover,
+        .edit-btn:hover {
+            background-color: #ffb300 !important;
+            border-color: #ffb300 !important;
+            color: #1a1a1a !important;
+        }
+        .btn-warning i,
+        .btn-action-compact.btn-action-edit-yellow i,
+        .edit-btn i {
+            color: #1a1a1a !important;
+        }
+
+        .btn-danger,
+        .btn-danger.btn-xs,
+        .btn-danger.btn-sm,
+        .btn-action-compact.btn-action-delete-red,
+        .delete-btn {
+            background-color: #bc2121 !important;
+            border-color: #bc2121 !important;
+            color: #ffffff !important;
+        }
+        .btn-danger:hover,
+        .btn-danger.btn-xs:hover,
+        .btn-danger.btn-sm:hover,
+        .btn-action-compact.btn-action-delete-red:hover,
+        .delete-btn:hover {
+            background-color: #a01b1b !important;
+            border-color: #a01b1b !important;
+            color: #ffffff !important;
+        }
+        .btn-danger i,
+        .btn-action-compact.btn-action-delete-red i,
+        .delete-btn i {
+            color: #ffffff !important;
+        }
+
+        .btn-secondary {
+            background-color: #064380 !important;
+            border-color: #064380 !important;
+            color: #ffffff !important;
+        }
+        .btn-secondary:hover,
+        .btn-secondary:focus,
+        .btn-secondary:active {
+            background-color: #042d57 !important;
+            border-color: #042d57 !important;
+            color: #ffffff !important;
+        }
+    </style>
+
 
 
 
