@@ -31,6 +31,62 @@ $prefix_map = [
     'Yogi Vemana University'          => 'yvu_',
 ];
 $prefix = $prefix_map[$institute_name] ?? 'uoh_';
+$currPrefixClean = rtrim($prefix, '_');
+
+// Derive prefix-to-logo and prefix-to-name lookup strictly from existing $prefix_map and $logo_map
+$prefix_to_logo = [];
+$prefix_to_name = [];
+foreach ($prefix_map as $instFullName => $pfx) {
+    $cleanKey = strtolower(rtrim($pfx, '_'));
+    $prefix_to_logo[$cleanKey] = $logo_map[$instFullName] ?? 'logos/default.jpg';
+    $prefix_to_name[$cleanKey] = $instFullName;
+}
+
+if (!function_exists('renderInstituteLogosHtml')) {
+    function renderInstituteLogosHtml($instPrefixes, $prefixToLogo, $prefixToName) {
+        if (empty($instPrefixes)) return '<span class="col-muted">—</span>';
+
+        $instPrefixes = array_values(array_unique(array_filter($instPrefixes)));
+        if (empty($instPrefixes)) return '<span class="col-muted">—</span>';
+
+        $cellStyle = 'display:inline-flex;flex-direction:row;align-items:center;justify-content:center;vertical-align:middle;line-height:1;margin:0 auto;';
+        $stackStyle = 'display:inline-flex;flex-direction:row;align-items:center;justify-content:center;position:relative;line-height:1;white-space:nowrap;';
+        $baseItemStyle = 'display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-width:30px;min-height:30px;max-width:30px;max-height:30px;border-radius:50%;background:#ffffff;border:1.5px solid #cbd5e1;box-shadow:0 1px 3px rgba(0,0,0,0.12);overflow:hidden;position:relative;flex-shrink:0;box-sizing:border-box;';
+        $imgStyle = 'width:100%;height:100%;max-width:30px;max-height:30px;object-fit:contain;padding:2px;display:block;border-radius:50%;box-sizing:border-box;';
+
+        if (count($instPrefixes) <= 1) {
+            // Individual publication: show single institute's existing logo (28-32px)
+            $p = strtolower($instPrefixes[0]);
+            $logo = htmlspecialchars($prefixToLogo[$p] ?? 'logos/default.jpg');
+            $name = htmlspecialchars($prefixToName[$p] ?? strtoupper($p));
+            return '<div class="pub-institutes-cell" style="' . $cellStyle . '" title="' . $name . '">'
+                 . '<div class="pub-inst-logo-item" style="' . $baseItemStyle . '" title="' . $name . '">'
+                 . '<img src="' . $logo . '" alt="' . $name . '" width="30" height="30" style="' . $imgStyle . '" loading="lazy">'
+                 . '</div>'
+                 . '</div>';
+        }
+
+        // Joint publication: 2+ accepted participating institutes (horizontal overlapping stack: 20-30% overlap)
+        $html = '<div class="pub-institutes-cell" style="' . $cellStyle . '">';
+        $html .= '<div class="pub-logo-stack" style="' . $stackStyle . '">';
+        foreach ($instPrefixes as $idx => $p) {
+            $p = strtolower($p);
+            $logo = htmlspecialchars($prefixToLogo[$p] ?? 'logos/default.jpg');
+            $name = htmlspecialchars($prefixToName[$p] ?? strtoupper($p));
+            $zIndex = $idx + 1;
+            $overlap = ($idx > 0) ? 'margin-left:-8px;border:2px solid #ffffff;' : '';
+            $itemStyle = $baseItemStyle . 'z-index:' . $zIndex . ';' . $overlap;
+
+            $html .= '<div class="pub-inst-logo-item" style="' . $itemStyle . '" title="' . $name . '">'
+                  . '<img src="' . $logo . '" alt="' . $name . '" width="30" height="30" style="' . $imgStyle . '" loading="lazy">'
+                  . '</div>';
+        }
+        $html .= '</div>'; // .pub-logo-stack
+        $html .= '</div>'; // .pub-institutes-cell
+
+        return $html;
+    }
+}
 
 if (!function_exists('fetchRows')) {
     function fetchRows($pdo, $sql, $params = []) {
@@ -53,6 +109,37 @@ try {
         $publications = fetchRows($pdo, "SELECT * FROM {$prefix}publications     ORDER BY created_at DESC");
     }
 } catch (PDOException $e) {}
+
+// Enrich publications with accepted participating institutes from publication_institutes table
+// (1 participating institute = Individual; 2+ accepted participating institutes = Joint)
+// Pending invitations ('Invited') are strictly excluded
+$pubInstitutesLookup = [];
+try {
+    $hasPITable = (bool)$pdo->query("SHOW TABLES LIKE 'publication_institutes'")->fetchColumn();
+    if ($hasPITable && !empty($publications)) {
+        $pids = array_filter(array_map(function($pub) { return (int)($pub['id'] ?? 0); }, $publications));
+        if (!empty($pids)) {
+            $inList = implode(',', $pids);
+            $piStmt = $pdo->prepare("
+                SELECT publication_id, institute_prefix 
+                FROM `publication_institutes` 
+                WHERE owner_prefix = :op 
+                  AND publication_id IN ($inList) 
+                  AND (status = 'Accepted' OR relationship = 'OWNER')
+                ORDER BY (relationship = 'OWNER') DESC, id ASC
+            ");
+            $piStmt->execute([':op' => $currPrefixClean]);
+            foreach ($piStmt->fetchAll(PDO::FETCH_ASSOC) as $piRow) {
+                $pid = (int)$piRow['publication_id'];
+                $ip  = strtolower(trim($piRow['institute_prefix']));
+                if ($ip !== '') {
+                    $pubInstitutesLookup[$pid][] = $ip;
+                }
+            }
+        }
+    }
+} catch (Exception $e) {}
+
 
 try {
     if ($prefix === 'uoh_') {
@@ -153,7 +240,14 @@ $tab_labels = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/institute.css"                type="text/css">
+    <link rel="stylesheet" href="assets/css/institute.css?v=<?= filemtime(__DIR__ . '/assets/css/institute.css') ?>" type="text/css">
+    <style>
+        .pub-institutes-cell { display: inline-flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; line-height: 1 !important; margin: 0 auto !important; }
+        .pub-logo-stack { display: inline-flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; position: relative !important; white-space: nowrap !important; line-height: 1 !important; margin: 0 !important; }
+        .pub-inst-logo-item { width: 30px !important; height: 30px !important; min-width: 30px !important; min-height: 30px !important; max-width: 30px !important; max-height: 30px !important; border-radius: 50% !important; overflow: hidden !important; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; box-sizing: border-box !important; }
+        .pub-logo-stack .pub-inst-logo-item + .pub-inst-logo-item { margin-left: -8px !important; border: 2px solid #ffffff !important; }
+        .pub-inst-logo-item img { width: 100% !important; height: 100% !important; max-width: 30px !important; max-height: 30px !important; object-fit: contain !important; padding: 2px !important; display: block !important; border-radius: 50% !important; box-sizing: border-box !important; }
+    </style>
 
 </head>
 
@@ -295,9 +389,15 @@ $tab_labels = [
                     <th>Date</th>
                     <th>Impact Factor</th>
                     <th>DOI</th>
+                    <th style="width:110px; text-align:center; white-space:nowrap;">Institutes</th>
                 </tr></thead>
                 <tbody>
-                <?php foreach ($publications as $i => $r): ?>
+                <?php foreach ($publications as $i => $r): 
+                    $rowId = (int)($r['id'] ?? 0);
+                    $acceptedCollabs = $pubInstitutesLookup[$rowId] ?? [];
+                    // Currently selected institute is the primary/owner; combine with accepted collaborator institutes
+                    $instList = array_values(array_unique(array_merge([$currPrefixClean], $acceptedCollabs)));
+                ?>
                 <tr>
                     <td><div class="row-num"><?= $i + 1 ?></div></td>
                     <td><a class="task-link" href="#"><?= htmlspecialchars($r['task_no'] ?? '—') ?></a></td>
@@ -315,6 +415,9 @@ $tab_labels = [
                             ? '<a class="doi-link" href="https://doi.org/'.htmlspecialchars($r['doi_number']).'" target="_blank">View ↗</a>'
                             : '<span class="col-muted">—</span>' ?>
                     </td>
+                    <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                        <?= renderInstituteLogosHtml($instList, $prefix_to_logo, $prefix_to_name) ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -327,7 +430,11 @@ $tab_labels = [
             <!-- MOBILE CARD LAYOUT -->
             <div class="card-layout" style="display:none;">
             <?php if ($publications): ?>
-                <?php foreach ($publications as $i => $r): ?>
+                <?php foreach ($publications as $i => $r): 
+                    $rowId = (int)($r['id'] ?? 0);
+                    $acceptedCollabs = $pubInstitutesLookup[$rowId] ?? [];
+                    $instList = array_values(array_unique(array_merge([$currPrefixClean], $acceptedCollabs)));
+                ?>
                 <div class="card-row <?= $i % 2 === 1 ? 'alt' : '' ?>">
                     <div class="card-header">
                         <div class="card-num"><?= $i + 1 ?></div>
@@ -365,6 +472,12 @@ $tab_labels = [
                         </div>
                     </div>
                     <?php endif; ?>
+                    <div class="card-section">
+                        <span class="card-label">Institutes</span>
+                        <div class="card-inline">
+                            <?= renderInstituteLogosHtml($instList, $prefix_to_logo, $prefix_to_name) ?>
+                        </div>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
