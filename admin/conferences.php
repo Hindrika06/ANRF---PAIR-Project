@@ -495,7 +495,11 @@ foreach ($conferences as $c) {
                                             </td>
                                             <td style="vertical-align: middle;">
                                                 <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if (strtolower($conf['institute_prefix'] ?? $prefix) === 'uoh'): ?>
+                                                        <span class="badge" style="background-color: #024283; color: #ffffff; font-size: 10px; font-weight: 700;">UOH</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php endif; ?>
                                                     <?php if ($approvalStatus === 'Approved'): ?>
                                                         <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
                                                     <?php elseif ($approvalStatus === 'Pending'): ?>

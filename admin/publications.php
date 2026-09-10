@@ -140,15 +140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validatedInstitutes[] = $inst;
             }
         }
-        // Server-side: ALWAYS force-include the owner (targetPrefix) — cannot be removed by POST manipulation
+        // Server-side: ALWAYS force-include mandatory UoH and owner prefix
+        if (!in_array('uoh', $validatedInstitutes, true)) {
+            $validatedInstitutes[] = 'uoh';
+        }
         if (!in_array($targetPrefix, $validatedInstitutes, true)) {
             $validatedInstitutes[] = $targetPrefix;
         }
-        $validatedInstitutes = array_unique($validatedInstitutes);
+        $validatedInstitutes = array_values(array_unique($validatedInstitutes));
 
-        // Server-side: require at least 2 institutes
+        // Server-side: require mandatory UoH + exactly 1 collaborator (total 2 institutes)
         if (count($validatedInstitutes) < 2) {
-            $error = 'Joint Publication must include at least 2 participating institutes (your institute + at least one collaborator).';
+            $error = 'Joint Publication must include 1 collaborating institute along with mandatory UoH.';
+        } elseif (count($validatedInstitutes) > 2) {
+            $error = 'Joint Publication allows only 1 collaborating institute along with mandatory UoH (maximum 2 total).';
         } else {
             foreach ($validatedInstitutes as $inst) {
                 $participatingInstitutes[$inst] = ($inst === $targetPrefix) ? 'OWNER' : 'COLLABORATOR';
@@ -577,6 +582,11 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
         background-color: #dc2626 !important;
     }
 
+    .joint-inst-cb:checked {
+        background-color: #09BD3C !important;
+        border-color: #09BD3C !important;
+    }
+
     .pagination-theme-sapphire .page-item.active .page-link {
         background-color: #bc2121 !important;
         border-color: #bc2121 !important;
@@ -809,7 +819,11 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php if (strtolower($pub['institute_prefix'] ?? $prefix) === 'uoh'): ?>
+                                                        <span class="badge" style="background-color: #024283; color: #ffffff; font-size: 10px; font-weight: 700;">UOH</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary" style="font-size: 10px; font-weight: 700;"><?= htmlspecialchars($instPrefix) ?></span>
+                                                    <?php endif; ?>
                                                     <?php if ($approvalStatus === 'Approved'): ?>
                                                         <span class="badge bg-success text-white" style="font-size: 10px;">Approved</span>
                                                     <?php elseif ($approvalStatus === 'Pending'): ?>
@@ -983,42 +997,27 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                                 <label class="form-label form-label-grey mb-2">
                                     <i class="fa-solid fa-link me-1" style="color:#7c3aed;"></i>
                                     Participating Institutes <span class="text-danger">*</span>
-                                    <small class="text-muted ms-2">(Select at least 2 institutes)</small>
+                                    <small class="text-muted ms-2">(Select UoH + 1 Collaborating Institute)</small>
                                 </label>
                                 <div class="row g-2">
-                                    <?php foreach ($allowedPrefixes as $ap):
-                                        $isOwner = ($ap === $sessionInstPrefix && !isSuperAdmin());
-                                    ?>
+                                    <?php foreach ($allowedPrefixes as $ap): ?>
                                     <div class="col-md-4 col-6">
-                                        <div class="form-check" style="background:#fff;border:1px solid <?= $isOwner ? '#7c3aed' : '#e2e8f0' ?>;border-radius:6px;padding:8px 12px 8px 32px;">
-                                            <?php if ($isOwner): ?>
-                                                <input class="form-check-input joint-inst-cb" type="checkbox"
-                                                       name="participating_institutes[]"
-                                                       value="<?= $ap ?>"
-                                                       id="inst_cb_<?= $ap ?>"
-                                                       checked disabled>
-                                                <input type="hidden" name="participating_institutes[]" value="<?= $ap ?>" class="hidden-owner-inst">
-                                                <label class="form-check-label d-flex align-items-center gap-1" for="inst_cb_<?= $ap ?>"
-                                                       style="font-size:12px;font-weight:700;color:#7c3aed;cursor:default;">
-                                                    <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
-                                                    <span class="badge ms-1" style="font-size:9px;background:#7c3aed;color:#fff;">Owner</span>
-                                                </label>
-                                            <?php else: ?>
-                                                <input class="form-check-input joint-inst-cb" type="checkbox"
-                                                       name="participating_institutes[]"
-                                                       value="<?= $ap ?>"
-                                                       id="inst_cb_<?= $ap ?>">
-                                                <label class="form-check-label" for="inst_cb_<?= $ap ?>"
-                                                       style="font-size:12px;font-weight:600;color:#334155;">
-                                                    <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
-                                                </label>
-                                            <?php endif; ?>
+                                        <div class="form-check" id="container_cb_<?= $ap ?>" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px 8px 32px;">
+                                            <input class="form-check-input joint-inst-cb <?= $ap === 'uoh' ? 'joint-uoh-cb' : 'joint-spoke-cb' ?>" type="checkbox"
+                                                   name="participating_institutes[]"
+                                                   value="<?= $ap ?>"
+                                                   id="inst_cb_<?= $ap ?>"
+                                                   <?= $ap === 'uoh' ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="inst_cb_<?= $ap ?>"
+                                                   style="font-size:12px;font-weight:600;color:#334155;cursor:pointer;">
+                                                <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
+                                            </label>
                                         </div>
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
                                 <div id="joint_inst_error" class="text-danger mt-2" style="font-size:12px;display:none;">
-                                    Please select at least 2 institutes.
+                                    Please select UoH and 1 collaborating institute (total 2 institutes).
                                 </div>
                             </div>
                         </div>
@@ -1209,15 +1208,38 @@ document.addEventListener("DOMContentLoaded", function () {
     const jointSection       = document.getElementById('joint_institutes_section');
     const jointInstError     = document.getElementById('joint_inst_error');
 
+    function updateCheckboxStyles() {
+        document.querySelectorAll('.joint-inst-cb').forEach(cb => {
+            const container = document.getElementById('container_cb_' + cb.value);
+            if (container) {
+                if (cb.checked) {
+                    container.style.borderColor = '#09BD3C';
+                } else {
+                    container.style.borderColor = '#e2e8f0';
+                }
+            }
+        });
+    }
+
+    function ensureUohChecked() {
+        const uohCb = document.getElementById('inst_cb_uoh');
+        if (uohCb && !uohCb.checked) {
+            uohCb.checked = true;
+        }
+        updateCheckboxStyles();
+    }
+
     function toggleJointSection() {
         if (!pubTypeSelect || !jointSection) return;
         const isJoint = pubTypeSelect.value === 'Joint';
         jointSection.style.display = isJoint ? 'block' : 'none';
         if (!isJoint && jointInstError) { jointInstError.style.display = 'none'; }
-        // When switching back to Single, uncheck all non-owner checkboxes
-        if (!isJoint) {
-            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => { cb.checked = false; });
+        if (isJoint) {
+            ensureUohChecked();
+        } else {
+            document.querySelectorAll('.joint-spoke-cb').forEach(cb => { cb.checked = false; });
         }
+        updateCheckboxStyles();
     }
 
     if (pubTypeSelect) {
@@ -1225,25 +1247,35 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleJointSection(); // initial state
     }
 
-    // ── COUNT checked participating institutes (include hidden owner field) ──
-    function countSelectedInstitutes() {
-        const checked = document.querySelectorAll('.joint-inst-cb:checked').length;
-        const hiddenOwner = document.querySelectorAll('.hidden-owner-inst').length;
-        // The hidden owner field + visible checked (but owner is already checked & disabled so counted by querySelectorAll)
-        return checked + hiddenOwner;
-    }
+    // Radio-like single choice selection among spoke institutes
+    document.querySelectorAll('.joint-inst-cb').forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.classList.contains('joint-spoke-cb') && this.checked) {
+                document.querySelectorAll('.joint-spoke-cb').forEach(other => {
+                    if (other !== this) other.checked = false;
+                });
+            }
+            updateCheckboxStyles();
+        });
+    });
 
     // ── FORM VALIDATION for Joint requirement ─────────────────────────────────
     if (modalForm) {
         modalForm.addEventListener('submit', function(e) {
             if (pubTypeSelect && pubTypeSelect.value === 'Joint') {
-                // Count enabled checkboxes that are checked + the locked owner
-                const enabledChecked  = Array.from(document.querySelectorAll('.joint-inst-cb:not(:disabled):checked')).length;
-                const ownerLocked     = Array.from(document.querySelectorAll('.joint-inst-cb:disabled:checked')).length;
-                const totalSelected   = enabledChecked + ownerLocked;
-                if (totalSelected < 2) {
+                const uohCb        = document.getElementById('inst_cb_uoh');
+                const uohChecked   = uohCb && uohCb.checked;
+                const spokeChecked = Array.from(document.querySelectorAll('.joint-spoke-cb:checked')).length;
+                if (!uohChecked || spokeChecked !== 1) {
                     e.preventDefault();
-                    if (jointInstError) { jointInstError.style.display = 'block'; }
+                    if (jointInstError) {
+                        if (!uohChecked) {
+                            jointInstError.innerText = 'UoH is mandatory for Joint publications and must be selected.';
+                        } else {
+                            jointInstError.innerText = 'Please select 1 collaborating institute along with UoH.';
+                        }
+                        jointInstError.style.display = 'block';
+                    }
                     jointSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return false;
                 }
@@ -1271,8 +1303,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Reset publication type to Single and hide joint section
             if (pubTypeSelect) { pubTypeSelect.value = 'Single'; toggleJointSection(); }
-            // Uncheck all non-owner checkboxes
-            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => { cb.checked = false; });
+            // Uncheck all spoke checkboxes
+            document.querySelectorAll('.joint-spoke-cb').forEach(cb => { cb.checked = false; });
             if (jointInstError) { jointInstError.style.display = 'none'; }
 
             modalTitle.innerText     = 'Publication Registration Form';
@@ -1282,6 +1314,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 el.disabled = false;
                 el.readOnly = false;
             });
+            ensureUohChecked();
         });
     }
 
@@ -1316,9 +1349,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Pre-populate participating institutes checkboxes
-            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => {
+            document.querySelectorAll('.joint-inst-cb').forEach(cb => {
                 cb.checked = piPrefixes.includes(cb.value);
             });
+            ensureUohChecked();
             if (jointInstError) { jointInstError.style.display = 'none'; }
 
             if (isViewOnly) {
@@ -1338,11 +1372,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         el.readOnly = false;
                     }
                 });
-                // Re-disable owner checkbox (always locked)
-                const ownerCb = document.querySelector('.joint-inst-cb:disabled');
-                // It remains disabled because we only un-disabled non-targetSelect elements,
-                // and `el.disabled = false` doesn't override the :disabled pseudo — but to be safe:
-                document.querySelectorAll('.joint-inst-cb[disabled]').forEach(cb => { cb.disabled = true; });
             }
 
             document.getElementById('modal_task_no').value             = this.dataset.taskNo;
