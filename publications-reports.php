@@ -70,14 +70,47 @@ include 'header.php';
                                                 usort($publications, function($a, $b) {
                                                     return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
                                                 });
+
+                                                // Enrich with participating institutes (if table exists)
+                                                $piMap = [];
+                                                try {
+                                                    $piCheck = $pdo->query("SHOW TABLES LIKE 'publication_institutes'")->rowCount();
+                                                    if ($piCheck > 0 && !empty($publications)) {
+                                                        $piWhere  = [];
+                                                        $piParams = [];
+                                                        foreach ($publications as $i => $pub) {
+                                                            $piWhere[]          = "(publication_id = :pid{$i} AND owner_prefix = :op{$i})";
+                                                            $piParams[":pid{$i}"] = (int)$pub['id'];
+                                                            $piParams[":op{$i}"]  = $pub['institute_prefix'];
+                                                        }
+                                                        $piStmt = $pdo->prepare("SELECT * FROM `publication_institutes` WHERE " . implode(' OR ', $piWhere));
+                                                        $piStmt->execute($piParams);
+                                                        foreach ($piStmt->fetchAll(PDO::FETCH_ASSOC) as $piRow) {
+                                                            $k = $piRow['owner_prefix'] . '_' . $piRow['publication_id'];
+                                                            $piMap[$k][] = $piRow;
+                                                        }
+                                                    }
+                                                } catch (Exception $e) {}
                                             }
 
                                             $hasData = false;
-                                            
-                                            foreach ($publications as $row) {
-                                                $hasData = true;
-                                                
-                                                echo "<li>";
+                                                                                        foreach ($publications as $row) {
+                                                    $hasData    = true;
+                                                    $rowInst    = $row['institute_prefix'] ?? '';
+                                                    $rowId      = (int)($row['id'] ?? 0);
+                                                    $piKey      = $rowInst . '_' . $rowId;
+                                                    $piRows     = $piMap[$piKey] ?? [];
+                                                    $rowPubType = $row['publication_type'] ?? 'Single';
+                                                    $isJointRow = ($rowPubType === 'Joint');
+
+                                                    // Build participating institutes display for Joint
+                                                    $instLabels = [];
+                                                    foreach ($piRows as $pi) {
+                                                        $instLabels[] = strtoupper($pi['institute_prefix']);
+                                                    }
+                                                    $instDisplay = implode(' • ', $instLabels);
+
+                                                    echo "<li>";
                                                 // 1. Authors / Author Name
                                                 echo htmlspecialchars($row['author_name'] ?? '') . " ";
                                                 
@@ -117,7 +150,13 @@ include 'header.php';
                                                     echo " <span class='badge-category'>[" . htmlspecialchars($row['task_no']) . "]</span>";
                                                 }
                                                 
-                                                echo "</li>";
+                                                    // 8. Joint Publication badge + participating institutes
+                                                    if ($isJointRow && $instDisplay !== '') {
+                                                        echo " <span style='display:inline-flex;align-items:center;gap:4px;background:#ede9fe;color:#7c3aed;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;'>"
+                                                           . "<span>&#128279;</span> Joint: " . htmlspecialchars($instDisplay) . "</span>";
+                                                    }
+
+                                                    echo "</li>";
                                             }
                                             
                                             if (!$hasData) {

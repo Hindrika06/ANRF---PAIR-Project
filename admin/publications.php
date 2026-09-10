@@ -10,6 +10,17 @@ if (!isValidPrefix($prefix)) {
 
 $allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
 
+// ── Institute display labels for Joint Publications UI ────────────────────────
+$instituteLabels = [
+    'cuk'    => 'CUK',
+    'kannur' => 'Kannur University',
+    'mgu'    => 'MGU',
+    'ou'     => 'OU',
+    'svu'    => 'SVU',
+    'uoh'    => 'UoH',
+    'yvu'    => 'YVU',
+];
+
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
 
@@ -19,6 +30,26 @@ $error   = '';
 // Generate CSRF Token for Form Security
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Helper: check publication_institutes table exists
+function publicationInstitutesTableExists($pdo) {
+    try {
+        $r = $pdo->query("SHOW TABLES LIKE 'publication_institutes'")->fetchAll();
+        return !empty($r);
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+// Helper: check publication_type column exists on a table
+function publicationTypeColumnExists($pdo, $tableName) {
+    try {
+        $r = $pdo->query("SHOW COLUMNS FROM `{$tableName}` LIKE 'publication_type'")->fetchAll();
+        return !empty($r);
+    } catch (Exception $e) {
+        return false;
+    }
 }
 
 // 1. HANDLE DELETE
@@ -37,11 +68,20 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
             $error = 'You are not allowed to delete records for this institute.';
         } else {
             try {
+                $deleteId    = (int)$_GET['id'];
                 $deleteTable = "{$deletePrefix}_publications";
-                $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
-                $stmt->execute([':id' => (int)$_GET['id']]);
+                $pdo->beginTransaction();
+                // Delete publication_institutes rows if the table exists
+                if (publicationInstitutesTableExists($pdo)) {
+                    $pdo->prepare("DELETE FROM `publication_institutes` WHERE publication_id = :pid AND owner_prefix = :op")
+                        ->execute([':pid' => $deleteId, ':op' => $deletePrefix]);
+                }
+                $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id")
+                    ->execute([':id' => $deleteId]);
+                $pdo->commit();
                 adminRedirect(['success_msg' => 'deleted']);
             } catch (PDOException $e) {
+                $pdo->rollBack();
                 $error = 'Failed to delete record: ' . $e->getMessage();
             }
         }
@@ -56,93 +96,212 @@ if (isset($_GET['success_msg'])) {
 // 3. HANDLE FORM SUBMISSIONS
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $task_no              = trim($_POST['task_no']            ?? '');
-    $publication_title    = trim($_POST['publication_title']   ?? '');
-    $author_name          = trim($_POST['author_name']         ?? '');
-    $doi_number           = trim($_POST['doi_number']          ?? '');
-    $publication_date     = $_POST['publication_date']         ?? '';
-    $publication_journal  = trim($_POST['publication_journal'] ?? '');
-    $impact_factor        = trim($_POST['impact_factor']       ?? '');
-    $edit_id              = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
-    $is_super             = isSuperAdmin();
+    $task_no             = trim($_POST['task_no']            ?? '');
+    $publication_title   = trim($_POST['publication_title']   ?? '');
+    $author_name         = trim($_POST['author_name']         ?? '');
+    $doi_number          = trim($_POST['doi_number']          ?? '');
+    $publication_date    = $_POST['publication_date']         ?? '';
+    $publication_journal = trim($_POST['publication_journal'] ?? '');
+    $impact_factor       = trim($_POST['impact_factor']       ?? '');
+    $edit_id             = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $is_super            = isSuperAdmin();
 
+    // ── Publication Type: whitelist-validate
+    $rawType         = trim($_POST['publication_type'] ?? 'Single');
+    $publication_type = in_array($rawType, ['Single', 'Joint'], true) ? $rawType : 'Single';
+
+    // ── Determine owner prefix (always session-locked for Spoke Admins)
     if ($is_super) {
         $targetPrefix = trim($_POST['target_prefix'] ?? ($prefix !== 'all' ? $prefix : 'uoh'));
         if (!in_array($targetPrefix, $allowedPrefixes, true)) {
             $targetPrefix = 'uoh';
         }
     } else {
+        // For Spoke Admin: ALWAYS use session prefix regardless of POST data
         $targetPrefix = $_SESSION['institute_prefix'] ?? '';
         if (!in_array($targetPrefix, $allowedPrefixes, true)) {
             die('Invalid institute configuration.');
         }
     }
 
+    // ── For Joint Publications: build & validate participating institutes
+    $participatingInstitutes = []; // will be ['cuk' => 'OWNER', 'ou' => 'COLLABORATOR', ...]
+    if ($publication_type === 'Joint') {
+        // Raw submitted list (may come from checkboxes)
+        $rawInstitutes = $_POST['participating_institutes'] ?? [];
+        if (!is_array($rawInstitutes)) {
+            $rawInstitutes = [];
+        }
+        // Whitelist-filter submitted institutes
+        $validatedInstitutes = [];
+        foreach ($rawInstitutes as $inst) {
+            $inst = trim($inst);
+            if (in_array($inst, $allowedPrefixes, true)) {
+                $validatedInstitutes[] = $inst;
+            }
+        }
+        // Server-side: ALWAYS force-include the owner (targetPrefix) — cannot be removed by POST manipulation
+        if (!in_array($targetPrefix, $validatedInstitutes, true)) {
+            $validatedInstitutes[] = $targetPrefix;
+        }
+        $validatedInstitutes = array_unique($validatedInstitutes);
+
+        // Server-side: require at least 2 institutes
+        if (count($validatedInstitutes) < 2) {
+            $error = 'Joint Publication must include at least 2 participating institutes (your institute + at least one collaborator).';
+        } else {
+            foreach ($validatedInstitutes as $inst) {
+                $participatingInstitutes[$inst] = ($inst === $targetPrefix) ? 'OWNER' : 'COLLABORATOR';
+            }
+        }
+    }
+
     $table = "{$targetPrefix}_publications";
 
-    if ($task_no === '' || $publication_title === '' || $author_name === '' || $publication_journal === '' || $publication_date === '') {
+    if ($error === '' && ($task_no === '' || $publication_title === '' || $author_name === '' || $publication_journal === '' || $publication_date === '')) {
         $error = 'Please fill in all required fields marked with *.';
-    } else {
+    }
+
+    if ($error === '') {
         if (!canEditInstitute($targetPrefix)) {
             $error = 'You are not allowed to update records for this institute.';
         } else {
-        try {
-            $approvalStatus = $is_super ? 'Approved' : 'Pending';
-            $payload = [
-                'task_no'             => $task_no,
-                'publication_title'   => $publication_title,
-                'author_name'         => $author_name,
-                'doi_number'          => $doi_number,
-                'publication_date'    => $publication_date ?: null,
-                'publication_journal' => $publication_journal,
-                'impact_factor'       => $impact_factor !== '' ? (float)$impact_factor : null,
-                'approval_status'     => $approvalStatus
-            ];
+            try {
+                $approvalStatus = $is_super ? 'Approved' : 'Pending';
+                $hasTypeCol     = publicationTypeColumnExists($pdo, $table);
 
-            if ($edit_id) {
-                $stmt = $pdo->prepare("
-                    UPDATE `$table` SET
-                        task_no              = :task_no,
-                        publication_title    = :publication_title,
-                        author_name          = :author_name,
-                        doi_number           = :doi_number,
-                        publication_date     = :publication_date,
-                        publication_journal  = :publication_journal,
-                        impact_factor        = :impact_factor,
-                        approval_status      = :approval_status
-                    WHERE id = :id
-                ");
-                $payload['id'] = $edit_id;
-                $stmt->execute($payload);
+                $payload = [
+                    'task_no'             => $task_no,
+                    'publication_title'   => $publication_title,
+                    'author_name'         => $author_name,
+                    'doi_number'          => $doi_number,
+                    'publication_date'    => $publication_date ?: null,
+                    'publication_journal' => $publication_journal,
+                    'impact_factor'       => $impact_factor !== '' ? (float)$impact_factor : null,
+                    'approval_status'     => $approvalStatus,
+                    'publication_type'    => $publication_type,
+                ];
 
-                if (!$is_super) {
-                    submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $edit_id, 'UPDATE', $payload);
-                    adminRedirect(['success_msg' => 'submitted']);
-                } else {
-                    adminRedirect(['success_msg' => 'updated']);
+                // Payload for approval log (includes human-readable joint info)
+                $approvalPayload = $payload;
+                if ($publication_type === 'Joint') {
+                    $approvalPayload['participating_institutes'] = array_keys($participatingInstitutes);
+                    $approvalPayload['owner_institute']          = $targetPrefix;
                 }
-            } else {
-                $stmt = $pdo->prepare("
-                    INSERT INTO `$table`
-                        (task_no, publication_title, author_name, doi_number,
-                         publication_date, publication_journal, impact_factor, approval_status, created_at)
-                    VALUES
-                        (:task_no, :publication_title, :author_name, :doi_number,
-                         :publication_date, :publication_journal, :impact_factor, :approval_status, NOW())
-                ");
-                $stmt->execute($payload);
-                $new_id = $pdo->lastInsertId();
 
-                if (!$is_super) {
-                    submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $new_id, 'CREATE', $payload);
-                    adminRedirect(['success_msg' => 'submitted']);
+                $hasPITable = publicationInstitutesTableExists($pdo);
+
+                $pdo->beginTransaction();
+
+                if ($edit_id) {
+                    // ── UPDATE
+                    if ($hasTypeCol) {
+                        $stmt = $pdo->prepare("
+                            UPDATE `$table` SET
+                                task_no              = :task_no,
+                                publication_title    = :publication_title,
+                                author_name          = :author_name,
+                                doi_number           = :doi_number,
+                                publication_date     = :publication_date,
+                                publication_journal  = :publication_journal,
+                                impact_factor        = :impact_factor,
+                                approval_status      = :approval_status,
+                                publication_type     = :publication_type
+                            WHERE id = :id
+                        ");
+                    } else {
+                        // Fallback if column doesn't exist yet (migration not run)
+                        $stmt = $pdo->prepare("
+                            UPDATE `$table` SET
+                                task_no              = :task_no,
+                                publication_title    = :publication_title,
+                                author_name          = :author_name,
+                                doi_number           = :doi_number,
+                                publication_date     = :publication_date,
+                                publication_journal  = :publication_journal,
+                                impact_factor        = :impact_factor,
+                                approval_status      = :approval_status
+                            WHERE id = :id
+                        ");
+                        unset($payload['publication_type']);
+                    }
+                    $stmtPayload = $payload;
+                    $stmtPayload['id'] = $edit_id;
+                    $stmt->execute($stmtPayload);
+
+                    // Update publication_institutes
+                    if ($hasPITable) {
+                        $pdo->prepare("DELETE FROM `publication_institutes` WHERE publication_id = :pid AND owner_prefix = :op")
+                            ->execute([':pid' => $edit_id, ':op' => $targetPrefix]);
+                        foreach ($participatingInstitutes as $instPrefix => $rel) {
+                            $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, :rel)")
+                                ->execute([':pid' => $edit_id, ':op' => $targetPrefix, ':ip' => $instPrefix, ':rel' => $rel]);
+                        }
+                    }
+
+                    $pdo->commit();
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $edit_id, 'UPDATE', $approvalPayload);
+                        adminRedirect(['success_msg' => 'submitted']);
+                    } else {
+                        adminRedirect(['success_msg' => 'updated']);
+                    }
+
                 } else {
-                    adminRedirect(['success_msg' => 'inserted']);
+                    // ── INSERT
+                    if ($hasTypeCol) {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO `$table`
+                                (task_no, publication_title, author_name, doi_number,
+                                 publication_date, publication_journal, impact_factor,
+                                 approval_status, publication_type, created_at)
+                            VALUES
+                                (:task_no, :publication_title, :author_name, :doi_number,
+                                 :publication_date, :publication_journal, :impact_factor,
+                                 :approval_status, :publication_type, NOW())
+                        ");
+                    } else {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO `$table`
+                                (task_no, publication_title, author_name, doi_number,
+                                 publication_date, publication_journal, impact_factor, approval_status, created_at)
+                            VALUES
+                                (:task_no, :publication_title, :author_name, :doi_number,
+                                 :publication_date, :publication_journal, :impact_factor, :approval_status, NOW())
+                        ");
+                        unset($payload['publication_type']);
+                    }
+                    $stmt->execute($payload);
+                    $new_id = $pdo->lastInsertId();
+
+                    // Insert publication_institutes for Joint (and OWNER for all types if table exists)
+                    if ($hasPITable) {
+                        if ($publication_type === 'Joint') {
+                            foreach ($participatingInstitutes as $instPrefix => $rel) {
+                                $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, :rel)")
+                                    ->execute([':pid' => $new_id, ':op' => $targetPrefix, ':ip' => $instPrefix, ':rel' => $rel]);
+                            }
+                        } else {
+                            // Single: record OWNER for consistent relationship data
+                            $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, 'OWNER')")
+                                ->execute([':pid' => $new_id, ':op' => $targetPrefix, ':ip' => $targetPrefix]);
+                        }
+                    }
+
+                    $pdo->commit();
+
+                    if (!$is_super) {
+                        submitKpiApprovalRequest($pdo, 'Publications', $table, $targetPrefix, $new_id, 'CREATE', $approvalPayload);
+                        adminRedirect(['success_msg' => 'submitted']);
+                    } else {
+                        adminRedirect(['success_msg' => 'inserted']);
+                    }
                 }
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                $error = 'Database error: ' . $e->getMessage();
             }
-        } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
-        }
         }
     }
 }
@@ -159,6 +318,65 @@ try {
 } catch (Exception $e) {
     $error = 'Could not load records: ' . $e->getMessage();
 }
+
+// 4b. ENRICH WITH PARTICIPATING INSTITUTES DATA
+// Build a lookup: [owner_prefix][publication_id] => [institutes list]
+$pubInstitutesMap = [];
+if (!empty($publications) && publicationInstitutesTableExists($pdo)) {
+    try {
+        // Collect all (publication_id, owner_prefix) pairs we need
+        $pairs = [];
+        foreach ($publications as $pub) {
+            $op  = $pub['institute_prefix'] ?? '';
+            $pid = (int)($pub['id'] ?? 0);
+            if ($op && $pid) {
+                $pairs[] = ['pid' => $pid, 'op' => $op];
+            }
+        }
+        if (!empty($pairs)) {
+            // Build a single query with OR conditions
+            $whereClauses = [];
+            $params = [];
+            foreach ($pairs as $i => $pair) {
+                $whereClauses[] = "(publication_id = :pid{$i} AND owner_prefix = :op{$i})";
+                $params[":pid{$i}"] = $pair['pid'];
+                $params[":op{$i}"]  = $pair['op'];
+            }
+            $sql  = "SELECT * FROM `publication_institutes` WHERE " . implode(' OR ', $whereClauses);
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $piRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($piRows as $row) {
+                $key = $row['owner_prefix'] . '_' . $row['publication_id'];
+                if (!isset($pubInstitutesMap[$key])) {
+                    $pubInstitutesMap[$key] = [];
+                }
+                $pubInstitutesMap[$key][] = [
+                    'institute_prefix' => $row['institute_prefix'],
+                    'relationship'     => $row['relationship'],
+                ];
+            }
+        }
+    } catch (Exception $e) {
+        // Ignore enrichment errors — feature degrades gracefully
+    }
+}
+
+// Attach enrichment data to each publication
+foreach ($publications as &$pub) {
+    $op  = $pub['institute_prefix'] ?? '';
+    $pid = (int)($pub['id'] ?? 0);
+    $key = $op . '_' . $pid;
+    $pub['_institutes']   = $pubInstitutesMap[$key] ?? [];
+    $pub['_pub_type']     = $pub['publication_type'] ?? 'Single';
+    // Build display string for Joint
+    $instLabels = [];
+    foreach ($pub['_institutes'] as $pi) {
+        $instLabels[] = strtoupper($pi['institute_prefix']);
+    }
+    $pub['_institutes_display'] = implode(' • ', $instLabels);
+}
+unset($pub);
 
 // 5. CALCULATE PUBLICATION STATS
 $total_publications = $total_records;
@@ -182,6 +400,9 @@ foreach ($publications as $pub) {
 $total_authors  = count($unique_authors);
 $total_journals = count($unique_journals);
 $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
+
+// Determine current logged-in institute for locked checkbox in Joint form
+$sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($_SESSION['institute_prefix'] ?? 'uoh');
 ?>
 
 <?php include 'nav_header.php'; ?>
@@ -552,26 +773,35 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                         <table class="table table-theme-sapphire" data-paginate="true">
                             <thead>
                                 <tr>
-                                    <th style="width: 4%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
-                                    <th style="width: 38%; background-color: #bc2121 !important; color: #ffffff !important;">Publication Info</th>
-                                    <th style="width: 18%; background-color: #bc2121 !important; color: #ffffff !important;">Author / DOI</th>
-                                    <th style="width: 13%; background-color: #bc2121 !important; color: #ffffff !important;">Journal</th>
-                                    <th style="width: 10%; background-color: #bc2121 !important; color: #ffffff !important;">Date</th>
-                                    <th style="width: 7%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Impact</th>
+                                    <th style="width: 3%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">S.No</th>
+                                    <th style="width: 28%; background-color: #bc2121 !important; color: #ffffff !important;">Publication Info</th>
+                                    <th style="width: 13%; background-color: #bc2121 !important; color: #ffffff !important;">Author / DOI</th>
+                                    <th style="width: 11%; background-color: #bc2121 !important; color: #ffffff !important;">Journal</th>
+                                    <th style="width: 8%; background-color: #bc2121 !important; color: #ffffff !important;">Date</th>
+                                    <th style="width: 6%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Impact</th>
+                                    <th style="width: 9%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Pub Type</th>
+                                    <th style="width: 12%; background-color: #bc2121 !important; color: #ffffff !important;">Institutes</th>
                                     <th style="width: 10%; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($publications)): ?>
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4" style="font-size: 13px;">No publications registered yet.</td>
+                                        <td colspan="9" class="text-center text-muted py-4" style="font-size: 13px;">No publications registered yet.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php
                                     $sno = 1;
                                     foreach ($publications as $pub):
-                                        $approvalStatus = $pub['approval_status'] ?? 'Approved';
-                                        $instPrefix     = strtoupper($pub['institute_prefix'] ?? $prefix);
+                                        $approvalStatus   = $pub['approval_status'] ?? 'Approved';
+                                        $instPrefix       = strtoupper($pub['institute_prefix'] ?? $prefix);
+                                        $pubType          = $pub['_pub_type'] ?? ($pub['publication_type'] ?? 'Single');
+                                        $instDisplay      = $pub['_institutes_display'] ?? '';
+                                        $isJoint          = ($pubType === 'Joint');
+                                        // Participating institutes JSON for edit modal
+                                        $piPrefixes = [];
+                                        foreach (($pub['_institutes'] ?? []) as $pi) { $piPrefixes[] = $pi['institute_prefix']; }
+                                        $piPrefixesJson = htmlspecialchars(json_encode($piPrefixes), ENT_QUOTES, 'UTF-8');
                                     ?>
                                         <tr>
                                             <td style="text-align: center;">
@@ -620,6 +850,28 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                                         : '—' ?>
                                                 </span>
                                             </td>
+                                            <!-- Publication Type column -->
+                                            <td style="text-align: center;">
+                                                <?php if ($isJoint): ?>
+                                                    <span class="badge" style="background:#7c3aed;color:#fff;font-size:10px;font-weight:700;">
+                                                        <i class="fa-solid fa-link me-1" style="font-size:9px;"></i>Joint
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge" style="background:#0369a1;color:#fff;font-size:10px;font-weight:700;">
+                                                        <i class="fa-solid fa-user me-1" style="font-size:9px;"></i>Single
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <!-- Participating Institutes column -->
+                                            <td>
+                                                <?php if ($isJoint && $instDisplay !== ''): ?>
+                                                    <span class="registry-sub-label" style="font-size:11px;color:#7c3aed;font-weight:600;">
+                                                        <?= htmlspecialchars($instDisplay) ?>
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="registry-sub-label">—</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
                                                     <button type="button"
@@ -642,6 +894,8 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                                                             data-date="<?= $pub['publication_date'] ?? '' ?>"
                                                             data-journal="<?= htmlspecialchars($pub['publication_journal']) ?>"
                                                             data-impact="<?= htmlspecialchars($pub['impact_factor'] ?? '') ?>"
+                                                            data-pub-type="<?= htmlspecialchars($pubType) ?>"
+                                                            data-pi-prefixes="<?= $piPrefixesJson ?>"
                                                             title="Edit Record">
                                                         <i class="fa fa-pencil"></i>
                                                     </button>
@@ -709,6 +963,65 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
                             </div>
                         </div>
                         <?php endif; ?>
+
+                        <!-- Publication Type -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label form-label-grey">
+                                    Publication Type <span class="text-danger">*</span>
+                                </label>
+                                <select name="publication_type" id="modal_publication_type" class="form-select" required>
+                                    <option value="Single" selected>Single</option>
+                                    <option value="Joint">Joint</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Participating Institutes (shown only for Joint) -->
+                        <div id="joint_institutes_section" style="display:none;" class="mb-3">
+                            <div class="card border-0" style="background:#f8f5ff;border-radius:8px;padding:14px 18px;">
+                                <label class="form-label form-label-grey mb-2">
+                                    <i class="fa-solid fa-link me-1" style="color:#7c3aed;"></i>
+                                    Participating Institutes <span class="text-danger">*</span>
+                                    <small class="text-muted ms-2">(Select at least 2 institutes)</small>
+                                </label>
+                                <div class="row g-2">
+                                    <?php foreach ($allowedPrefixes as $ap):
+                                        $isOwner = ($ap === $sessionInstPrefix && !isSuperAdmin());
+                                    ?>
+                                    <div class="col-md-4 col-6">
+                                        <div class="form-check" style="background:#fff;border:1px solid <?= $isOwner ? '#7c3aed' : '#e2e8f0' ?>;border-radius:6px;padding:8px 12px 8px 32px;">
+                                            <?php if ($isOwner): ?>
+                                                <input class="form-check-input joint-inst-cb" type="checkbox"
+                                                       name="participating_institutes[]"
+                                                       value="<?= $ap ?>"
+                                                       id="inst_cb_<?= $ap ?>"
+                                                       checked disabled>
+                                                <input type="hidden" name="participating_institutes[]" value="<?= $ap ?>" class="hidden-owner-inst">
+                                                <label class="form-check-label d-flex align-items-center gap-1" for="inst_cb_<?= $ap ?>"
+                                                       style="font-size:12px;font-weight:700;color:#7c3aed;cursor:default;">
+                                                    <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
+                                                    <span class="badge ms-1" style="font-size:9px;background:#7c3aed;color:#fff;">Owner</span>
+                                                </label>
+                                            <?php else: ?>
+                                                <input class="form-check-input joint-inst-cb" type="checkbox"
+                                                       name="participating_institutes[]"
+                                                       value="<?= $ap ?>"
+                                                       id="inst_cb_<?= $ap ?>">
+                                                <label class="form-check-label" for="inst_cb_<?= $ap ?>"
+                                                       style="font-size:12px;font-weight:600;color:#334155;">
+                                                    <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
+                                                </label>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div id="joint_inst_error" class="text-danger mt-2" style="font-size:12px;display:none;">
+                                    Please select at least 2 institutes.
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Task No / Publication Title -->
                         <div class="row">
@@ -825,7 +1138,7 @@ $avg_impact     = $impact_count > 0 ? round($impact_sum / $impact_count, 2) : 0;
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ── READ-ONLY VIEW MODAL TRIGGER
+    // ── READ-ONLY VIEW MODAL TRIGGER ──────────────────────────────────────────
     const viewKpiBtns = document.querySelectorAll('.view-kpi-btn');
     viewKpiBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -834,22 +1147,42 @@ document.addEventListener("DOMContentLoaded", function () {
             const instPrefix = rec.institute_prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
             const instName = (typeof getInstituteFullName === 'function') ? getInstituteFullName(instPrefix) : instPrefix.toUpperCase();
 
+            const pubType = rec['_pub_type'] || rec.publication_type || 'Single';
+            const isJoint = (pubType === 'Joint');
+
+            // Build participating institutes display
+            let piDisplay = '';
+            if (isJoint && Array.isArray(rec['_institutes']) && rec['_institutes'].length > 0) {
+                piDisplay = rec['_institutes'].map(pi => {
+                    return pi.institute_prefix.toUpperCase() + (pi.relationship === 'OWNER' ? ' (Owner)' : '');
+                }).join(', ');
+            }
+
+            const fields = [
+                { label: 'Task Number',      value: rec.task_no,             icon: 'fa-solid fa-list-check' },
+                { label: 'Publication Title', value: rec.publication_title,  fullWidth: true, icon: 'fa-solid fa-book' },
+                { label: 'Publication Type',  value: pubType,                icon: 'fa-solid fa-tag', type: 'badge' },
+                { label: 'Primary Author',    value: rec.author_name,        icon: 'fa-solid fa-user-pen' },
+                { label: 'Journal Name',      value: rec.publication_journal,icon: 'fa-solid fa-newspaper' },
+                { label: 'DOI Number',        value: rec.doi_number,         type: 'doi', icon: 'fa-solid fa-fingerprint' },
+                { label: 'Publication Date',  value: rec.publication_date ? formatDate(rec.publication_date) : null, icon: 'fa-solid fa-calendar-days' },
+                { label: 'Impact Factor',     value: (rec.impact_factor !== null && rec.impact_factor !== undefined && rec.impact_factor !== '') ? parseFloat(rec.impact_factor).toFixed(2) : null, icon: 'fa-solid fa-chart-line' },
+                { label: 'Created At',        value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
+            ];
+
+            // Add participating institutes field for Joint
+            if (isJoint && piDisplay) {
+                fields.splice(3, 0, { label: 'Participating Institutes', value: piDisplay, fullWidth: true, icon: 'fa-solid fa-link' });
+            }
+
             openKpiRecordViewModal({
                 moduleTitle: 'Publication Details',
                 recordTitle: rec.publication_title || 'Untitled Publication',
                 institutePrefix: instPrefix,
                 instituteName: instName,
                 approvalStatus: rec.approval_status || 'Approved',
-                fields: [
-                    { label: 'Task Number', value: rec.task_no, icon: 'fa-solid fa-list-check' },
-                    { label: 'Publication Title', value: rec.publication_title, fullWidth: true, icon: 'fa-solid fa-book' },
-                    { label: 'Primary Author', value: rec.author_name, icon: 'fa-solid fa-user-pen' },
-                    { label: 'Journal Name', value: rec.publication_journal, icon: 'fa-solid fa-newspaper' },
-                    { label: 'DOI Number', value: rec.doi_number, type: 'doi', icon: 'fa-solid fa-fingerprint' },
-                    { label: 'Publication Date', value: rec.publication_date ? formatDate(rec.publication_date) : null, icon: 'fa-solid fa-calendar-days' },
-                    { label: 'Impact Factor', value: (rec.impact_factor !== null && rec.impact_factor !== undefined && rec.impact_factor !== '') ? parseFloat(rec.impact_factor).toFixed(2) : null, icon: 'fa-solid fa-chart-line' },
-                    { label: 'Created At', value: rec.created_at ? formatDate(rec.created_at) : null, icon: 'fa-solid fa-clock' }
-                ]
+                extraStatus: isJoint ? 'Joint Publication' : null,
+                fields: fields
             });
         });
     });
@@ -864,34 +1197,84 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalDeleteExecutionLink = document.getElementById('modalDeleteExecutionLink');
     const bootstrapDeleteInstance  = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
 
-    // Calendar picker for Publication Date. dateFormat matches what the
-    // old native date input produced (Y-m-d), so the PHP/SQL side needs
-    // no changes; altInput just shows a friendlier label to the admin.
+    // Calendar picker
     const pubDatePicker = flatpickr("#modal_publication_date", {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d M, Y"
     });
 
-    // ── ADD NEW
+    // ── JOINT PUBLICATION TYPE TOGGLE ─────────────────────────────────────────
+    const pubTypeSelect      = document.getElementById('modal_publication_type');
+    const jointSection       = document.getElementById('joint_institutes_section');
+    const jointInstError     = document.getElementById('joint_inst_error');
+
+    function toggleJointSection() {
+        if (!pubTypeSelect || !jointSection) return;
+        const isJoint = pubTypeSelect.value === 'Joint';
+        jointSection.style.display = isJoint ? 'block' : 'none';
+        if (!isJoint && jointInstError) { jointInstError.style.display = 'none'; }
+        // When switching back to Single, uncheck all non-owner checkboxes
+        if (!isJoint) {
+            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => { cb.checked = false; });
+        }
+    }
+
+    if (pubTypeSelect) {
+        pubTypeSelect.addEventListener('change', toggleJointSection);
+        toggleJointSection(); // initial state
+    }
+
+    // ── COUNT checked participating institutes (include hidden owner field) ──
+    function countSelectedInstitutes() {
+        const checked = document.querySelectorAll('.joint-inst-cb:checked').length;
+        const hiddenOwner = document.querySelectorAll('.hidden-owner-inst').length;
+        // The hidden owner field + visible checked (but owner is already checked & disabled so counted by querySelectorAll)
+        return checked + hiddenOwner;
+    }
+
+    // ── FORM VALIDATION for Joint requirement ─────────────────────────────────
+    if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+            if (pubTypeSelect && pubTypeSelect.value === 'Joint') {
+                // Count enabled checkboxes that are checked + the locked owner
+                const enabledChecked  = Array.from(document.querySelectorAll('.joint-inst-cb:not(:disabled):checked')).length;
+                const ownerLocked     = Array.from(document.querySelectorAll('.joint-inst-cb:disabled:checked')).length;
+                const totalSelected   = enabledChecked + ownerLocked;
+                if (totalSelected < 2) {
+                    e.preventDefault();
+                    if (jointInstError) { jointInstError.style.display = 'block'; }
+                    jointSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+                if (jointInstError) { jointInstError.style.display = 'none'; }
+            }
+        });
+    }
+
+    // ── ADD NEW ───────────────────────────────────────────────────────────────
     if (addNewBtn) {
         addNewBtn.addEventListener('click', function () {
             modalForm.reset();
             pubDatePicker.clear();
             document.getElementById('modal_edit_id').value = '';
+
             const targetSelect = document.getElementById('modal_target_prefix_select');
             if (targetSelect) {
                 targetSelect.disabled = false;
                 const currentPrefix = "<?= htmlspecialchars($prefix) ?>";
-                if (currentPrefix !== 'all') {
-                    targetSelect.value = currentPrefix;
-                } else {
-                    targetSelect.value = 'uoh';
-                }
+                targetSelect.value = (currentPrefix !== 'all') ? currentPrefix : 'uoh';
                 document.getElementById('modal_target_prefix').value = targetSelect.value;
             } else {
                 document.getElementById('modal_target_prefix').value = "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
             }
+
+            // Reset publication type to Single and hide joint section
+            if (pubTypeSelect) { pubTypeSelect.value = 'Single'; toggleJointSection(); }
+            // Uncheck all non-owner checkboxes
+            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => { cb.checked = false; });
+            if (jointInstError) { jointInstError.style.display = 'none'; }
+
             modalTitle.innerText     = 'Publication Registration Form';
             modalSubmitBtn.innerText = 'Save Publication';
             modalSubmitBtn.style.display = "block";
@@ -909,22 +1292,37 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── EDIT
+    // ── EDIT ──────────────────────────────────────────────────────────────────
     editButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
-            const isViewOnly = this.getAttribute('data-view-only') === 'true';
+            const isViewOnly   = this.getAttribute('data-view-only') === 'true';
             const recordPrefix = this.dataset.recordPrefix || this.dataset.prefix || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>";
+            const editPubType  = this.dataset.pubType || 'Single';
+            let   piPrefixes   = [];
+            try { piPrefixes = JSON.parse(this.dataset.piPrefixes || '[]'); } catch(e) { piPrefixes = []; }
 
             document.getElementById('modal_edit_id').value       = this.dataset.id;
             document.getElementById('modal_target_prefix').value = recordPrefix;
             const targetSelect = document.getElementById('modal_target_prefix_select');
             if (targetSelect) {
-                targetSelect.value = recordPrefix;
+                targetSelect.value    = recordPrefix;
                 targetSelect.disabled = true;
             }
 
+            // Set publication type
+            if (pubTypeSelect) {
+                pubTypeSelect.value = editPubType;
+                toggleJointSection();
+            }
+
+            // Pre-populate participating institutes checkboxes
+            document.querySelectorAll('.joint-inst-cb:not(:disabled)').forEach(cb => {
+                cb.checked = piPrefixes.includes(cb.value);
+            });
+            if (jointInstError) { jointInstError.style.display = 'none'; }
+
             if (isViewOnly) {
-                modalTitle.innerText     = 'View Publication Info';
+                modalTitle.innerText         = 'View Publication Info';
                 modalSubmitBtn.style.display = "none";
                 modalForm.querySelectorAll('input, select, textarea').forEach(el => {
                     el.disabled = true;
@@ -940,6 +1338,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         el.readOnly = false;
                     }
                 });
+                // Re-disable owner checkbox (always locked)
+                const ownerCb = document.querySelector('.joint-inst-cb:disabled');
+                // It remains disabled because we only un-disabled non-targetSelect elements,
+                // and `el.disabled = false` doesn't override the :disabled pseudo — but to be safe:
+                document.querySelectorAll('.joint-inst-cb[disabled]').forEach(cb => { cb.disabled = true; });
             }
 
             document.getElementById('modal_task_no').value             = this.dataset.taskNo;
@@ -958,7 +1361,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ── DELETE
+    // ── DELETE ────────────────────────────────────────────────────────────────
     deleteTriggers.forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -967,9 +1370,7 @@ document.addEventListener("DOMContentLoaded", function () {
             urlParams.set('id', this.dataset.id);
             urlParams.set('csrf_token', '<?= $_SESSION['csrf_token'] ?>');
             const recordPrefix = this.dataset.recordPrefix || this.dataset.prefix;
-            if (recordPrefix) {
-                urlParams.set('record_prefix', recordPrefix);
-            }
+            if (recordPrefix) { urlParams.set('record_prefix', recordPrefix); }
             modalDeleteExecutionLink.setAttribute('href', '?' + urlParams.toString());
             bootstrapDeleteInstance.show();
         });

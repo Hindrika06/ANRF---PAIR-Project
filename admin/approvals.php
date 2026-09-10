@@ -549,28 +549,59 @@ function showDetails(requestId) {
     
     const oldData = req.old_data ? JSON.parse(req.old_data) : null;
     const newData = req.new_data ? JSON.parse(req.new_data) : null;
-    
+
+    // ── Joint Publication banner (shown to Hub Admin for context)
+    if (newData && newData.publication_type === 'Joint') {
+        const piList  = Array.isArray(newData.participating_institutes)
+                        ? newData.participating_institutes.map(p => p.toUpperCase()).join(', ')
+                        : (newData.participating_institutes || '—');
+        const owner   = (newData.owner_institute || req.institute_prefix || '').toUpperCase();
+        html += `
+            <div class="alert alert-primary d-flex align-items-start gap-2 mb-3" style="border-left:4px solid #7c3aed;background:#f5f3ff;">
+                <i class="fa-solid fa-link mt-1" style="color:#7c3aed;"></i>
+                <div>
+                    <strong style="color:#7c3aed;">Joint Publication</strong>
+                    <div style="font-size:13px;margin-top:4px;">
+                        <span class="me-3"><strong>Owner Institute:</strong> ${escapeHtml(owner)}</span>
+                        <span><strong>Participating Institutes:</strong> ${escapeHtml(piList)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     html += `<h5 class="mt-4 mb-2" style="font-weight: 700;">Data Comparison</h5>`;
     html += `<div class="table-responsive"><table class="table table-bordered table-striped table-hover">`;
     html += `<thead><tr class="table-light"><th>Field</th><th>Original Value</th><th>Proposed Value</th></tr></thead><tbody>`;
-    
+
+    // Helper to format value for display (handles arrays)
+    function fmtVal(v) {
+        if (v === null || v === undefined) return 'NULL';
+        if (Array.isArray(v)) return v.join(', ');
+        return String(v);
+    }
+
+    // Fields to skip in the comparison table (handled separately above)
+    const skipKeys = new Set(['created_at', 'updated_at', 'participating_institutes', 'owner_institute']);
+
     if (req.action_type === 'CREATE') {
         if (newData) {
             for (const [key, value] of Object.entries(newData)) {
-                if (key === 'created_at' || key === 'updated_at') continue;
+                if (skipKeys.has(key)) continue;
                 html += `<tr>
                     <td class="font-weight-bold" style="width: 30%;">${escapeHtml(key)}</td>
                     <td class="text-muted">-</td>
-                    <td class="text-success font-weight-bold">${escapeHtml(value !== null ? value : 'NULL')}</td>
+                    <td class="text-success font-weight-bold">${escapeHtml(fmtVal(value))}</td>
                 </tr>`;
             }
         }
     } else if (req.action_type === 'DELETE') {
         if (oldData) {
             for (const [key, value] of Object.entries(oldData)) {
+                if (skipKeys.has(key)) continue;
                 html += `<tr>
                     <td class="font-weight-bold" style="width: 30%;">${escapeHtml(key)}</td>
-                    <td class="text-danger" style="text-decoration: line-through;">${escapeHtml(value !== null ? value : 'NULL')}</td>
+                    <td class="text-danger" style="text-decoration: line-through;">${escapeHtml(fmtVal(value))}</td>
                     <td class="text-muted">-</td>
                 </tr>`;
             }
@@ -578,23 +609,23 @@ function showDetails(requestId) {
     } else if (req.action_type === 'UPDATE') {
         const allKeys = new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})]);
         allKeys.forEach(key => {
-            if (key === 'created_at' || key === 'updated_at') return;
+            if (skipKeys.has(key)) return;
             const oldVal = oldData && oldData[key] !== undefined ? oldData[key] : null;
             const newVal = newData && newData[key] !== undefined ? newData[key] : null;
-            
-            const isDifferent = String(oldVal) !== String(newVal);
-            const rowStyle = isDifferent ? 'style="background-color: #fffbeb;"' : ''; 
-            
+
+            const isDifferent = fmtVal(oldVal) !== fmtVal(newVal);
+            const rowStyle = isDifferent ? 'style="background-color: #fffbeb;"' : '';
+
             html += `<tr ${rowStyle}>
                 <td class="font-weight-bold" style="width: 30%;">${escapeHtml(key)}</td>
-                <td class="${isDifferent ? 'text-danger font-weight-bold' : 'text-muted'}">${escapeHtml(oldVal !== null ? oldVal : 'NULL')}</td>
-                <td class="${isDifferent ? 'text-success font-weight-bold' : ''}">${escapeHtml(newVal !== null ? newVal : 'NULL')}</td>
+                <td class="${isDifferent ? 'text-danger font-weight-bold' : 'text-muted'}">${escapeHtml(fmtVal(oldVal))}</td>
+                <td class="${isDifferent ? 'text-success font-weight-bold' : ''}">${escapeHtml(fmtVal(newVal))}</td>
             </tr>`;
         });
     }
-    
+
     html += `</tbody></table></div>`;
-    
+
     document.getElementById('detailsModalBody').innerHTML = html;
     new bootstrap.Modal(document.getElementById('detailsModal')).show();
 }
