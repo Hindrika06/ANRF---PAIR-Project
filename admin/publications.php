@@ -373,7 +373,7 @@ foreach ($publications as &$pub) {
     $pid = (int)($pub['id'] ?? 0);
     $key = $op . '_' . $pid;
     $pub['_institutes']   = $pubInstitutesMap[$key] ?? [];
-    $pub['_pub_type']     = $pub['publication_type'] ?? 'Single';
+    $pub['_pub_type']     = (!empty($pub['publication_type'])) ? $pub['publication_type'] : (count($pub['_institutes']) > 1 ? 'Joint' : 'Single');
     // Build display string for Joint
     $instLabels = [];
     foreach ($pub['_institutes'] as $pi) {

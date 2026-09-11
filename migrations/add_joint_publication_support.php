@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Migration: Add Joint Publication Support
  * Run once: php migrations/add_joint_publication_support.php
@@ -53,7 +53,9 @@ if (!empty($tableCheck)) {
     }
 }
 
-header('Content-Type: text/plain; charset=utf-8');
+if (php_sapi_name() !== 'cli' && !headers_sent()) {
+    header('Content-Type: text/plain; charset=utf-8');
+}
 echo "=== Joint Publication Migration ===\n\n";
 foreach ($messages as $m) { echo $m . "\n"; }
 if (!empty($errors)) {
