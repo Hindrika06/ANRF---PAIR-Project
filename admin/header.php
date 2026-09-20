@@ -32,84 +32,84 @@ $__activeInstContext = getActiveInstituteContext();
            Edit:  #ffca28 (Yellow)
            Delete:#bc2121 (Red)
         ═══════════════════════════════════════════════════════ */
-        .btn-info,
-        .btn-info.btn-xs,
-        .btn-info.btn-sm,
-        .btn-action-compact.btn-info,
-        .view-research-btn,
-        .view-facility-btn,
-        .view-kpi-btn,
-        .view-btn {
-            background-color: #0856a4 !important;
-            border-color: #0856a4 !important;
+        body .btn-info,
+        body .btn-info.btn-xs,
+        body .btn-info.btn-sm,
+        body .btn-action-compact.btn-info,
+        body .view-research-btn,
+        body .view-facility-btn,
+        body .view-kpi-btn,
+        body .view-btn {
+            background-color: #1565c0 !important;
+            border-color: #1565c0 !important;
             color: #ffffff !important;
         }
-        .btn-info:hover,
-        .btn-info.btn-xs:hover,
-        .btn-info.btn-sm:hover,
-        .btn-action-compact.btn-info:hover,
-        .view-research-btn:hover,
-        .view-facility-btn:hover,
-        .view-kpi-btn:hover,
-        .view-btn:hover {
-            background-color: #064380 !important;
-            border-color: #064380 !important;
+        body .btn-info:hover,
+        body .btn-info.btn-xs:hover,
+        body .btn-info.btn-sm:hover,
+        body .btn-action-compact.btn-info:hover,
+        body .view-research-btn:hover,
+        body .view-facility-btn:hover,
+        body .view-kpi-btn:hover,
+        body .view-btn:hover {
+            background-color: #0d47a1 !important;
+            border-color: #0d47a1 !important;
             color: #ffffff !important;
         }
-        .btn-info i,
-        .btn-action-compact.btn-info i,
-        .view-research-btn i,
-        .view-facility-btn i,
-        .view-kpi-btn i,
-        .view-btn i {
+        body .btn-info i,
+        body .btn-action-compact.btn-info i,
+        body .view-research-btn i,
+        body .view-facility-btn i,
+        body .view-kpi-btn i,
+        body .view-btn i {
             color: #ffffff !important;
         }
 
-        .btn-warning,
-        .btn-warning.btn-xs,
-        .btn-warning.btn-sm,
-        .btn-action-compact.btn-action-edit-yellow,
-        .edit-btn {
+        body .btn-warning,
+        body .btn-warning.btn-xs,
+        body .btn-warning.btn-sm,
+        body .btn-action-compact.btn-action-edit-yellow,
+        body .edit-btn {
             background-color: #ffca28 !important;
             border-color: #ffca28 !important;
             color: #1a1a1a !important;
         }
-        .btn-warning:hover,
-        .btn-warning.btn-xs:hover,
-        .btn-warning.btn-sm:hover,
-        .btn-action-compact.btn-action-edit-yellow:hover,
-        .edit-btn:hover {
+        body .btn-warning:hover,
+        body .btn-warning.btn-xs:hover,
+        body .btn-warning.btn-sm:hover,
+        body .btn-action-compact.btn-action-edit-yellow:hover,
+        body .edit-btn:hover {
             background-color: #ffb300 !important;
             border-color: #ffb300 !important;
             color: #1a1a1a !important;
         }
-        .btn-warning i,
-        .btn-action-compact.btn-action-edit-yellow i,
-        .edit-btn i {
+        body .btn-warning i,
+        body .btn-action-compact.btn-action-edit-yellow i,
+        body .edit-btn i {
             color: #1a1a1a !important;
         }
 
-        .btn-danger,
-        .btn-danger.btn-xs,
-        .btn-danger.btn-sm,
-        .btn-action-compact.btn-action-delete-red,
-        .delete-btn {
-            background-color: #bc2121 !important;
-            border-color: #bc2121 !important;
+        body .btn-danger,
+        body .btn-danger.btn-xs,
+        body .btn-danger.btn-sm,
+        body .btn-action-compact.btn-action-delete-red,
+        body .delete-btn {
+            background-color: #c62828 !important;
+            border-color: #c62828 !important;
             color: #ffffff !important;
         }
-        .btn-danger:hover,
-        .btn-danger.btn-xs:hover,
-        .btn-danger.btn-sm:hover,
-        .btn-action-compact.btn-action-delete-red:hover,
-        .delete-btn:hover {
-            background-color: #a01b1b !important;
-            border-color: #a01b1b !important;
+        body .btn-danger:hover,
+        body .btn-danger.btn-xs:hover,
+        body .btn-danger.btn-sm:hover,
+        body .btn-action-compact.btn-action-delete-red:hover,
+        body .delete-btn:hover {
+            background-color: #b71c1c !important;
+            border-color: #b71c1c !important;
             color: #ffffff !important;
         }
-        .btn-danger i,
-        .btn-action-compact.btn-action-delete-red i,
-        .delete-btn i {
+        body .btn-danger i,
+        body .btn-action-compact.btn-action-delete-red i,
+        body .delete-btn i {
             color: #ffffff !important;
         }
 

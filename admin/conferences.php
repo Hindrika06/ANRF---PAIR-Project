@@ -538,9 +538,9 @@ foreach ($conferences as $c) {
                                                 </span>
                                             </td>
                                             <td style="vertical-align: middle;">
-                                                <div style="font-size: 12px;">
+                                                <div style="font-size: 13px;">
                                                     <strong>Duration:</strong><br>
-                                                    <span class="text-muted">
+                                                    <span class="text-dark font-w600">
                                                         <?= $startDateVal ? date('d M Y', strtotime($startDateVal)) : '—' ?> - <?= $endDateVal ? date('d M Y', strtotime($endDateVal)) : '—' ?>
                                                     </span>
                                                     <?php if ($deadlineVal): ?>
