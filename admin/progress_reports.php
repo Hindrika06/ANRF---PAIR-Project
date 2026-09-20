@@ -863,6 +863,223 @@ button.btn-kpi-select:hover {
     border-radius: 8px !important;
     transition: all 0.2s ease !important;
 }
+
+/* ── WEBINARS REFERENCE DESIGN SYSTEM FOR PROGRESS REPORTS ── */
+.registry-card {
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+}
+
+.registry-card-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 14px 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.registry-card-title {
+    color: #bc2121 !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-transform: uppercase !important;
+}
+
+.btn-add-green {
+    background-color: #00c853 !important;
+    border-color: #00c853 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    padding: 6px 16px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 4px rgba(0, 200, 83, 0.25) !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+.btn-add-green:hover {
+    background-color: #00a843 !important;
+    border-color: #00a843 !important;
+    color: #ffffff !important;
+}
+
+/* Red Table Header */
+.registry-card .table thead th {
+    background-color: #bc2121 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding: 12px 16px !important;
+    border: none !important;
+    vertical-align: middle !important;
+}
+
+.registry-card .table tbody td {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    vertical-align: middle !important;
+    font-size: 13.5px !important;
+}
+
+/* Serial Number Red Circle Badge */
+.index-badge-circle {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
+    background-color: #bc2121 !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
+}
+
+/* Details Section Tags */
+.badge-inst-tag {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 1px solid #bae6fd !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.badge-approved-tag {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 1px solid #bbf7d0 !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.badge-pending-tag {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 1px solid #fde68a !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.badge-rejected-tag {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border: 1px solid #fca5a5 !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.report-main-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.4 !important;
+    margin-bottom: 6px !important;
+}
+
+.sub-link-pill {
+    background-color: #e0f2fe !important;
+    color: #0284c7 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 10px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    border: 1px solid #bae6fd !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+/* Secondary & Meta Info Text */
+.registry-meta-text {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    display: block !important;
+}
+
+.registry-sub-label {
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    display: block !important;
+    margin-top: 2px !important;
+}
+
+/* Status Solid Green Badge */
+.badge-pub-solid {
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 5px 12px !important;
+    border-radius: 4px !important;
+    display: inline-block !important;
+}
+
+/* Square Icon Action Buttons */
+.btn-action-compact {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    border: none !important;
+    transition: transform 0.15s ease !important;
+    text-decoration: none !important;
+}
+.btn-action-compact:hover {
+    transform: translateY(-1px) !important;
+}
+
+.btn-action-blue {
+    background-color: #0256af !important;
+    color: #ffffff !important;
+}
+.btn-action-edit-yellow {
+    background-color: #eab308 !important;
+    color: #ffffff !important;
+}
+.btn-action-delete-red {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+}
 </style>
 
 <div id="main-wrapper">
@@ -887,77 +1104,104 @@ button.btn-kpi-select:hover {
 
             <!-- MODE A — REGISTRY PAGE VIEW -->
             <?php if ($activeAction === 'registry'): ?>
-            <div class="card registry-card shadow-sm mb-4" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; background: #ffffff;">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background: <?= $isSuper ? 'linear-gradient(135deg, #024283, #0856a4)' : '#bc2121' ?> !important;">
-                    <h4 class="card-title text-white mb-0 font-weight-bold" style="font-size: 1.05rem; color: #ffffff !important;">
-                        <i class="fas fa-list-alt me-2"></i> Progress Reports Registry (<?= strtoupper($prefix) ?>)
+            <div class="card registry-card shadow-sm mb-4">
+                <div class="registry-card-header">
+                    <h4 class="registry-card-title">
+                        <i class="fa-solid fa-list-check"></i> PROGRESS REPORTS REGISTRY (<?= strtoupper($prefix) ?>)
                     </h4>
-                    <a href="<?= buildNavUrl('progress_reports.php?action=new') ?>" class="btn btn-sm btn-light font-weight-bold" style="border-radius: 6px; font-size: 0.8rem; color: <?= $isSuper ? '#024283' : '#bc2121' ?>;">
-                        <i class="fas fa-plus me-1"></i> New Progress Report
+                    <a href="<?= buildNavUrl('progress_reports.php?action=new') ?>" class="btn-add-green">
+                        <i class="fa fa-plus"></i> + New Progress Report
                     </a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.875rem;">
-                            <thead style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <table class="table align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <th style="width: 50px; text-align: center;">#</th>
-                                    <th>TASK NO & PROJECT TITLE</th>
+                                    <th style="width: 50px; text-align: center;">S.NO</th>
+                                    <th>PROGRESS REPORT DETAILS</th>
                                     <th>PI / CO-PI</th>
                                     <th>WORK PACKAGE</th>
                                     <th style="text-align: center;">STATUS</th>
-                                    <th style="text-align: right; min-width: 280px;">ACTIONS</th>
+                                    <th style="text-align: center;">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($allReports)): ?>
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
-                                            <i class="fas fa-folder-open me-2"></i> No Progress Reports found for <?= strtoupper($prefix) ?>.
-                                        </td>
+                                        <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No progress report records tracked yet.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($allReports as $idx => $rep): ?>
                                         <tr>
-                                            <td style="text-align: center;">
-                                                <span class="badge rounded-pill bg-secondary"><?= $idx + 1 ?></span>
+                                            <td style="text-align: center; vertical-align: middle;">
+                                                <span class="index-badge-circle"><?= $idx + 1 ?></span>
                                             </td>
-                                            <td>
-                                                <strong class="text-dark d-block"><?= htmlspecialchars($rep['project_title'] ?: 'Untitled Project') ?></strong>
+                                            <td style="vertical-align: middle; padding: 12px 16px;">
+                                                <!-- Header Badge Pill Row -->
+                                                <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                                    <span class="badge-inst-tag">
+                                                        <i class="fa-solid fa-building me-1" style="font-size: 9px;"></i><?= strtoupper($prefix) ?>
+                                                    </span>
+                                                    <?php if ($rep['approval_status'] === 'Approved'): ?>
+                                                        <span class="badge-approved-tag"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>
+                                                    <?php elseif ($rep['approval_status'] === 'Rejected'): ?>
+                                                        <span class="badge-rejected-tag"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>
+                                                    <?php else: ?>
+                                                        <span class="badge-pending-tag"><i class="fa-solid fa-clock me-1"></i>Pending Approval</span>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <!-- Project Title -->
+                                                <h6 class="report-main-title">
+                                                    <?= htmlspecialchars($rep['project_title'] ?: 'Untitled Project') ?>
+                                                </h6>
+
+                                                <!-- Task Sub Link Pill -->
                                                 <?php if (!empty($rep['task_no'])): ?>
-                                                    <small class="text-muted"><i class="fas fa-tasks me-1"></i> <?= htmlspecialchars($rep['task_no']) ?></small>
+                                                    <div class="mt-1">
+                                                        <span class="sub-link-pill">
+                                                            <i class="fa fa-tasks"></i> Task <?= htmlspecialchars($rep['task_no']) ?>
+                                                        </span>
+                                                    </div>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <div><strong>PI:</strong> <?= htmlspecialchars($rep['pi_name'] ?: 'N/A') ?></div>
+                                            <td style="vertical-align: middle;">
+                                                <span class="registry-meta-text">
+                                                    <?= htmlspecialchars($rep['pi_name'] ?: 'N/A') ?>
+                                                </span>
                                                 <?php if (!empty($rep['co_pi_name'])): ?>
-                                                    <small class="text-muted"><strong>Co-PI:</strong> <?= htmlspecialchars($rep['co_pi_name']) ?></small>
+                                                    <span class="registry-sub-label">
+                                                        Co-PI: <?= htmlspecialchars($rep['co_pi_name']) ?>
+                                                    </span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <?= htmlspecialchars($rep['work_package_no'] ?: '—') ?>
+                                            <td style="vertical-align: middle;">
+                                                <span class="registry-meta-text" style="font-size: 13px;">
+                                                    <?= htmlspecialchars($rep['work_package_no'] ?: '—') ?>
+                                                </span>
                                             </td>
-                                            <td style="text-align: center;">
+                                            <td style="text-align: center; vertical-align: middle;">
                                                 <?php if ($rep['approval_status'] === 'Approved'): ?>
-                                                    <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i> Approved</span>
+                                                    <span class="badge-pub-solid" style="background-color: #00c853 !important;">Approved</span>
                                                 <?php elseif ($rep['approval_status'] === 'Rejected'): ?>
-                                                    <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i> Rejected</span>
+                                                    <span class="badge-pub-solid" style="background-color: #dc2626 !important;">Rejected</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> Pending</span>
+                                                    <span class="badge-pub-solid" style="background-color: #f59e0b !important;">Pending</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td style="text-align: right;">
-                                                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                            <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                                                <div class="d-flex justify-content-center gap-1">
                                                     <?php if (isSuperAdmin() && $rep['approval_status'] === 'Approved'): ?>
-                                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $rep['id']) ?>" target="_blank" class="btn btn-xs btn-outline-danger" title="Export PDF" style="font-size: 0.75rem; padding: 2px 8px;">
-                                                            <i class="fas fa-file-pdf me-1"></i> Export PDF
+                                                        <a href="<?= buildNavUrl('export_progress_report_pdf.php?id=' . $rep['id']) ?>" target="_blank" class="btn btn-action-compact btn-action-blue" title="Export PDF">
+                                                            <i class="fa fa-file-pdf"></i>
                                                         </a>
                                                     <?php endif; ?>
-                                                    <a href="<?= buildNavUrl('progress_reports.php?action=manage&report_id=' . $rep['id']) ?>" class="btn btn-xs btn-outline-primary" style="font-size: 0.75rem; padding: 2px 8px;">
-                                                        <i class="fas fa-edit me-1"></i> Manage
+                                                    <a href="<?= buildNavUrl('progress_reports.php?action=manage&report_id=' . $rep['id']) ?>" class="btn btn-action-compact btn-action-edit-yellow" title="Manage Report">
+                                                        <i class="fa fa-pencil"></i>
                                                     </a>
-                                                    <a href="<?= buildNavUrl('progress_reports.php?action=approval_logs&report_id=' . $rep['id']) ?>" class="btn btn-xs btn-outline-info" style="font-size: 0.75rem; padding: 2px 8px;">
-                                                        <i class="fas fa-history me-1"></i> Approval Logs
+                                                    <a href="<?= buildNavUrl('progress_reports.php?action=approval_logs&report_id=' . $rep['id']) ?>" class="btn btn-action-compact btn-action-delete-red" title="Approval Logs">
+                                                        <i class="fa fa-history"></i>
                                                     </a>
                                                 </div>
                                             </td>
