@@ -231,18 +231,19 @@ $total_categories   = count($categories_count);
         color: #334155;
     }
 
-    /* Index badge */
-    .index-badge-circle {
-        width: 24px;
-        height: 24px;
-        background-color: #024283;
-        color: #ffffff;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 10px;
+    .index-badge-circle,
+    .index-badge-circle * {
+        width: 26px !important;
+        height: 26px !important;
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
     }
 
     /* Category pill */
@@ -434,7 +435,7 @@ $total_categories   = count($categories_count);
                         <?php if (canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3"
                                 data-bs-toggle="modal" data-bs-target="#galleryModal" id="addNewBtn"
-                                style="border-radius: 4px; font-weight: 600;">
+                                style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Gallery Event
                         </button>
                         <?php endif; ?>

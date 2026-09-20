@@ -300,6 +300,177 @@ try {
     .custom-tab-1 .nav-tabs .nav-link.active i {
         color: #00897B !important;
     }
+
+    /* ──── WEBINARS/CONFERENCES TEMPLATE DESIGN SYSTEM FOR RESEARCH & INFRASTRUCTURE ──── */
+    .registry-card {
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+    }
+    .registry-card-header {
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding: 14px 20px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    .registry-card-title {
+        color: #bc2121 !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        margin-bottom: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-transform: uppercase !important;
+    }
+    .btn-add-green {
+        background-color: #00c853 !important;
+        border-color: #00c853 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 12.5px !important;
+        padding: 6px 16px !important;
+        border-radius: 4px !important;
+        box-shadow: 0 2px 4px rgba(0, 200, 83, 0.25) !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    .btn-add-green:hover {
+        background-color: #00a843 !important;
+        border-color: #00a843 !important;
+        color: #ffffff !important;
+    }
+
+    /* Red Table Header */
+    .registry-card .table thead th,
+    .table thead th {
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 12px 16px !important;
+        border: none !important;
+        vertical-align: middle !important;
+    }
+
+    .registry-card .table tbody td,
+    .table tbody td {
+        padding: 14px 16px !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        vertical-align: middle !important;
+        font-size: 13.5px !important;
+        color: #1e293b !important;
+    }
+
+    .row-title-text {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.4 !important;
+    }
+
+    .row-desc-text {
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: #334155 !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Image Thumbnail */
+    .table-img-thumb {
+        width: 65px !important;
+        height: 45px !important;
+        object-fit: cover !important;
+        border-radius: 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+    }
+
+    .table-no-photo-badge {
+        background-color: #f1f5f9 !important;
+        color: #64748b !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 4px !important;
+        padding: 5px 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .table-order-badge {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        display: inline-block !important;
+    }
+
+    /* Status Solid Green / Grey Badge */
+    .badge-status-solid-active {
+        background-color: #00c853 !important;
+        color: #ffffff !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 5px 12px !important;
+        border-radius: 4px !important;
+        display: inline-block !important;
+    }
+
+    .badge-status-solid-inactive {
+        background-color: #94a3b8 !important;
+        color: #ffffff !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 5px 12px !important;
+        border-radius: 4px !important;
+        display: inline-block !important;
+    }
+
+    /* Square Icon Action Buttons */
+    .btn-action-compact {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 6px !important;
+        font-size: 13px !important;
+        border: none !important;
+        transition: transform 0.15s ease !important;
+        text-decoration: none !important;
+    }
+    .btn-action-compact:hover {
+        transform: translateY(-1px) !important;
+    }
+
+    .btn-action-blue {
+        background-color: #0256af !important;
+        color: #ffffff !important;
+    }
+    .btn-action-edit-yellow {
+        background-color: #eab308 !important;
+        color: #ffffff !important;
+    }
+    .btn-action-delete-red {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+    }
 </style>
 
 <div id="main-wrapper">
@@ -347,65 +518,75 @@ try {
 
             <!-- TAB 1: RESEARCH AREAS -->
             <?php if ($activeTab === 'research'): ?>
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Project Key Research Areas (Global)</h4>
+            <div class="card registry-card shadow-sm mb-4">
+                <div class="registry-card-header">
+                    <h4 class="registry-card-title">
+                        <i class="fa-solid fa-flask"></i> PROJECT KEY RESEARCH AREAS (GLOBAL)
+                    </h4>
                     <?php if (isSuperAdmin()): ?>
-                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#researchModal" data-toggle="modal" data-target="#researchModal" onclick="openAddResearchModal()">
-                        <i class="fa fa-plus me-1"></i> Add Research Area
+                    <button type="button" class="btn btn-add-green" data-bs-toggle="modal" data-bs-target="#researchModal" data-toggle="modal" data-target="#researchModal" onclick="openAddResearchModal()">
+                        <i class="fa fa-plus"></i> + Add Research Area
                     </button>
                     <?php else: ?>
                     <span class="text-muted" style="font-size: 13px;"><i class="fa fa-lock"></i> Hub Admin Only</span>
                     <?php endif; ?>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Cover</th>
-                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Title</th>
-                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Description</th>
-                                    <th style="width: 80px; background-color: #bc2121 !important; color: #ffffff !important;">Order</th>
-                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
-                                    <th style="width: 100px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Actions</th>
+                                    <th style="width: 100px; text-align: center;">COVER</th>
+                                    <th style="min-width: 220px;">TITLE</th>
+                                    <th>DESCRIPTION</th>
+                                    <th style="width: 80px; text-align: center;">ORDER</th>
+                                    <th style="width: 100px; text-align: center;">STATUS</th>
+                                    <th style="width: 130px; text-align: center;">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($researchAreas)): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">No research areas configured. Fallback categories will display.</td>
+                                    <td colspan="6" class="text-center text-muted py-4" style="font-size: 13px;">No research areas configured yet. Fallback categories will display.</td>
                                 </tr>
                                 <?php else: ?>
                                     <?php foreach ($researchAreas as $r): ?>
                                     <tr>
-                                        <td>
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <?php if ($r['image_path']): ?>
-                                                <img src="../<?= htmlspecialchars($r['image_path']) ?>" alt="Research Area" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                <img src="../<?= htmlspecialchars($r['image_path']) ?>" alt="Research Area" class="table-img-thumb">
                                             <?php else: ?>
-                                                <span class="text-muted" style="font-size: 11px;">No Photo</span>
+                                                <span class="table-no-photo-badge"><i class="fa fa-image"></i> No Photo</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><strong><?= htmlspecialchars($r['title']) ?></strong></td>
-                                        <td><small><?= htmlspecialchars(strlen($r['description']) > 150 ? substr($r['description'], 0, 150) . '...' : $r['description']) ?></small></td>
-                                        <td><?= (int)$r['display_order'] ?></td>
-                                        <td>
-                                            <span class="badge <?= $r['status'] === 'Active' ? 'bg-success' : 'bg-secondary' ?>">
+                                        <td style="vertical-align: middle;">
+                                            <div class="row-title-text"><?= htmlspecialchars($r['title']) ?></div>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <div class="row-desc-text"><?= htmlspecialchars(strlen($r['description']) > 150 ? substr($r['description'], 0, 150) . '...' : $r['description']) ?></div>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <span class="table-order-badge"><?= (int)$r['display_order'] ?></span>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <span class="<?= $r['status'] === 'Active' ? 'badge-status-solid-active' : 'badge-status-solid-inactive' ?>">
                                                 <?= htmlspecialchars($r['status']) ?>
                                             </span>
                                         </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-research-btn" data-record="<?= htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-                                            <?php if (isSuperAdmin()): ?>
-                                                <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)" title="Edit Record">
-                                                    <i class="fa fa-pencil"></i>
+                                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-action-compact btn-action-blue view-research-btn" data-record="<?= htmlspecialchars(json_encode($r), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                    <i class="fa fa-eye"></i>
                                                 </button>
-                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
-                                                    <i class="fa fa-trash"></i>
-                                                </a>
-                                            <?php endif; ?>
+                                                <?php if (isSuperAdmin()): ?>
+                                                    <button type="button" class="btn btn-action-compact btn-action-edit-yellow" data-bs-toggle="modal" data-bs-target="#researchModal" onclick="openEditResearchModal(<?= htmlspecialchars(json_encode($r)) ?>)" title="Edit Record">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </button>
+                                                    <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=research&id=' . $r['id']) ?>" class="btn btn-action-compact btn-action-delete-red" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Research Area?', message: 'Are you sure you want to delete this research area?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -419,70 +600,82 @@ try {
 
             <!-- TAB 2: INFRASTRUCTURE & FACILITIES -->
             <?php if ($activeTab === 'infrastructure'): ?>
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Laboratory Infrastructure & Advanced Facilities</h4>
-                    <button type="button" class="btn text-white btn-sm" style="background-color: #09BD3C !important; border-color: #09BD3C !important; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#facilityModal" data-toggle="modal" data-target="#facilityModal" onclick="openAddFacilityModal()">
-                        <i class="fa fa-plus me-1"></i> Add Facility
+            <div class="card registry-card shadow-sm mb-4">
+                <div class="registry-card-header">
+                    <h4 class="registry-card-title">
+                        <i class="fa-solid fa-microscope"></i> LABORATORY INFRASTRUCTURE & ADVANCED FACILITIES
+                    </h4>
+                    <button type="button" class="btn btn-add-green" data-bs-toggle="modal" data-bs-target="#facilityModal" data-toggle="modal" data-target="#facilityModal" onclick="openAddFacilityModal()">
+                        <i class="fa fa-plus"></i> + Add Facility
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Photo</th>
-                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Facility Name</th>
-                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Description &amp; Equipment Details</th>
-                                    <th style="background-color: #bc2121 !important; color: #ffffff !important;">Owner</th>
-                                    <th style="width: 80px; background-color: #bc2121 !important; color: #ffffff !important;">Order</th>
-                                    <th style="width: 100px; background-color: #bc2121 !important; color: #ffffff !important;">Status</th>
-                                    <th style="width: 100px; text-align: center; background-color: #bc2121 !important; color: #ffffff !important;">Actions</th>
+                                    <th style="width: 100px; text-align: center;">PHOTO</th>
+                                    <th style="min-width: 200px;">FACILITY NAME</th>
+                                    <th>DESCRIPTION &amp; EQUIPMENT DETAILS</th>
+                                    <th style="width: 90px; text-align: center;">OWNER</th>
+                                    <th style="width: 80px; text-align: center;">ORDER</th>
+                                    <th style="width: 100px; text-align: center;">STATUS</th>
+                                    <th style="width: 130px; text-align: center;">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($facilities)): ?>
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">No infrastructure facilities configured for this prefix. Fallback facilities will display.</td>
+                                    <td colspan="7" class="text-center text-muted py-4" style="font-size: 13px;">No infrastructure facilities configured for this prefix. Fallback facilities will display.</td>
                                 </tr>
                                 <?php else: ?>
                                     <?php foreach ($facilities as $f): ?>
                                     <tr>
-                                        <td>
+                                        <td style="text-align: center; vertical-align: middle;">
                                             <?php if ($f['image_path']): ?>
-                                                <img src="../<?= htmlspecialchars($f['image_path']) ?>" alt="Facility" style="width: 60px; height: 45px; object-fit: cover; border-radius: 4px;">
+                                                <img src="../<?= htmlspecialchars($f['image_path']) ?>" alt="Facility" class="table-img-thumb">
                                             <?php else: ?>
-                                                <span class="text-muted" style="font-size: 11px;">No Photo</span>
+                                                <span class="table-no-photo-badge"><i class="fa fa-image"></i> No Photo</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><strong><?= htmlspecialchars($f['name']) ?></strong></td>
-                                        <td>
-                                            <p style="font-size: 13px; margin-bottom: 5px;"><?= htmlspecialchars($f['description']) ?></p>
+                                        <td style="vertical-align: middle;">
+                                            <div class="row-title-text"><?= htmlspecialchars($f['name']) ?></div>
+                                        </td>
+                                        <td style="vertical-align: middle;">
+                                            <div class="row-desc-text mb-1"><?= htmlspecialchars($f['description']) ?></div>
                                             <?php if ($f['equipment_details']): ?>
-                                                <div style="font-size: 11px; color:#555; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #bc2121;">
-                                                    <strong>Equipment list:</strong> <?= htmlspecialchars($f['equipment_details']) ?>
+                                                <div style="font-size: 11.5px; color: #334155; background: #f8fafc; padding: 5px 10px; border-radius: 6px; border-left: 3px solid #bc2121; margin-top: 4px;">
+                                                    <strong style="color: #0f172a;">Equipment list:</strong> <?= htmlspecialchars($f['equipment_details']) ?>
                                                 </div>
                                             <?php endif; ?>
                                         </td>
-                                        <td><span class="badge bg-secondary"><?= htmlspecialchars(strtoupper($f['institute_prefix'])) ?></span></td>
-                                        <td><?= (int)$f['display_order'] ?></td>
-                                        <td>
-                                            <span class="badge <?= $f['status'] === 'Active' ? 'bg-success' : 'bg-secondary' ?>">
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <span class="badge" style="background-color: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 8px;">
+                                                <i class="fa-solid fa-building me-1" style="font-size: 9px;"></i><?= htmlspecialchars(strtoupper($f['institute_prefix'])) ?>
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <span class="table-order-badge"><?= (int)$f['display_order'] ?></span>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <span class="<?= $f['status'] === 'Active' ? 'badge-status-solid-active' : 'badge-status-solid-inactive' ?>">
                                                 <?= htmlspecialchars($f['status']) ?>
                                             </span>
                                         </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-info btn-xs text-white me-1 view-facility-btn" data-record="<?= htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-                                            <?php if (canEditInstitute($f['institute_prefix'] ?? $prefix)): ?>
-                                            <button class="btn btn-warning btn-xs me-1" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)" title="Edit Record">
-                                                <i class="fa fa-pencil"></i>
-                                            </button>
-                                            <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-danger btn-xs" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
-                                                <i class="fa fa-trash"></i>
-                                            </a>
-                                            <?php endif; ?>
+                                        <td style="text-align: center; vertical-align: middle; white-space: nowrap;">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button type="button" class="btn btn-action-compact btn-action-blue view-facility-btn" data-record="<?= htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8') ?>" title="View Details">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
+                                                <?php if (canEditInstitute($f['institute_prefix'] ?? $prefix)): ?>
+                                                <button type="button" class="btn btn-action-compact btn-action-edit-yellow" data-bs-toggle="modal" data-bs-target="#facilityModal" onclick="openEditFacilityModal(<?= htmlspecialchars(json_encode($f)) ?>)" title="Edit Record">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <a href="<?= $navUrl('research_infrastructure.php?action=delete&type=facility&id=' . $f['id'] . '&record_prefix=' . urlencode($f['institute_prefix'] ?? $prefix)) ?>" class="btn btn-action-compact btn-action-delete-red" title="Delete Record" onclick="event.preventDefault(); const targetUrl = this.href; ANRFModal.confirm({ title: 'Delete Facility?', message: 'Are you sure you want to delete this facility?', confirmText: 'Delete', onConfirm: function() { window.location.href = targetUrl; } });">
+                                                    <i class="fa fa-trash"></i>
+                                                </a>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>

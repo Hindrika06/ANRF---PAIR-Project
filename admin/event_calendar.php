@@ -566,7 +566,7 @@ include 'loader.php';
                             <i class="fa-solid fa-list-check me-2"></i>EVENT RECORDS
                         </h4>
                         <?php if ($is_super): ?>
-                        <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#eventModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
+                        <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#eventModal" id="addNewBtn" style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Event
                         </button>
                         <?php endif; ?>

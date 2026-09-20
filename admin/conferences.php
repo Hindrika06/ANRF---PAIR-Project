@@ -239,17 +239,19 @@ foreach ($conferences as $c) {
         font-size: 13.5px;
         vertical-align: middle;
     }
-    .index-badge-circle {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: #f1f5f9;
-        color: #475569;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 11px;
+    .index-badge-circle,
+    .index-badge-circle * {
+        width: 26px !important;
+        height: 26px !important;
+        border-radius: 50% !important;
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
     }
     .registry-task-link {
         font-weight: 700;

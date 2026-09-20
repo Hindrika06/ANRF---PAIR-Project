@@ -464,7 +464,7 @@ include 'loader.php';
                         <h4 class="card-title mb-0" style="color: #024283; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-id-card me-2"></i>TEAM DIRECTORY MEMBERS
                         </h4>
-                        <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#memberModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
+                        <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#memberModal" id="addNewBtn" style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Team Member
                         </button>
                     </div>

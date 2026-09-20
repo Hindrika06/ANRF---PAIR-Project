@@ -502,7 +502,7 @@ $nowStr = date('Y-m-d H:i:s');
                         <h4 class="card-title mb-0">Automatic Homepage Poster & Event Banner System</h4>
                         <small class="text-muted"><i class="fa fa-clock me-1"></i> Server Time (Asia/Kolkata): <strong><?= date('d-M-Y h:i A') ?></strong></small>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm" id="openAddModalBtn" onclick="openAddModal()">
+                    <button type="button" class="btn btn-success btn-sm text-white px-3" id="openAddModalBtn" onclick="openAddModal()" style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                         <i class="fa fa-plus me-1"></i> Add Event Poster / Slide
                     </button>
                 </div>

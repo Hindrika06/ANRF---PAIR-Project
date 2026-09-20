@@ -317,8 +317,11 @@ $__activeInstContext = getActiveInstituteContext();
         .registry-task-link:hover {
             color: #bc2121 !important;
         }
-        .index-badge-circle {
+        .index-badge-circle,
+        .index-badge-circle * {
             background-color: #bc2121 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
         .registry-tag-pill {
             color: #7a0e0e !important;
@@ -564,8 +567,11 @@ $__activeInstContext = getActiveInstituteContext();
         .registry-task-link:hover {
             color: #991b1b !important;
         }
-        .index-badge-circle {
+        .index-badge-circle,
+        .index-badge-circle * {
             background-color: #bc2121 !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
             box-shadow: 0 2px 5px rgba(188, 33, 33, 0.25) !important;
         }
         .registry-tag-pill {

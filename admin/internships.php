@@ -186,18 +186,19 @@ $total_pis = count($unique_investigators);
         color: #334155;
     }
 
-    /* Index Circle */
-    .index-badge-circle {
-        width: 22px;
-        height: 22px;
-        background-color: #b93c3c;
-        color: #ffffff;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 10px;
+    .index-badge-circle,
+    .index-badge-circle * {
+        width: 26px !important;
+        height: 26px !important;
+        background-color: #bc2121 !important;
+        color: #ffffff !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        box-shadow: 0 2px 4px rgba(188, 33, 33, 0.25) !important;
     }
 
     .registry-task-link {

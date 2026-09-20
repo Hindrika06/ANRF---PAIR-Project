@@ -205,7 +205,7 @@ try {
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h4 class="card-title mb-0">Ticker Announcements & "What's New"</h4>
-                    <button type="button" class="btn btn-primary btn-sm px-3" onclick="openAddModal()">
+                    <button type="button" class="btn btn-success btn-sm text-white px-3" onclick="openAddModal()" style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                         <i class="fa fa-plus me-1"></i> Add Announcement
                     </button>
                 </div>

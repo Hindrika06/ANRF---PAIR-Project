@@ -214,7 +214,8 @@ foreach ($webinars as $w) {
         font-size: 13.5px;
         vertical-align: middle;
     }
-    .index-badge-circle {
+    .index-badge-circle,
+    .index-badge-circle * {
         width: 26px !important;
         height: 26px !important;
         border-radius: 50% !important;

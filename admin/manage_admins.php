@@ -138,7 +138,7 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">Spoke University Admin Accounts</h4>
-                    <button class="btn btn-primary btn-sm" onclick="openAddAdminModal()">
+                    <button class="btn btn-success btn-sm text-white px-3" onclick="openAddAdminModal()" style="background-color: var(--bs-btn-bg, #00c853) !important; border-color: var(--bs-btn-bg, #00c853) !important; color: #ffffff !important; border-radius: 4px; font-weight: 600;">
                         <i class="fa fa-plus me-1"></i> Add Spoke Admin
                     </button>
                 </div>
