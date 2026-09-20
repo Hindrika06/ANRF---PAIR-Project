@@ -912,12 +912,6 @@ include 'loader.php';
     </div>
 </div>
 <?php endif; ?>
-
-    <div class="footer">
-        <div class="copyright">
-            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved.</p>
-        </div>
-    </div>
 </div>
 
 <script src="vendor/global/global.min.js"></script>
@@ -1028,5 +1022,4 @@ include 'loader.php';
 </script>
 
 <?php include 'includes/view_modal.php'; ?>
-</body>
-</html>
+<?php include 'footer.php'; ?>

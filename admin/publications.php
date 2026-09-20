@@ -1119,12 +1119,6 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
     </div>
 
     <?php include 'includes/view_modal.php'; ?>
-
-    <div class="footer">
-        <div class="copyright">
-            <p>&copy; <?php echo date('Y'); ?> ANRF&ndash;PAIR Project, University of Hyderabad. All rights reserved.</p>
-        </div>
-    </div>
 </div>
 
 <script src="vendor/global/global.min.js"></script>
@@ -1407,5 +1401,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
-</body>
-</html>
+<?php include 'footer.php'; ?>

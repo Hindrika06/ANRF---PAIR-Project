@@ -321,6 +321,5 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 </script>
 <?php include 'includes/view_modal.php'; ?>
-</body>
-</html>
+<?php include 'footer.php'; ?>
 
