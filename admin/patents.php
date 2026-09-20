@@ -9,7 +9,8 @@ if (!isValidPrefix($prefix)) {
 }
 
 // Table name built only from a whitelisted value above — safe from injection
-$table = "{$prefix}_patent";
+$allowedPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+$table = ($prefix !== 'all') ? "{$prefix}_patent" : null;
 
 // ── Database & logic ─────────────────────────────────────────────────────────
 require_once 'config/db.php';
@@ -18,36 +19,49 @@ $success = false;
 $error   = '';
 
 // Auto-generate Patent ID helper for standard additions
-function generatePatentId($pdo, $table): string {
-    $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
-    $count = (int)$stmt->fetchColumn();
-    return 'PAT-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+if (!function_exists('generatePatentId')) {
+    function generatePatentId($pdo, $table): string {
+        $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
+        $count = (int)$stmt->fetchColumn();
+        return 'PAT-' . str_pad($count + 1, 5, '0', STR_PAD_LEFT);
+    }
 }
 
-$patentId = generatePatentId($pdo, $table);
+if ($prefix === 'all' && isSuperAdmin()) {
+    $patentId = '';
+} else {
+    $patentId = $table ? generatePatentId($pdo, $table) : '';
+}
 
 // 1. HANDLE DELETE ACTION
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $deletePrefix = $_GET['record_prefix'] ?? $prefix;
-    if (!isValidPrefix($deletePrefix) || !canEditInstitute($deletePrefix)) {
+    if ($prefix === 'all' && isSuperAdmin()) {
+        $deletePrefix = $_GET['record_prefix'] ?? '';
+    } else {
+        $deletePrefix = $_GET['record_prefix'] ?? $prefix;
+    }
+
+    if (!in_array($deletePrefix, $allowedPrefixes, true)) {
+        $error = 'Invalid record institute.';
+    } elseif (!canEditInstitute($deletePrefix)) {
         $error = 'You are not allowed to delete records for this institute.';
     } else {
-    try {
-        $deleteTable = "{$deletePrefix}_patent";
-        // Optional: Clean up associated server-side assets if they exist
-        $stmt = $pdo->prepare("SELECT patent_file FROM `$deleteTable` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        $row = $stmt->fetch();
-        if ($row) {
-            if (!empty($row['patent_file']) && file_exists($row['patent_file'])) @unlink($row['patent_file']);
-        }
+        try {
+            $deleteTable = "{$deletePrefix}_patent";
+            // Optional: Clean up associated server-side assets if they exist
+            $stmt = $pdo->prepare("SELECT patent_file FROM `$deleteTable` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            $row = $stmt->fetch();
+            if ($row) {
+                if (!empty($row['patent_file']) && file_exists($row['patent_file'])) @unlink($row['patent_file']);
+            }
 
-        $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-        adminRedirect(['success_msg' => 'deleted']);
-    } catch (PDOException $e) {
-        $error = 'Failed to delete record: ' . $e->getMessage();
-    }
+            $stmt = $pdo->prepare("DELETE FROM `$deleteTable` WHERE id = :id");
+            $stmt->execute([':id' => (int)$_GET['id']]);
+            adminRedirect(['success_msg' => 'deleted']);
+        } catch (PDOException $e) {
+            $error = 'Failed to delete record: ' . $e->getMessage();
+        }
     }
 }
 
@@ -74,136 +88,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $technology_area  = trim($_POST['technology_area']  ?? '');
     $abstract         = trim($_POST['abstract']         ?? '');
     $edit_id          = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
+    $postPrefix       = trim($_POST['record_prefix']    ?? '');
 
-    if (!canEditInstitute($prefix)) {
+    // Determine target institute and table
+    if ($edit_id && !empty($postPrefix) && in_array($postPrefix, $allowedPrefixes, true)) {
+        $targetPrefix = $postPrefix;
+    } else {
+        $targetPrefix = $prefix;
+    }
+
+    if ($targetPrefix === 'all' || !in_array($targetPrefix, $allowedPrefixes, true)) {
+        $error = 'Please select a specific institute before creating or editing a patent.';
+    } elseif (!canEditInstitute($targetPrefix)) {
         $error = 'You are not allowed to update records for this institute.';
     } else {
-    try {
-        // Direct target folder
-        $uploadDir = 'uploads/patents/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $uploadFile = function (string $field) use ($uploadDir): ?string {
-            if (empty($_FILES[$field]['name'])) return null;
-            $f = $_FILES[$field];
-            if ($f['error'] !== UPLOAD_ERR_OK) throw new RuntimeException("Upload error: " . $f['error']);
-            if ($f['size'] > 10 * 1024 * 1024) throw new RuntimeException("File exceeds 10 MB limit.");
-            $ext  = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
-            $dest = $uploadDir . uniqid('pat_', true) . '.' . $ext;
-
-            if (!move_uploaded_file($f['tmp_name'], $dest))
-                throw new RuntimeException("Could not save uploaded file. Check folder write configurations.");
-            return $dest;
-        };
-
-        $patentFile = $uploadFile('patent_file');
-
-        $is_super = isSuperAdmin();
-        $approvalStatus = $is_super ? 'Approved' : 'Pending';
-
-        if ($edit_id) {
-            // UPDATE EXISTING PATENT RECORD
-            $query = "UPDATE `$table` SET 
-                        task_no = :task_no,
-                        patent_title = :patent_title, 
-                        inventor_name = :inventor_name, 
-                        co_inventors = :co_inventors, 
-                        application_no = :application_no, 
-                        patent_no = :patent_no, 
-                        country = :country, 
-                        filing_date = :filing_date, 
-                        publication_date = :publication_date, 
-                        grant_date = :grant_date, 
-                        status = :status, 
-                        technology_area = :technology_area, 
-                        abstract = :abstract,
-                        approval_status = :approval_status";
-
-            $params = [
-                ':task_no'          => $task_no,
-                ':patent_title'     => $patent_title,
-                ':inventor_name'    => $inventor_name,
-                ':co_inventors'     => $co_inventors,
-                ':application_no'   => $application_no,
-                ':patent_no'        => $patent_no,
-                ':country'          => $country,
-                ':filing_date'      => $filing_date      ?: null,
-                ':publication_date' => $publication_date ?: null,
-                ':grant_date'       => $grant_date       ?: null,
-                ':status'           => $status,
-                ':technology_area'  => $technology_area,
-                ':abstract'         => $abstract,
-                ':approval_status'  => $approvalStatus,
-                ':id'               => $edit_id
-            ];
-
-            if ($patentFile) {
-                $query .= ", patent_file = :patent_file";
-                $params[':patent_file'] = $patentFile;
+        $targetTable = "{$targetPrefix}_patent";
+        try {
+            // Direct target folder
+            $uploadDir = 'uploads/patents/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
             }
 
-            $query .= " WHERE id = :id";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute($params);
+            $uploadFile = function (string $field) use ($uploadDir): ?string {
+                if (empty($_FILES[$field]['name'])) return null;
+                $f = $_FILES[$field];
+                if ($f['error'] !== UPLOAD_ERR_OK) throw new RuntimeException("Upload error: " . $f['error']);
+                if ($f['size'] > 10 * 1024 * 1024) throw new RuntimeException("File exceeds 10 MB limit.");
+                $ext  = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+                $dest = $uploadDir . uniqid('pat_', true) . '.' . $ext;
 
-            if (!$is_super) {
-                submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $edit_id, 'UPDATE', $params);
-                adminRedirect(['success_msg' => 'submitted']);
+                if (!move_uploaded_file($f['tmp_name'], $dest))
+                    throw new RuntimeException("Could not save uploaded file. Check folder write configurations.");
+                return $dest;
+            };
+
+            $patentFile = $uploadFile('patent_file');
+
+            $is_super = isSuperAdmin();
+            $approvalStatus = $is_super ? 'Approved' : 'Pending';
+
+            if ($edit_id) {
+                // UPDATE EXISTING PATENT RECORD
+                $query = "UPDATE `$targetTable` SET 
+                            task_no = :task_no,
+                            patent_title = :patent_title, 
+                            inventor_name = :inventor_name, 
+                            co_inventors = :co_inventors, 
+                            application_no = :application_no, 
+                            patent_no = :patent_no, 
+                            country = :country, 
+                            filing_date = :filing_date, 
+                            publication_date = :publication_date, 
+                            grant_date = :grant_date, 
+                            status = :status, 
+                            technology_area = :technology_area, 
+                            abstract = :abstract,
+                            approval_status = :approval_status";
+
+                $params = [
+                    ':task_no'          => $task_no,
+                    ':patent_title'     => $patent_title,
+                    ':inventor_name'    => $inventor_name,
+                    ':co_inventors'     => $co_inventors,
+                    ':application_no'   => $application_no,
+                    ':patent_no'        => $patent_no,
+                    ':country'          => $country,
+                    ':filing_date'      => $filing_date      ?: null,
+                    ':publication_date' => $publication_date ?: null,
+                    ':grant_date'       => $grant_date       ?: null,
+                    ':status'           => $status,
+                    ':technology_area'  => $technology_area,
+                    ':abstract'         => $abstract,
+                    ':approval_status'  => $approvalStatus,
+                    ':id'               => $edit_id
+                ];
+
+                if ($patentFile) {
+                    $query .= ", patent_file = :patent_file";
+                    $params[':patent_file'] = $patentFile;
+                }
+
+                $query .= " WHERE id = :id";
+                $stmt = $pdo->prepare($query);
+                $stmt->execute($params);
+
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Patents', $targetTable, $targetPrefix, $edit_id, 'UPDATE', $params);
+                    adminRedirect(['success_msg' => 'submitted']);
+                } else {
+                    adminRedirect(['success_msg' => 'updated']);
+                }
             } else {
-                adminRedirect(['success_msg' => 'updated']);
-            }
-        } else {
-            // INSERT NEW PATENT RECORD
-            $final_id = !empty($req_patent_id) ? $req_patent_id : $patentId;
-            $stmt = $pdo->prepare("
-                INSERT INTO `$table`
-                    (task_no, patent_id, patent_title, inventor_name, co_inventors,
-                     application_no, patent_no, country,
-                     filing_date, publication_date, grant_date,
-                     status, technology_area, abstract,
-                     patent_file, approval_status, created_at)
-                VALUES
-                    (:task_no, :patent_id, :patent_title, :inventor_name, :co_inventors,
-                     :application_no, :patent_no, :country,
-                     :filing_date, :publication_date, :grant_date,
-                     :status, :technology_area, :abstract,
-                     :patent_file, :approval_status, NOW())
-            ");
-            $params = [
-                ':task_no'          => $task_no,
-                ':patent_id'        => $final_id,
-                ':patent_title'     => $patent_title,
-                ':inventor_name'    => $inventor_name,
-                ':co_inventors'     => $co_inventors,
-                ':application_no'   => $application_no,
-                ':patent_no'        => $patent_no,
-                ':country'          => $country,
-                ':filing_date'      => $filing_date      ?: null,
-                ':publication_date' => $publication_date ?: null,
-                ':grant_date'       => $grant_date       ?: null,
-                ':status'           => $status,
-                ':technology_area'  => $technology_area,
-                ':abstract'         => $abstract,
-                ':patent_file'      => $patentFile,
-                ':approval_status'  => $approvalStatus
-            ];
-            $stmt->execute($params);
-            $new_id = $pdo->lastInsertId();
+                // INSERT NEW PATENT RECORD
+                $final_id = !empty($req_patent_id) ? $req_patent_id : generatePatentId($pdo, $targetTable);
+                $stmt = $pdo->prepare("
+                    INSERT INTO `$targetTable`
+                        (task_no, patent_id, patent_title, inventor_name, co_inventors,
+                         application_no, patent_no, country,
+                         filing_date, publication_date, grant_date,
+                         status, technology_area, abstract,
+                         patent_file, approval_status, created_at)
+                    VALUES
+                        (:task_no, :patent_id, :patent_title, :inventor_name, :co_inventors,
+                         :application_no, :patent_no, :country,
+                         :filing_date, :publication_date, :grant_date,
+                         :status, :technology_area, :abstract,
+                         :patent_file, :approval_status, NOW())
+                ");
+                $params = [
+                    ':task_no'          => $task_no,
+                    ':patent_id'        => $final_id,
+                    ':patent_title'     => $patent_title,
+                    ':inventor_name'    => $inventor_name,
+                    ':co_inventors'     => $co_inventors,
+                    ':application_no'   => $application_no,
+                    ':patent_no'        => $patent_no,
+                    ':country'          => $country,
+                    ':filing_date'      => $filing_date      ?: null,
+                    ':publication_date' => $publication_date ?: null,
+                    ':grant_date'       => $grant_date       ?: null,
+                    ':status'           => $status,
+                    ':technology_area'  => $technology_area,
+                    ':abstract'         => $abstract,
+                    ':patent_file'      => $patentFile,
+                    ':approval_status'  => $approvalStatus
+                ];
+                $stmt->execute($params);
+                $new_id = $pdo->lastInsertId();
 
-            if (!$is_super) {
-                submitKpiApprovalRequest($pdo, 'Patents', $table, $prefix, $new_id, 'CREATE', $params);
-                adminRedirect(['success_msg' => 'submitted']);
-            } else {
-                adminRedirect(['success_msg' => 'inserted']);
+                if (!$is_super) {
+                    submitKpiApprovalRequest($pdo, 'Patents', $targetTable, $targetPrefix, $new_id, 'CREATE', $params);
+                    adminRedirect(['success_msg' => 'submitted']);
+                } else {
+                    adminRedirect(['success_msg' => 'inserted']);
+                }
             }
+        } catch (RuntimeException $e) {
+            $error = "System Upload Notice: " . $e->getMessage();
+        } catch (PDOException $e) {
+            $error = 'Database error: ' . $e->getMessage();
         }
-    } catch (RuntimeException $e) {
-        $error = "System Upload Notice: " . $e->getMessage();
-    } catch (PDOException $e) {
-        $error = 'Database error: ' . $e->getMessage();
-    }
     }
 }
 
@@ -615,7 +640,7 @@ $total_inventors = count($unique_inventors);
                         <h4 class="card-title mb-0" style="color: #bc2121; font-weight: 700; font-size: 15px;">
                             <i class="fa-solid fa-certificate me-2"></i>REGISTERED PATENTS LIST
                         </h4>
-                        <?php if (canEditInstitute($prefix)): ?>
+                        <?php if ($prefix !== 'all' && canEditInstitute($prefix)): ?>
                         <button type="button" class="btn btn-success btn-sm text-white px-3" data-bs-toggle="modal" data-bs-target="#patentModal" id="addNewBtn" style="border-radius: 4px; font-weight: 600;">
                             <i class="fa fa-plus me-1"></i> Add Patent
                         </button>
@@ -700,12 +725,16 @@ $total_inventors = count($unique_inventors);
                                                             title="View Details">
                                                         <i class="fa fa-eye"></i>
                                                     </button>
-                                                    <?php if (canEditInstitute($prefix)): ?>
+                                                    <?php 
+                                                    $recPrefix = $patent['institute_prefix'] ?? ($prefix !== 'all' ? $prefix : '');
+                                                    if (canEditInstitute($recPrefix)): 
+                                                    ?>
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-edit-yellow edit-btn"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#patentModal"
                                                             data-id="<?= $patent['id'] ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($recPrefix) ?>"
                                                             data-taskno="<?= htmlspecialchars($patent['task_no'] ?? '') ?>"
                                                             data-patid="<?= htmlspecialchars($patent['patent_id']) ?>"
                                                             data-title="<?= htmlspecialchars($patent['patent_title']) ?>"
@@ -726,7 +755,7 @@ $total_inventors = count($unique_inventors);
                                                     <button type="button"
                                                             class="btn btn-action-compact btn-action-delete-red delete-confirm-trigger"
                                                             data-id="<?= $patent['id'] ?>"
-                                                            data-record-prefix="<?= htmlspecialchars($patent['institute_prefix'] ?? $prefix) ?>"
+                                                            data-record-prefix="<?= htmlspecialchars($recPrefix) ?>"
                                                             title="Delete Record">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
@@ -766,6 +795,7 @@ $total_inventors = count($unique_inventors);
                 <form method="POST" enctype="multipart/form-data" id="modalForm">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
+                        <input type="hidden" name="record_prefix" id="modal_record_prefix" value="<?= htmlspecialchars($prefix !== 'all' ? $prefix : '') ?>">
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
@@ -954,6 +984,10 @@ document.addEventListener("DOMContentLoaded", function() {
         addNewBtn.addEventListener('click', function() {
             modalForm.reset();
             document.getElementById('modal_edit_id').value = '';
+            const recPrefixEl = document.getElementById('modal_record_prefix');
+            if (recPrefixEl) {
+                recPrefixEl.value = "<?= htmlspecialchars($prefix !== 'all' ? $prefix : '') ?>";
+            }
             document.getElementById('modal_task_no').value = '';
             document.getElementById('modal_patent_id').value = defaultPatentId;
             modalTitle.innerText = "Patent Registration Form";
@@ -991,6 +1025,10 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             document.getElementById('modal_edit_id').value = this.getAttribute('data-id');
+            const recPrefixEl = document.getElementById('modal_record_prefix');
+            if (recPrefixEl) {
+                recPrefixEl.value = this.getAttribute('data-record-prefix') || "<?= htmlspecialchars($prefix !== 'all' ? $prefix : '') ?>";
+            }
             document.getElementById('modal_task_no').value = this.getAttribute('data-taskno');
             document.getElementById('modal_patent_id').value = this.getAttribute('data-patid');
             document.getElementById('modal_patent_title').value = this.getAttribute('data-title');
