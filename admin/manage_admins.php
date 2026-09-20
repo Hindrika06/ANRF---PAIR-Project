@@ -144,50 +144,52 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
+                        <table class="table table-theme-sapphire table-striped table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Username / Email</th>
-                                    <th>Assigned Institute</th>
-                                    <th>Role</th>
-                                    <th>Created At</th>
-                                    <th style="width: 120px; text-align: center;">Actions</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px;">ID</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px;">Username / Email</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px;">Assigned Institute</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px;">Role</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px;">Created At</th>
+                                    <th style="background-color: #bc2121 !important; color: #ffffff !important; font-weight: 600; border: none; padding: 12px 15px; min-width: 260px; text-align: center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($admins as $admin): ?>
-                                    <tr>
-                                        <td><strong>#<?= (int)$admin['id'] ?></strong></td>
-                                        <td><?= htmlspecialchars($admin['username']) ?></td>
-                                        <td>
-                                            <span class="badge bg-secondary">
+                                    <tr style="color: #212529; font-weight: 500;">
+                                        <td style="font-weight: 900; font-size: 1.05rem; color: #0f172a; vertical-align: middle; padding-left: 1rem;">
+                                            <?= (int)$admin['id'] ?>
+                                        </td>
+                                        <td class="text-dark align-middle"><strong><?= htmlspecialchars($admin['username']) ?></strong></td>
+                                        <td class="align-middle">
+                                            <span class="badge" style="background-color: #064482 !important; color: #fff; padding: 6px 10px; font-weight: 600; border-radius: 4px; min-width: 85px; display: inline-block; text-align: center;">
                                                 <?= htmlspecialchars(getInstituteLabel($admin['institute_prefix'])) ?>
                                             </span>
                                         </td>
-                                        <td>
-                                            <span class="badge <?= ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin') ? 'bg-primary' : 'bg-info' ?>">
+                                        <td class="align-middle">
+                                            <span class="badge" style="background-color: #bc2121 !important; color: #fff; padding: 6px 10px; font-weight: 600; border-radius: 4px;">
                                                 <?= htmlspecialchars(getRoleDisplayName($admin['role'])) ?>
                                             </span>
                                         </td>
-                                        <td><small><?= htmlspecialchars($admin['created_at']) ?></small></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-info btn-xs me-1" onclick="viewAdmin(<?= htmlspecialchars(json_encode($admin)) ?>)">
-                                                <i class="fa fa-eye"></i> View
-                                            </button>
-                                            <button class="btn btn-warning btn-xs me-1" onclick="openEditAdminModal(<?= htmlspecialchars(json_encode($admin)) ?>)">
-                                                <i class="fa fa-pencil"></i> Edit
-                                            </button>
-                                            <?php if (!in_array($admin['role'], ['super_admin', 'superadmin', 'hub_admin'], true)): ?>
-                                             <form method="POST" action="<?= buildNavUrl('manage_admins.php') ?>" style="display:inline-block;" id="deleteAdminForm_<?= (int)$admin['id'] ?>">
-                                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                                                 <input type="hidden" name="action" value="delete">
-                                                 <input type="hidden" name="id" value="<?= (int)$admin['id'] ?>">
-                                                 <button type="button" class="btn btn-danger btn-xs" onclick="ANRFModal.confirm({ title: 'Delete Admin Account?', message: 'Are you sure you want to delete this Spoke Admin account? They will lose login access.', confirmText: 'Delete Account', onConfirm: function() { document.getElementById('deleteAdminForm_<?= (int)$admin['id'] ?>').submit(); } });">
-                                                     <i class="fa fa-trash"></i> Delete
-                                                 </button>
-                                             </form>
-                                             <?php endif; ?>
+                                        <td class="text-dark align-middle"><small><?= htmlspecialchars($admin['created_at']) ?></small></td>
+                                        <td class="text-center align-middle">
+                                            <div class="d-flex flex-row gap-2 align-items-center justify-content-center">
+                                                <button type="button" class="btn btn-primary btn-xs" style="width: 75px; background-color: #1565c0 !important; border-color: #1565c0 !important;" onclick="viewAdmin(<?= htmlspecialchars(json_encode($admin)) ?>)">
+                                                    <i class="fa fa-eye"></i> View
+                                                </button>
+                                                <button type="button" class="btn btn-warning btn-xs" style="width: 75px; background-color: #ffca28 !important; border-color: #ffca28 !important; color: #1a1a1a !important;" onclick="openEditAdminModal(<?= htmlspecialchars(json_encode($admin)) ?>)">
+                                                    <i class="fa fa-pencil"></i> Edit
+                                                </button>
+                                                 <form method="POST" action="<?= buildNavUrl('manage_admins.php') ?>" style="margin:0;" id="deleteAdminForm_<?= (int)$admin['id'] ?>">
+                                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                                     <input type="hidden" name="action" value="delete">
+                                                     <input type="hidden" name="id" value="<?= (int)$admin['id'] ?>">
+                                                     <button type="button" class="btn btn-danger btn-xs" style="width: 75px; background-color: #c62828 !important; border-color: #c62828 !important;" onclick="ANRFModal.confirm({ title: 'Delete Admin Account?', message: 'Are you sure you want to delete this account?', confirmText: 'Delete Account', onConfirm: function() { document.getElementById('deleteAdminForm_<?= (int)$admin['id'] ?>').submit(); } });">
+                                                         <i class="fa fa-trash"></i> Delete
+                                                     </button>
+                                                 </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
