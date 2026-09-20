@@ -442,12 +442,18 @@ $bodyClass = 'page-sub-page page-course-detail'; include 'header.php';?>
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
 }
+
+/* Eliminate unwanted white horizontal strip above dark-blue footer */
+.block:last-of-type {
+    padding-bottom: 10px !important;
+    margin-bottom: 0 !important;
+}
+#page-footer #footer-top {
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
 </style>
 
-
 <?php include 'footer.php';?>
-
-
-</div><!-- end Wrapper -->
-
-=
