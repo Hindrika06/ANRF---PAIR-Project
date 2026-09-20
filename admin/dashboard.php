@@ -26,6 +26,27 @@ if (!function_exists('getTableCount')) {
     }
 }
 
+$allowedPrefixes = [
+    'cuk',
+    'kannur',
+    'mgu',
+    'ou',
+    'svu',
+    'uoh',
+    'yvu'
+];
+
+if (!function_exists('getCombinedTableCount')) {
+    function getCombinedTableCount($pdo, $tableSuffix, $allowedPrefixes) {
+        $total = 0;
+        foreach ($allowedPrefixes as $instPrefix) {
+            $tableName = "{$instPrefix}_{$tableSuffix}";
+            $total += getTableCount($pdo, $tableName);
+        }
+        return $total;
+    }
+}
+
 // Fetch counts
 $is_super = isSuperAdmin();
 $pendingApprovalsCount = 0;
@@ -33,13 +54,23 @@ if ($is_super) {
     $pendingApprovalsCount = getTableCount($pdo, "approval_requests", "status = 'Pending'");
 }
 
-$countPublications  = getTableCount($pdo, "{$prefix}_publications");
-$countPatents       = getTableCount($pdo, "{$prefix}_patent");
-$countConferences   = getTableCount($pdo, "{$prefix}_conferences");
-$countWebinars      = getTableCount($pdo, "{$prefix}_webinars");
-$countInternships   = getTableCount($pdo, "{$prefix}_internships");
-$countReports       = getTableCount($pdo, "{$prefix}_progress_reports");
-$countGallery       = getTableCount($pdo, "{$prefix}_gallery_events") + getTableCount($pdo, "gallery_albums", "institute_prefix = '$prefix' OR institute_prefix = 'all'");
+if ($prefix === 'all' && $is_super) {
+    $countPublications = getCombinedTableCount($pdo, 'publications', $allowedPrefixes);
+    $countPatents      = getCombinedTableCount($pdo, 'patent', $allowedPrefixes);
+    $countConferences  = getCombinedTableCount($pdo, 'conferences', $allowedPrefixes);
+    $countWebinars     = getCombinedTableCount($pdo, 'webinars', $allowedPrefixes);
+    $countInternships  = getCombinedTableCount($pdo, 'internships', $allowedPrefixes);
+    $countReports      = getCombinedTableCount($pdo, 'progress_reports', $allowedPrefixes);
+    $countGallery      = getCombinedTableCount($pdo, 'gallery_events', $allowedPrefixes) + getTableCount($pdo, "gallery_albums", "institute_prefix = '$prefix' OR institute_prefix = 'all'");
+} else {
+    $countPublications = getTableCount($pdo, "{$prefix}_publications");
+    $countPatents      = getTableCount($pdo, "{$prefix}_patent");
+    $countConferences  = getTableCount($pdo, "{$prefix}_conferences");
+    $countWebinars     = getTableCount($pdo, "{$prefix}_webinars");
+    $countInternships  = getTableCount($pdo, "{$prefix}_internships");
+    $countReports      = getTableCount($pdo, "{$prefix}_progress_reports");
+    $countGallery      = getTableCount($pdo, "{$prefix}_gallery_events") + getTableCount($pdo, "gallery_albums", "institute_prefix = '$prefix' OR institute_prefix = 'all'");
+}
 
 $countTeam            = getTableCount($pdo, "team", "status = 'Active'");
 $countEvents          = getTableCount($pdo, "events", $is_super ? "" : "university_id = '$prefix' OR university_id = 'all'");
