@@ -180,11 +180,23 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
     /**
      * Fetches Public Centralized KPI Data:
-     * - Returns all approved & published records across all specified institute tables.
-     * - Enforces approval_status = 'Approved' AND (publish_status = 1 OR publish_status IS NULL)
+     * - Returns approved & published records across specified institute tables.
+     * - If $targetPrefix is provided (e.g. 'cuk'), limits queries strictly to that university.
+     * - If $targetPrefix is null or 'all', returns records across all 7 institute tables.
+     * - Enforces approval_status = 'Approved' (or NULL) AND (publish_status = 1 OR publish_status IS NULL)
      */
-    function fetchPublicCentralizedKpiDataset($pdo, $moduleSuffix) {
-        $prefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+    function fetchPublicCentralizedKpiDataset($pdo, $moduleSuffix, $targetPrefix = null) {
+        $allPrefixes = ['cuk', 'kannur', 'mgu', 'ou', 'svu', 'uoh', 'yvu'];
+        if ($targetPrefix !== null && $targetPrefix !== '' && $targetPrefix !== 'all') {
+            $cleanTarget = strtolower(rtrim((string)$targetPrefix, '_'));
+            if (in_array($cleanTarget, $allPrefixes, true)) {
+                $prefixes = [$cleanTarget];
+            } else {
+                return [];
+            }
+        } else {
+            $prefixes = $allPrefixes;
+        }
         $combined = [];
 
         foreach ($prefixes as $p) {
@@ -201,7 +213,7 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
                 $whereConditions = [];
                 if ($hasApproval) {
-                    $whereConditions[] = "approval_status = 'Approved'";
+                    $whereConditions[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
                 }
                 if ($hasPublish) {
                     $whereConditions[] = "(publish_status = 1 OR publish_status IS NULL)";

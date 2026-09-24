@@ -158,17 +158,27 @@ try {
 } catch (PDOException $e) {}
 
 try {
-    if ($prefix === 'uoh_') {
-        $progress     = fetchRows($pdo, "SELECT * FROM uoh_progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
-    } else {
-        $progress     = fetchRows($pdo, "SELECT * FROM {$prefix}progress_reports WHERE (approval_status = 'Approved' OR approval_status IS NULL) AND (publish_status = 1 OR publish_status IS NULL) ORDER BY created_at DESC");
+    $progTbl = "{$prefix}progress_reports";
+    $checkTbl = $pdo->query("SHOW TABLES LIKE '$progTbl'");
+    if ($checkTbl && $checkTbl->fetch()) {
+        $pCols = $pdo->query("SHOW COLUMNS FROM `$progTbl`")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        $pWhere = [];
+        if (in_array('approval_status', $pCols, true)) {
+            $pWhere[] = "(approval_status = 'Approved' OR approval_status IS NULL)";
+        }
+        if (in_array('publish_status', $pCols, true)) {
+            $pWhere[] = "(publish_status = 1 OR publish_status IS NULL)";
+        }
+        $pWhereSql = !empty($pWhere) ? "WHERE " . implode(' AND ', $pWhere) : "";
+        $pOrderSql = in_array('created_at', $pCols, true) ? "ORDER BY created_at DESC" : "ORDER BY id DESC";
+        $progress = fetchRows($pdo, "SELECT * FROM `$progTbl` $pWhereSql $pOrderSql");
     }
 } catch (PDOException $e) {}
 
 $webinars = [];
 $conferences = [];
 try {
-    $webinars = fetchPublicCentralizedKpiDataset($pdo, 'webinars');
+    $webinars = fetchPublicCentralizedKpiDataset($pdo, 'webinars', $currPrefixClean);
     if (!empty($webinars)) {
         usort($webinars, function($a, $b) {
             $tA = !empty($a['webinar_date']) ? strtotime($a['webinar_date']) : 0;
@@ -179,7 +189,7 @@ try {
 } catch (Exception $e) {}
 
 try {
-    $conferences = fetchPublicCentralizedKpiDataset($pdo, 'conferences');
+    $conferences = fetchPublicCentralizedKpiDataset($pdo, 'conferences', $currPrefixClean);
     if (!empty($conferences)) {
         usort($conferences, function($a, $b) {
             $dateA = !empty($a['conf_date']) ? $a['conf_date'] : ($a['start_date'] ?? '');
