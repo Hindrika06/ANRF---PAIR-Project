@@ -33,6 +33,18 @@ $prefix_map = [
 $prefix = $prefix_map[$institute_name] ?? 'uoh_';
 $currPrefixClean = rtrim($prefix, '_');
 
+// 3. Map university name to official verified website
+$website_map = [
+    'University of Hyderabad'         => 'https://uohyd.ac.in/',
+    'Central University of Karnataka' => 'https://cuk.ac.in/',
+    'Kannur University'               => 'https://kannuruniversity.ac.in/',
+    'Mahatma Gandhi University'       => 'https://mgu.ac.in/',
+    'Osmania University'              => 'https://osmania.ac.in/',
+    'Sri Venkateswara University'     => 'https://svuniversity.edu.in/',
+    'Yogi Vemana University'          => 'https://yvu.edu.in/',
+];
+$institute_website = $website_map[$institute_name] ?? 'https://osmania.ac.in/';
+
 // Derive prefix-to-logo and prefix-to-name lookup strictly from existing $prefix_map and $logo_map
 $prefix_to_logo = [];
 $prefix_to_name = [];
@@ -257,6 +269,8 @@ $tab_labels = [
         .pub-inst-logo-item { width: 30px !important; height: 30px !important; min-width: 30px !important; min-height: 30px !important; max-width: 30px !important; max-height: 30px !important; border-radius: 50% !important; overflow: hidden !important; background: #ffffff !important; border: 1.5px solid #cbd5e1 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; box-sizing: border-box !important; }
         .pub-logo-stack .pub-inst-logo-item + .pub-inst-logo-item { margin-left: -8px !important; border: 2px solid #ffffff !important; }
         .pub-inst-logo-item img { width: 100% !important; height: 100% !important; max-width: 30px !important; max-height: 30px !important; object-fit: contain !important; padding: 2px !important; display: block !important; border-radius: 50% !important; box-sizing: border-box !important; }
+        .inst-logo-link { display: inline-flex; align-items: center; justify-content: center; height: 100%; max-height: 85px; max-width: 100%; text-decoration: none; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .inst-logo-link:hover { opacity: 0.92; transform: scale(1.02); }
     </style>
 
 </head>
@@ -277,7 +291,9 @@ $tab_labels = [
 
     <div class="inst-card" style="margin-top:12px;">
         <div class="inst-logo-wrap">
-            <img src="<?= htmlspecialchars($institute_logo) ?>" alt="<?= htmlspecialchars($institute_name) ?> logo">
+            <a href="<?= htmlspecialchars($institute_website, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" class="inst-logo-link" title="Visit <?= htmlspecialchars($institute_name) ?> official website">
+                <img src="<?= htmlspecialchars($institute_logo) ?>" alt="<?= htmlspecialchars($institute_name) ?> logo">
+            </a>
         </div>
         <div class="inst-meta">
             <h2><?= htmlspecialchars($institute_name) ?></h2>

@@ -140,7 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $validatedInstitutes[] = $inst;
             }
         }
-        // Server-side: ALWAYS force-include mandatory UoH and owner prefix
+        $validatedInstitutes = array_values(array_unique($validatedInstitutes));
+
         if (!in_array('uoh', $validatedInstitutes, true)) {
             $validatedInstitutes[] = 'uoh';
         }
@@ -149,11 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $validatedInstitutes = array_values(array_unique($validatedInstitutes));
 
-        // Server-side: require mandatory UoH + exactly 1 collaborator (total 2 institutes)
         if (count($validatedInstitutes) < 2) {
-            $error = 'Joint Publication must include 1 collaborating institute along with mandatory UoH.';
-        } elseif (count($validatedInstitutes) > 2) {
-            $error = 'Joint Publication allows only 1 collaborating institute along with mandatory UoH (maximum 2 total).';
+            $error = 'Joint Publication must include UoH and the owner/participating institute.';
         } else {
             foreach ($validatedInstitutes as $inst) {
                 $participatingInstitutes[$inst] = ($inst === $targetPrefix) ? 'OWNER' : 'COLLABORATOR';
@@ -238,9 +236,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($hasPITable) {
                         $pdo->prepare("DELETE FROM `publication_institutes` WHERE publication_id = :pid AND owner_prefix = :op")
                             ->execute([':pid' => $edit_id, ':op' => $targetPrefix]);
-                        foreach ($participatingInstitutes as $instPrefix => $rel) {
-                            $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, :rel)")
-                                ->execute([':pid' => $edit_id, ':op' => $targetPrefix, ':ip' => $instPrefix, ':rel' => $rel]);
+                        if ($publication_type === 'Joint') {
+                            foreach ($participatingInstitutes as $instPrefix => $rel) {
+                                $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, :rel)")
+                                    ->execute([':pid' => $edit_id, ':op' => $targetPrefix, ':ip' => $instPrefix, ':rel' => $rel]);
+                            }
+                        } else {
+                            // Single: record OWNER for consistent relationship data
+                            $pdo->prepare("INSERT IGNORE INTO `publication_institutes` (publication_id, owner_prefix, institute_prefix, relationship) VALUES (:pid, :op, :ip, 'OWNER')")
+                                ->execute([':pid' => $edit_id, ':op' => $targetPrefix, ':ip' => $targetPrefix]);
                         }
                     }
 
@@ -880,7 +884,7 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                                             <!-- Participating Institutes column -->
                                             <td>
                                                 <?php if ($isJoint && $instDisplay !== ''): ?>
-                                                    <span class="registry-sub-label" style="font-size:11px;color:#7c3aed;font-weight:600;">
+                                                    <span class="registry-sub-label" style="font-size:11px;color:#7c3aed;font-weight:600;white-space:normal;line-height:1.4;word-break:break-word;">
                                                         <?= htmlspecialchars($instDisplay) ?>
                                                     </span>
                                                 <?php else: ?>
@@ -998,7 +1002,7 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                                 <label class="form-label form-label-grey mb-2">
                                     <i class="fa-solid fa-link me-1" style="color:#7c3aed;"></i>
                                     Participating Institutes <span class="text-danger">*</span>
-                                    <small class="text-muted ms-2">(Select UoH + 1 Collaborating Institute)</small>
+                                    <small class="text-muted ms-2">(Select all participating institutes; UoH is mandatory)</small>
                                 </label>
                                 <div class="row g-2">
                                     <?php foreach ($allowedPrefixes as $ap): ?>
@@ -1012,13 +1016,14 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                                             <label class="form-check-label" for="inst_cb_<?= $ap ?>"
                                                    style="font-size:12px;font-weight:600;color:#334155;cursor:pointer;">
                                                 <?= htmlspecialchars($instituteLabels[$ap] ?? strtoupper($ap)) ?>
+                                                <span class="badge ms-1 mandatory-badge-<?= $ap ?>" style="font-size:9px;display:none;background:#7c3aed;color:#fff;"></span>
                                             </label>
                                         </div>
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
                                 <div id="joint_inst_error" class="text-danger mt-2" style="font-size:12px;display:none;">
-                                    Please select UoH and 1 collaborating institute (total 2 institutes).
+                                    Joint Publication must include UoH and at least one collaborating institute.
                                 </div>
                             </div>
                         </div>
@@ -1203,7 +1208,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const jointSection       = document.getElementById('joint_institutes_section');
     const jointInstError     = document.getElementById('joint_inst_error');
 
+    function getActiveTargetPrefix() {
+        const targetSelect = document.getElementById('modal_target_prefix_select');
+        if (targetSelect && !targetSelect.disabled && targetSelect.value) {
+            return targetSelect.value.toLowerCase();
+        }
+        const hiddenTarget = document.getElementById('modal_target_prefix');
+        return hiddenTarget && hiddenTarget.value ? hiddenTarget.value.toLowerCase() : '';
+    }
+
     function updateCheckboxStyles() {
+        const targetPrefix = getActiveTargetPrefix();
         document.querySelectorAll('.joint-inst-cb').forEach(cb => {
             const container = document.getElementById('container_cb_' + cb.value);
             if (container) {
@@ -1213,13 +1228,35 @@ document.addEventListener("DOMContentLoaded", function () {
                     container.style.borderColor = '#e2e8f0';
                 }
             }
+            const badge = document.querySelector('.mandatory-badge-' + cb.value);
+            if (badge) {
+                if (cb.value === 'uoh' && cb.value === targetPrefix) {
+                    badge.innerText = 'OWNER / REQUIRED';
+                    badge.style.display = 'inline-block';
+                } else if (cb.value === 'uoh') {
+                    badge.innerText = 'REQUIRED';
+                    badge.style.display = 'inline-block';
+                } else if (cb.value === targetPrefix) {
+                    badge.innerText = 'OWNER / REQUIRED';
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
         });
     }
 
-    function ensureUohChecked() {
+    function ensureMandatoryChecked() {
+        const targetPrefix = getActiveTargetPrefix();
         const uohCb = document.getElementById('inst_cb_uoh');
-        if (uohCb && !uohCb.checked) {
+        if (uohCb) {
             uohCb.checked = true;
+        }
+        if (targetPrefix) {
+            const ownerCb = document.getElementById('inst_cb_' + targetPrefix);
+            if (ownerCb) {
+                ownerCb.checked = true;
+            }
         }
         updateCheckboxStyles();
     }
@@ -1230,7 +1267,7 @@ document.addEventListener("DOMContentLoaded", function () {
         jointSection.style.display = isJoint ? 'block' : 'none';
         if (!isJoint && jointInstError) { jointInstError.style.display = 'none'; }
         if (isJoint) {
-            ensureUohChecked();
+            ensureMandatoryChecked();
         } else {
             document.querySelectorAll('.joint-spoke-cb').forEach(cb => { cb.checked = false; });
         }
@@ -1242,13 +1279,22 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleJointSection(); // initial state
     }
 
-    // Radio-like single choice selection among spoke institutes
+    // Checkbox selection: allow selecting ANY number of valid institutes.
+    // Ensure mandatory institutes (UoH and owner institute) cannot be accidentally unchecked.
     document.querySelectorAll('.joint-inst-cb').forEach(cb => {
+        cb.addEventListener('click', function(e) {
+            const targetPrefix = getActiveTargetPrefix();
+            if ((this.value === 'uoh' || this.value === targetPrefix) && !this.checked) {
+                e.preventDefault();
+                this.checked = true;
+                updateCheckboxStyles();
+                return false;
+            }
+        });
         cb.addEventListener('change', function() {
-            if (this.classList.contains('joint-spoke-cb') && this.checked) {
-                document.querySelectorAll('.joint-spoke-cb').forEach(other => {
-                    if (other !== this) other.checked = false;
-                });
+            const targetPrefix = getActiveTargetPrefix();
+            if (this.value === 'uoh' || this.value === targetPrefix) {
+                this.checked = true;
             }
             updateCheckboxStyles();
         });
@@ -1258,16 +1304,22 @@ document.addEventListener("DOMContentLoaded", function () {
     if (modalForm) {
         modalForm.addEventListener('submit', function(e) {
             if (pubTypeSelect && pubTypeSelect.value === 'Joint') {
-                const uohCb        = document.getElementById('inst_cb_uoh');
-                const uohChecked   = uohCb && uohCb.checked;
-                const spokeChecked = Array.from(document.querySelectorAll('.joint-spoke-cb:checked')).length;
-                if (!uohChecked || spokeChecked !== 1) {
+                ensureMandatoryChecked();
+                const checkedValues = Array.from(document.querySelectorAll('.joint-inst-cb:checked')).map(cb => cb.value);
+                const uniqueChecked = new Set(checkedValues);
+                const hasUoh = uniqueChecked.has('uoh');
+                const targetPrefix = getActiveTargetPrefix();
+                const hasOwner = targetPrefix ? uniqueChecked.has(targetPrefix) : true;
+
+                if (!hasUoh || !hasOwner || uniqueChecked.size < 2) {
                     e.preventDefault();
                     if (jointInstError) {
-                        if (!uohChecked) {
+                        if (!hasUoh) {
                             jointInstError.innerText = 'UoH is mandatory for Joint publications and must be selected.';
+                        } else if (!hasOwner) {
+                            jointInstError.innerText = 'Owner institute is mandatory for Joint publications.';
                         } else {
-                            jointInstError.innerText = 'Please select 1 collaborating institute along with UoH.';
+                            jointInstError.innerText = 'Joint Publication must include UoH and at least one collaborating institute.';
                         }
                         jointInstError.style.display = 'block';
                     }
@@ -1309,7 +1361,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 el.disabled = false;
                 el.readOnly = false;
             });
-            ensureUohChecked();
+            ensureMandatoryChecked();
         });
     }
 
@@ -1317,6 +1369,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (targetSelectElem) {
         targetSelectElem.addEventListener('change', function() {
             document.getElementById('modal_target_prefix').value = this.value;
+            if (pubTypeSelect && pubTypeSelect.value === 'Joint') {
+                ensureMandatoryChecked();
+            }
         });
     }
 
@@ -1347,7 +1402,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('.joint-inst-cb').forEach(cb => {
                 cb.checked = piPrefixes.includes(cb.value);
             });
-            ensureUohChecked();
+            ensureMandatoryChecked();
             if (jointInstError) { jointInstError.style.display = 'none'; }
 
             if (isViewOnly) {
