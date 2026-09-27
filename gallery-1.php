@@ -214,11 +214,23 @@
                     require_once 'config.php';
                 }
 
+                if (!function_exists('safeGalleryUrl')) {
+                    function safeGalleryUrl($path) {
+                        if (empty($path)) {
+                            return '';
+                        }
+                        $path = str_replace('\\', '/', (string)$path);
+                        $parts = explode('/', $path);
+                        $encodedParts = array_map('rawurlencode', $parts);
+                        return implode('/', $encodedParts);
+                    }
+                }
+
                 $dbAlbums = [];
                 try {
                     $stmt = $pdo->query("SELECT * FROM `gallery_albums` ORDER BY album_date DESC, id DESC");
                     $dbAlbums = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                } catch (PDOException $e) {
+                } catch (Throwable $e) {
                     // Fallback
                 }
 
@@ -263,10 +275,12 @@
                                 <div class="gallery-wrapper">
                                     <button class="nav-btn btn-left" onclick="scrollGallery(this, -1)">&#10094;</button>
                                     <ul class="gallery-list-horizontal">
-                                        <?php foreach ($photos as $ph): ?>
+                                        <?php foreach ($photos as $ph): 
+                                            $encodedPhotoUrl = safeGalleryUrl($ph['photo_path']);
+                                        ?>
                                             <li>
-                                                <a href="<?php echo htmlspecialchars($ph['photo_path']); ?>" class="image-popup image-card">
-                                                    <img src="<?php echo htmlspecialchars($ph['photo_path']); ?>"
+                                                <a href="<?php echo htmlspecialchars($encodedPhotoUrl); ?>" class="image-popup image-card">
+                                                    <img src="<?php echo htmlspecialchars($encodedPhotoUrl); ?>"
                                                          alt="<?php echo htmlspecialchars($eventName); ?> photo"
                                                          loading="lazy"
                                                          style="object-fit: cover; width: 100%; height: 100%;">
@@ -318,10 +332,12 @@
                                     <div class="gallery-wrapper">
                                         <button class="nav-btn btn-left" onclick="scrollGallery(this, -1)">&#10094;</button>
                                         <ul class="gallery-list-horizontal">
-                                            <?php foreach ($images as $img): ?>
+                                            <?php foreach ($images as $img): 
+                                                $encodedImgUrl = safeGalleryUrl($img);
+                                            ?>
                                                 <li>
-                                                    <a href="<?php echo htmlspecialchars($img); ?>" class="image-popup image-card">
-                                                        <img src="<?php echo htmlspecialchars($img); ?>"
+                                                    <a href="<?php echo htmlspecialchars($encodedImgUrl); ?>" class="image-popup image-card">
+                                                        <img src="<?php echo htmlspecialchars($encodedImgUrl); ?>"
                                                              alt="<?php echo $eventName; ?> photo"
                                                              loading="lazy"
                                                              style="object-fit: cover; width: 100%; height: 100%;">

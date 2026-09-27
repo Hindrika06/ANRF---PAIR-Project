@@ -95,13 +95,16 @@ if (isset($_GET['success_msg'])) {
 
 // 3. HANDLE FORM SUBMISSIONS
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $task_no             = trim($_POST['task_no']            ?? '');
-    $publication_title   = trim($_POST['publication_title']   ?? '');
-    $author_name         = trim($_POST['author_name']         ?? '');
-    $doi_number          = trim($_POST['doi_number']          ?? '');
-    $publication_date    = $_POST['publication_date']         ?? '';
-    $publication_journal = trim($_POST['publication_journal'] ?? '');
+    $userCsrf = $_POST['csrf_token'] ?? '';
+    if (empty($userCsrf) || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $userCsrf)) {
+        $error = 'Security Error: Invalid or missing CSRF token.';
+    } else {
+        $task_no             = trim($_POST['task_no']            ?? '');
+        $publication_title   = trim($_POST['publication_title']   ?? '');
+        $author_name         = trim($_POST['author_name']         ?? '');
+        $doi_number          = trim($_POST['doi_number']          ?? '');
+        $publication_date    = $_POST['publication_date']         ?? '';
+        $publication_journal = trim($_POST['publication_journal'] ?? '');
     $impact_factor       = trim($_POST['impact_factor']       ?? '');
     $edit_id             = !empty($_POST['edit_id']) ? (int)$_POST['edit_id'] : null;
     $is_super            = isSuperAdmin();
@@ -313,6 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+}
 }
 
 // 4. FETCH ALL CENTRALIZED RECORDS
@@ -962,6 +966,7 @@ $sessionInstPrefix = isSuperAdmin() ? ($prefix !== 'all' ? $prefix : 'uoh') : ($
                 </div>
 
                 <form method="POST" id="modalForm">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="modal-body">
                         <input type="hidden" name="edit_id" id="modal_edit_id">
                         <input type="hidden" name="target_prefix" id="modal_target_prefix" value="<?= htmlspecialchars($prefix !== 'all' ? $prefix : 'uoh') ?>">

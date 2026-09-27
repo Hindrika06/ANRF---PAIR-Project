@@ -53,7 +53,7 @@ $uniqueVisitorsCount = trackAndGetUniqueVisitors($pdo);
                             <abbr title="Landline">Landline:</abbr>
                             <a href="tel:04023132309">040-23132309</a><br>
                             <abbr title="Email">Email:</abbr>
-                            <a href="mailto:pairdirecorate@uohyd.ac.in">pairdirecorate@uohyd.ac.in</a>
+                            <a href="mailto:pairdirectorate@uohyd.ac.in">pairdirectorate@uohyd.ac.in</a>
                         </address>
                     </aside>
                 </div><!-- /.col-md-3 -->

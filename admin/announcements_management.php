@@ -16,6 +16,36 @@ $error   = '';
 // Clean Action URL (prevents GET action/id parameters from leaking into POST forms)
 $cleanActionUrl = 'announcements_management.php' . (!empty($_GET['prefix']) ? '?prefix=' . urlencode($_GET['prefix']) : '');
 
+// Safe Announcement Link Resolver Helper
+if (!function_exists('getSafeAnnouncementUrl')) {
+    function getSafeAnnouncementUrl($link) {
+        $link = trim((string)$link);
+        if ($link === '') {
+            return '';
+        }
+        // Block dangerous schemes
+        if (preg_match('/^\s*(javascript|vbscript|data):/i', $link)) {
+            return '';
+        }
+        // External absolute HTTP or HTTPS URL
+        if (preg_match('/^https?:\/\//i', $link)) {
+            return filter_var($link, FILTER_VALIDATE_URL) ? $link : '';
+        }
+        // Disallow protocol-relative URLs
+        if (substr($link, 0, 2) === '//') {
+            return '';
+        }
+        // Internal relative / application path
+        if (substr($link, 0, 3) === '../') {
+            return $link;
+        }
+        if (substr($link, 0, 1) === '/') {
+            return '..' . $link;
+        }
+        return '../' . $link;
+    }
+}
+
 // Self-healing: create table if not exists
 try {
     $pdo->exec("
@@ -86,6 +116,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (!isset($_POST['action']) |
 
         if (empty($title)) {
             $error = 'Announcement text/title is required.';
+        } elseif ($link !== '' && preg_match('/^\s*(javascript|vbscript|data):/i', $link)) {
+            $error = 'Invalid URL format. JavaScript or unsafe URL schemes are not allowed.';
         } else {
             try {
                 if ($edit_id) {
@@ -219,10 +251,15 @@ try {
                                     <tr>
                                         <td><strong class="text-dark"><?= htmlspecialchars($a['title']) ?></strong></td>
                                         <td>
-                                            <?php if (!empty($a['link'])): ?>
-                                                <a href="../<?= htmlspecialchars($a['link']) ?>" target="_blank" class="text-info font-w500">
+                                            <?php 
+                                            $safeLink = getSafeAnnouncementUrl($a['link']);
+                                            if (!empty($safeLink)): 
+                                            ?>
+                                                <a href="<?= htmlspecialchars($safeLink) ?>" target="_blank" rel="noopener noreferrer" class="text-info font-w500">
                                                     <i class="fa fa-external-link me-1"></i><?= htmlspecialchars($a['link']) ?>
                                                 </a>
+                                            <?php elseif (!empty($a['link'])): ?>
+                                                <span class="text-danger small"><i class="fa fa-exclamation-triangle me-1"></i><?= htmlspecialchars($a['link']) ?> (Unsafe/Invalid)</span>
                                             <?php else: ?>
                                                 <span class="text-muted small">(No link)</span>
                                             <?php endif; ?>
